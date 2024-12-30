@@ -11,26 +11,36 @@ type board struct {
 	grid [8][8]rune
 }
 
+const Space rune = '0'
+const BlackPawn, WhitePawn rune = 'p', 'P'
+const BlackKnight, WhiteKnight rune = 'n', 'N'
+const BlackBishop, WhiteBishop rune = 'b', 'B'
+const BlackRookNC, WhiteRookNC rune = 'r', 'R'
+const BlackQueen, WhiteQueen rune = 'q', 'Q'
+const BlackKing, WhiteKing rune = 'k', 'K'
+const BlackRookC, WhiteRookC rune = 'o', 'O'
+const BlackPawnEP, WhitePawnEP rune = 'a', 'A'
+
 // A map that maps the encoded board runes to human readable strings
 var human_map = map[rune]string{
-	'0': "  ",
-	'p': "bp",
-	'n': "bn",
-	'b': "bb",
-	'r': "br",
-	'q': "bq",
-	'k': "bk",
-	'o': "BR", // a rook with the ability to castle
-	'a': "BP", // a pawn which can be taken via en passant
+	Space:       "  ",
+	BlackPawn:   "bp",
+	BlackKnight: "bn",
+	BlackBishop: "bb",
+	BlackRookNC: "br",
+	BlackQueen:  "bq",
+	BlackKing:   "bk",
+	BlackRookC:  "BR", // a rook with the ability to castle
+	BlackPawnEP: "BP", // a pawn which can be taken via en passant
 	//--------
-	'P': "wp",
-	'N': "wn",
-	'B': "wb",
-	'R': "wr",
-	'Q': "wq",
-	'K': "wk",
-	'O': "WR", // a rook with the ability to castle
-	'A': "WP", // a pawn which can be taken via en passant
+	WhitePawn:   "wp",
+	WhiteKnight: "wn",
+	WhiteBishop: "wb",
+	WhiteRookNC: "wr",
+	WhiteQueen:  "wq",
+	WhiteKing:   "wk",
+	WhiteRookC:  "WR", // a rook with the ability to castle
+	WhitePawnEP: "WP", // a pawn which can be taken via en passant
 }
 
 const StartingBoard string = "onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO"
