@@ -17,3 +17,17 @@ func TestGetBoardFromFile(t *testing.T) {
 	b2 := GetBoardFromFile("qgo.txt")
 	fmt.Println(b2)
 }
+
+func TestGetWhiteCoords(t *testing.T) {
+	b := GetBoardFromString(StartingBoard)
+	fmt.Println("Checking white coordinates: ")
+	fmt.Println(b)
+	fmt.Println(b.GetWhiteCoords())
+}
+
+func TestGetBlackCoords(t *testing.T) {
+	b := GetBoardFromString(StartingBoard)
+	fmt.Println("Checking black coordinates: ")
+	fmt.Println(b)
+	fmt.Println(b.GetBlackCoords())
+}
