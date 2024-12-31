@@ -5,16 +5,18 @@ import (
 	"testing"
 )
 
+var boardsDir string = "testingBoards/"
+
 func TestGetBoardFromString(t *testing.T) {
 	b := GetBoardFromString(StartingBoard)
 	fmt.Println(b)
 }
 
 func TestGetBoardFromFile(t *testing.T) {
-	b := GetBoardFromFile("kpo.txt")
+	b := GetBoardFromFile(boardsDir + "kpo.txt")
 	fmt.Println(b)
 
-	b2 := GetBoardFromFile("qgo.txt")
+	b2 := GetBoardFromFile(boardsDir + "qgo.txt")
 	fmt.Println(b2)
 }
 
