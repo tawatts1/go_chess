@@ -2,6 +2,26 @@ import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+const piecesList = [
+  '0',
+  'p',
+  'n',
+  'b',
+  'r',
+  'q',
+  'k',
+  'o',
+  'a',
+  'P',
+  'N',
+  'B',
+  'R',
+  'Q',
+  'K',
+  'O',
+  'A'
+];
+
 const Space = '0';
 
 const BlackPawn = 'p';
@@ -40,6 +60,8 @@ const imageMap = {
   WhiteRookC: 'wr.png',
   WhitePawnEP: 'wp.png'
 };
+
+var boardString = '';
 
 void main() {
   runApp(MyApp());
@@ -80,6 +102,7 @@ class MyAppState extends ChangeNotifier {
   ];
   void getNext() {
     current = WordPair.random();
+    print(boardString);
     notifyListeners();
   }
 }
@@ -111,6 +134,7 @@ class MyHomePage extends StatelessWidget {
   List<Widget> myBoard(MyAppState appState) {
     // out is the list of row widgets that make up the board. 
     List<Widget> out = [];
+    boardString = '';
     for (int i=0; i<appState.board.length; i++){
       // row is a list of strings
       var row = appState.board[i];
@@ -128,11 +152,65 @@ class MyHomePage extends StatelessWidget {
         rowView.add(
           Square(pieceCode: pieceCode, color: color)
         );
+        boardString += pieceCode;
       } 
-      out.add(Row(children:rowView, mainAxisAlignment: MainAxisAlignment.center,));
+      out.add(Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children:rowView,));
+      boardString += '\n';
     }
+
+    out.add(Expanded(
+      child: Row(children: [
+        getButtonColumn(0, 1, appState), 
+        getButtonColumn(1, 9, appState),
+        getButtonColumn(7, 9, appState),
+        getButtonColumn(9, 15, appState),
+        getButtonColumn(15, piecesList.length, appState)
+      ]),
+    ));
+      
+    // for (int i=0; i<piecesList.length; i++){
+      
+    //   }
+    // }
     return out;
   }
+}
+
+Column getButtonColumn(int start, int end, var appState) {
+  List<Widget> extraPieces = [];
+  for (int i=start; i<end; i++){
+      var pieceCode = piecesList[i];
+      var iconLoc = '';
+      if (pieceCode != Space) {
+        iconLoc = 'images/${imageMap[pieceCode] ?? ''}';
+      }
+      if (iconLoc == '') {
+        extraPieces.add(Expanded(
+          child: Row(children: [Text(piecesList[i]), ElevatedButton(
+            onPressed: () {
+              appState.getNext();
+            }, 
+            child: Text(''))]),
+        )
+      );
+      } else {
+        extraPieces.add(Expanded(
+          child: Row(children: [
+              Text(pieceCode),
+              IconButton(
+                icon: Image.asset(iconLoc),
+                onPressed: () {
+                  appState.getNext();
+                }
+              )
+            ]
+          ),
+        ));
+      }
+  }
+  return Column(children: extraPieces);
 }
 
 class Square extends StatelessWidget {
@@ -161,7 +239,7 @@ class Square extends StatelessWidget {
       );
     String iconLoc = '';
     if (pieceCode != Space) {
-      iconLoc = 'images/' + (imageMap[pieceCode] ?? '');
+      iconLoc = 'images/${imageMap[pieceCode] ?? ''}';
     }
 
     if (iconLoc=='') {
