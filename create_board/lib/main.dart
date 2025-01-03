@@ -88,22 +88,48 @@ class MyApp extends StatelessWidget {
 
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
+  int? piece_i;
+  int? piece_j;
+  String? piece_code;
   var white = Color.fromARGB(255, 241, 189, 129);
   var black = const Color.fromARGB(255, 99, 46, 11);
   List<List<String>> board = [
-    ['o', 'n', 'b', 'k', 'q', '0', '0', 'o',],
-    ['p', 'p', 'p', 'p', 'p', '0', 'p', 'p',],
+    ['o', 'n', 'b', 'q', 'k', 'b', 'n', 'o',],
+    ['p', 'p', 'p', 'p', '0', 'p', 'p', 'p',],
     ['0', '0', '0', '0', '0', '0', '0', '0',],
+    ['0', '0', '0', '0', 'p', '0', '0', '0',],
+    ['0', '0', '0', '0', 'P', '0', '0', '0',],
     ['0', '0', '0', '0', '0', '0', '0', '0',],
-    ['0', '0', '0', '0', '0', '0', '0', '0',],
-    ['0', '0', '0', '0', '0', '0', '0', '0',],
-    ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P',],
-    ['O', 'N', 'B', 'K', 'Q', '0', '0', 'O',],
+    ['P', 'P', 'P', 'P', '0', 'P', 'P', 'P',],
+    ['O', 'N', 'B', 'Q', 'K', 'B', 'N', 'O',],
   ];
-  void getNext() {
-    current = WordPair.random();
-    print(boardString);
+  void stageSetPiece(int? i, int? j, String? piece) {
+    if (piece_code == null) {
+      piece_i = i;
+      piece_j = j;
+      piece_code = piece;
+      print('Staging piece: $piece_i $piece_j $piece_code');
+    } else if (i!= null && j != null && piece_code != null){
+      board[i][j] = piece_code ?? Space;
+      if (piece_i != null && piece_j != null) {
+        board[piece_i!][piece_j!] = Space;
+      }
+      piece_i = null;
+      piece_j = null;
+      piece_code = null;
+      print('Setting piece: $i $j $piece_code');
+    }
+    
     notifyListeners();
+  }
+  void unstageSetPiece() {
+    piece_i = null;
+    piece_j = null;
+    piece_code = null;
+    notifyListeners();
+  }
+  void printBoard() {
+    print(boardString);
   }
 }
 
@@ -121,9 +147,15 @@ class MyHomePage extends StatelessWidget {
           Text(appState.current.asLowerCase),
           ElevatedButton(
             onPressed: () {
-              appState.getNext();
+              appState.printBoard();
             },
-            child: Text('Next'),
+            child: Text('Print'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              appState.unstageSetPiece();
+            },
+            child: Text('Unselect Piece'),
           ),
           ] 
           + myBoard(appState),
@@ -150,20 +182,20 @@ class MyHomePage extends StatelessWidget {
         }
         var pieceCode = row[j];
         rowView.add(
-          Square(pieceCode: pieceCode, color: color)
+          Square(pieceCode: pieceCode, color: color, i: i, j: j)
         );
         boardString += pieceCode;
       } 
       out.add(Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children:rowView,));
-      boardString += '\n';
+      //boardString += '\n';
     }
 
     out.add(Expanded(
       child: Row(children: [
         getButtonColumn(0, 1, appState), 
-        getButtonColumn(1, 9, appState),
+        getButtonColumn(1, 7, appState),
         getButtonColumn(7, 9, appState),
         getButtonColumn(9, 15, appState),
         getButtonColumn(15, piecesList.length, appState)
@@ -190,7 +222,7 @@ Column getButtonColumn(int start, int end, var appState) {
         extraPieces.add(Expanded(
           child: Row(children: [Text(piecesList[i]), ElevatedButton(
             onPressed: () {
-              appState.getNext();
+              appState.stageSetPiece(null, null, pieceCode);
             }, 
             child: Text(''))]),
         )
@@ -202,7 +234,7 @@ Column getButtonColumn(int start, int end, var appState) {
               IconButton(
                 icon: Image.asset(iconLoc),
                 onPressed: () {
-                  appState.getNext();
+                  appState.stageSetPiece(null, null, pieceCode);
                 }
               )
             ]
@@ -218,10 +250,14 @@ class Square extends StatelessWidget {
     super.key,
     required this.pieceCode,
     required this.color,
+    required this.i,
+    required this.j
   });
 
   final String pieceCode;
   final Color color;
+  final int i;
+  final int j;
   
   @override
   Widget build(BuildContext context) {
@@ -249,7 +285,7 @@ class Square extends StatelessWidget {
           child: ElevatedButton(
             style:style,
             onPressed: () {
-              appState.getNext();
+              appState.stageSetPiece(i,j,pieceCode);
             }, 
             child: Text('')
           ),
@@ -262,7 +298,7 @@ class Square extends StatelessWidget {
           style:style,
           icon: Image.asset(iconLoc),
           onPressed: () {
-            appState.getNext();
+            appState.stageSetPiece(i,j,pieceCode);
           },
           
         )
