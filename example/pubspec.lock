@@ -78,7 +78,7 @@ packages:
   go_chess:
     dependency: "direct main"
     description:
-      path: ".."
+      path: "../chess_ffigen"
       relative: true
     source: path
     version: "0.0.1"
