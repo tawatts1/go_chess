@@ -11,15 +11,6 @@ type board struct {
 	grid [8][8]rune
 }
 
-// coord, y is the column, x is the row of the board.
-type coord struct {
-	y, x int
-}
-
-func (c coord) String() string {
-	return fmt.Sprintf("(y:%v,x:%v)", c.y, c.x)
-}
-
 const StartingBoard string = "onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO"
 
 func check(e error) {
@@ -94,4 +85,24 @@ func (b board) GetBlackCoords() []coord {
 		}
 	}
 	return out
+}
+
+func (b board) GetBlackCoordMap() map[coord]bool {
+	out := make(map[coord]bool)
+	for _, c := range b.GetBlackCoords() {
+		out[c] = true
+	}
+	return out
+}
+
+func (b board) GetWhiteCoordMap() map[coord]bool {
+	out := make(map[coord]bool)
+	for _, c := range b.GetWhiteCoords() {
+		out[c] = true
+	}
+	return out
+}
+
+func (b board) GetPiece(c coord) rune {
+	return b.grid[c.y][c.x]
 }

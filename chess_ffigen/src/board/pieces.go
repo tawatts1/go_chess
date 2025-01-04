@@ -54,3 +54,50 @@ var whiteMap = map[rune]bool{
 	WhiteRookC:  true,
 	WhitePawnEP: true,
 }
+
+func IsPawn(p rune) bool {
+	switch p {
+	case BlackPawn:
+		return true
+	case BlackPawnEP:
+		return true
+	case WhitePawn:
+		return true
+	case WhitePawnEP:
+		return true
+	default:
+		return false
+	}
+}
+func IsKnight(p rune) bool {
+	if p == BlackKnight || p == WhiteKnight {
+		return true
+	}
+	return false
+}
+func IsBishop(p rune) bool {
+	if p == BlackBishop || p == WhiteBishop {
+		return true
+	}
+	return false
+}
+func IsRook(p rune) bool {
+	if p == BlackRookC || p == WhiteRookC ||
+		p == BlackRookNC || p == WhiteRookNC {
+		return true
+	}
+	return false
+}
+func IsQueen(p rune) bool {
+	if p == BlackQueen || p == WhiteQueen {
+		return true
+	}
+	return false
+}
+
+func IsKing(p rune) bool {
+	if p == BlackKing || p == WhiteKing {
+		return true
+	}
+	return false
+}
