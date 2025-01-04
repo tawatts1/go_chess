@@ -1,0 +1,23 @@
+#First word is a control word, new, has, or num. New starts a new board, has checks if the piece at the square has the move, num checks the number of moves. 
+new,onbqkb0opp0p0p0p00p00000000npPa00000P000BPN0000PP0PPB0P0O00QK0NO
+# check that this board HAS a piece at 3,5 that goes to 2,5. forward is a comment for easy reading
+has,3,5,2,5,,forward
+has,3,5,2,6,e,en passant
+# check that the NUMber of moves the piece has at 3,5 is 2 moves.
+num,3,5,2,two moves
+has,4,4,3,3,,attack knight
+num,4,4,1,one move
+has,6,6,5,6,,one step forward
+has,6,6,4,6,,two steps forward
+num,6,6,2,two moves
+##new board to test black pawn moves
+new,onb0kb0opp000ppp000p0n000000p0q0P0pAP00000P000000P000PPPONBQKBNO
+has,4,2,5,3,e,en passant
+num,4,2,1,one move
+has,3,4,4,3,,attack pawn
+num,3,4,1,one move
+has,1,6,2,6,,one forward
+num,1,6,1,one move
+has,1,0,2,0,,one forward
+has,1,0,3,0,,two forward
+num,1,0,2,two moves

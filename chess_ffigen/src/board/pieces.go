@@ -69,6 +69,13 @@ func IsPawn(p rune) bool {
 		return false
 	}
 }
+
+func IsEPPawn(p rune) bool {
+	if p == BlackPawnEP || p == WhitePawnEP {
+		return true
+	}
+	return false
+}
 func IsKnight(p rune) bool {
 	if p == BlackKnight || p == WhiteKnight {
 		return true
