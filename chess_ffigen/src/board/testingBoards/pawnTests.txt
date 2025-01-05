@@ -21,3 +21,15 @@ num,1,6,1,one move
 has,1,0,2,0,,one forward
 has,1,0,3,0,,two forward
 num,1,0,2,two moves
+### new board to test pawn promotion
+new,r0r0k0000P00P00P000000000000000000000000000000000p0BNN000000K000
+has,1,1,0,0,N,knight promotion
+has,1,1,0,1,Q,Queen promotion
+num,1,1,12
+num,1,4,0
+num,1,7,4
+has,6,1,7,1,n,
+has,6,1,7,1,b,
+has,6,1,7,1,q,
+has,6,1,7,1,r,
+num,6,1,4
