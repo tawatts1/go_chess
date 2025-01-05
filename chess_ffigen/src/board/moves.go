@@ -54,6 +54,12 @@ func (b board) GetMoves(c coord, bcm, wcm map[coord]bool) []move {
 		} else {
 			return b.GetRookMoves(wcm, bcm, c)
 		}
+	} else if IsQueen(piece) {
+		if blk {
+			return b.GetQueenMoves(bcm, wcm, c)
+		} else {
+			return b.GetQueenMoves(wcm, bcm, c)
+		}
 	} else {
 		panic("Not implemented")
 	}
@@ -176,4 +182,8 @@ func (b board) GetRookMoves(friends, enemies map[coord]bool, c coord) []move {
 		}
 	}
 	return out
+}
+
+func (b board) GetQueenMoves(friends, enemies map[coord]bool, c coord) []move {
+	return append(b.GetBishopMoves(friends, enemies, c), b.GetRookMoves(friends, enemies, c)...)
 }
