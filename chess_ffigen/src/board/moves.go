@@ -48,6 +48,12 @@ func (b board) GetMoves(c coord, bcm, wcm map[coord]bool) []move {
 		} else {
 			return b.GetBishopMoves(wcm, bcm, c)
 		}
+	} else if IsRook(piece) {
+		if blk {
+			return b.GetRookMoves(bcm, wcm, c)
+		} else {
+			return b.GetRookMoves(wcm, bcm, c)
+		}
 	} else {
 		panic("Not implemented")
 	}
@@ -127,7 +133,7 @@ func getPawnPromotionMoves(from, to coord, promotionCodes *[]rune) []move {
 }
 
 func (b board) GetBishopMoves(friends, enemies map[coord]bool, c coord) []move {
-	out := make([]move, 0, 2)
+	out := make([]move, 0, 3)
 	var newSquare coord
 	// vectors used to add diagonal moves to the starting square
 	v_xs, v_ys := [2]int{-1, 1}, [2]int{-1, 1}
@@ -144,6 +150,28 @@ func (b board) GetBishopMoves(friends, enemies map[coord]bool, c coord) []move {
 				if hasEnemy {
 					break // with the other vectors
 				}
+			}
+		}
+	}
+	return out
+}
+
+func (b board) GetRookMoves(friends, enemies map[coord]bool, c coord) []move {
+	out := make([]move, 0, 3)
+	var newSquare coord
+	// vectors used to add diagonal moves to the starting square
+	vectors := []coord{{y: 1, x: 0}, {y: -1, x: 0}, {y: 0, x: 1}, {y: 0, x: -1}}
+	for _, v := range vectors {
+		for newSquare = c.Copy().Add(v.y, v.x); newSquare.IsInBoard(); newSquare = newSquare.Copy().Add(v.y, v.x) {
+			_, hasFriend := friends[newSquare]
+			if hasFriend {
+				break // with the other vectors
+			}
+			//add move whether there is an enemy there or it is empty
+			out = append(out, move{a: c, b: newSquare})
+			_, hasEnemy := enemies[newSquare]
+			if hasEnemy {
+				break // with the other vectors
 			}
 		}
 	}
