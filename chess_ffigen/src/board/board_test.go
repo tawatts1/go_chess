@@ -70,7 +70,7 @@ func testMoveFile(fname string) string {
 					special = r[0]
 				}
 			}
-			m = move{a: &c1, b: &c2, special: special}
+			m = move{a: c1, b: c2, special: special}
 			moves := b.GetMoves(c1, bcm, wcm)
 			if !AnyEqual(moves, m) {
 				return fmt.Sprintf("%v: expected %v to contain %v", lineIndex+1, moves, m)
@@ -123,9 +123,9 @@ func TestGetBishopMoves(t *testing.T) {
 
 func TestMoveEquals(t *testing.T) {
 	a1 := coord{y: -5, x: 0}
-	m1 := move{a: &a1, b: &coord{y: 1, x: 1}}
+	m1 := move{a: a1, b: coord{y: 1, x: 1}}
 	a2 := a1.Copy()
-	m2 := move{a: &a2, b: &coord{y: 1, x: 1}}
+	m2 := move{a: a2, b: coord{y: 1, x: 1}}
 	if !m1.Equals(m2) {
 		t.Error("moves not equal")
 	}
