@@ -60,6 +60,12 @@ func (b board) GetMoves(c coord, bcm, wcm map[coord]bool) []move {
 		} else {
 			return b.GetQueenMoves(wcm, bcm, c)
 		}
+	} else if IsKnight(piece) {
+		if blk {
+			return b.GetKnightMoves(bcm, wcm, c)
+		} else {
+			return b.GetKnightMoves(wcm, bcm, c)
+		}
 	} else {
 		panic("Not implemented")
 	}
@@ -186,4 +192,21 @@ func (b board) GetRookMoves(friends, enemies map[coord]bool, c coord) []move {
 
 func (b board) GetQueenMoves(friends, enemies map[coord]bool, c coord) []move {
 	return append(b.GetBishopMoves(friends, enemies, c), b.GetRookMoves(friends, enemies, c)...)
+}
+
+func (b board) GetKnightMoves(friends, enemies map[coord]bool, c coord) []move {
+	out := make([]move, 0, 4)
+	var newSquare coord
+	for _, sign := range [2]int{-1, 1} {
+		for _, vector := range [4]coord{{y: 1, x: 2}, {y: 2, x: 1}, {y: -1, x: 2}, {y: -2, x: 1}} {
+			newSquare = c.Add(sign*vector.y, sign*vector.x)
+			if newSquare.IsInBoard() {
+				_, hasFriend := friends[newSquare]
+				if !hasFriend {
+					out = append(out, move{a: c, b: newSquare})
+				}
+			}
+		}
+	}
+	return out
 }
