@@ -44,33 +44,33 @@ func (b board) GetMoves(c coord, bcm, wcm map[coord]bool) []move {
 		}
 	} else if IsBishop(piece) {
 		if blk {
-			return b.GetBishopMoves(bcm, wcm, c)
+			return GetBishopMoves(bcm, wcm, c)
 		} else {
-			return b.GetBishopMoves(wcm, bcm, c)
+			return GetBishopMoves(wcm, bcm, c)
 		}
 	} else if IsRook(piece) {
 		if blk {
-			return b.GetRookMoves(bcm, wcm, c)
+			return GetRookMoves(bcm, wcm, c)
 		} else {
-			return b.GetRookMoves(wcm, bcm, c)
+			return GetRookMoves(wcm, bcm, c)
 		}
 	} else if IsQueen(piece) {
 		if blk {
-			return b.GetQueenMoves(bcm, wcm, c)
+			return GetQueenMoves(bcm, wcm, c)
 		} else {
-			return b.GetQueenMoves(wcm, bcm, c)
+			return GetQueenMoves(wcm, bcm, c)
 		}
 	} else if IsKnight(piece) {
 		if blk {
-			return b.GetKnightMoves(bcm, wcm, c)
+			return GetKnightMoves(bcm, wcm, c)
 		} else {
-			return b.GetKnightMoves(wcm, bcm, c)
+			return GetKnightMoves(wcm, bcm, c)
 		}
 	} else if IsKing(piece) {
 		if blk {
-			return b.GetKingMoves(bcm, wcm, c)
+			return GetKingMoves(bcm, wcm, c)
 		} else {
-			return b.GetKingMoves(wcm, bcm, c)
+			return GetKingMoves(wcm, bcm, c)
 		}
 	} else {
 		panic("Not implemented")
@@ -150,7 +150,7 @@ func getPawnPromotionMoves(from, to coord, promotionCodes *[]rune) []move {
 	return out
 }
 
-func (b board) GetBishopMoves(friends, enemies map[coord]bool, c coord) []move {
+func GetBishopMoves(friends, enemies map[coord]bool, c coord) []move {
 	out := make([]move, 0, 3)
 	var newSquare coord
 	// vectors used to add diagonal moves to the starting square
@@ -174,7 +174,7 @@ func (b board) GetBishopMoves(friends, enemies map[coord]bool, c coord) []move {
 	return out
 }
 
-func (b board) GetRookMoves(friends, enemies map[coord]bool, c coord) []move {
+func GetRookMoves(friends, enemies map[coord]bool, c coord) []move {
 	out := make([]move, 0, 3)
 	var newSquare coord
 	// vectors used to add diagonal moves to the starting square
@@ -196,11 +196,11 @@ func (b board) GetRookMoves(friends, enemies map[coord]bool, c coord) []move {
 	return out
 }
 
-func (b board) GetQueenMoves(friends, enemies map[coord]bool, c coord) []move {
-	return append(b.GetBishopMoves(friends, enemies, c), b.GetRookMoves(friends, enemies, c)...)
+func GetQueenMoves(friends, enemies map[coord]bool, c coord) []move {
+	return append(GetBishopMoves(friends, enemies, c), GetRookMoves(friends, enemies, c)...)
 }
 
-func (b board) GetKnightMoves(friends, enemies map[coord]bool, c coord) []move {
+func GetKnightMoves(friends, enemies map[coord]bool, c coord) []move {
 	out := make([]move, 0, 4)
 	var newSquare coord
 	for _, sign := range [2]int{-1, 1} {
@@ -217,7 +217,7 @@ func (b board) GetKnightMoves(friends, enemies map[coord]bool, c coord) []move {
 	return out
 }
 
-func (b board) GetKingMoves(friends, enemies map[coord]bool, c coord) []move {
+func GetKingMoves(friends, enemies map[coord]bool, c coord) []move {
 	out := make([]move, 0, 2)
 	var newSquare coord
 	for _, sign := range [2]int{-1, 1} {
