@@ -108,6 +108,13 @@ func TestGetQueenMoves(t *testing.T) {
 	}
 }
 
+func TestGetKnightMoves(t *testing.T) {
+	err := testMoveFile(boardsDir + "knightTests.txt")
+	if err != "" {
+		t.Error(err)
+	}
+}
+
 // func TestGetBoardFromString(t *testing.T) {
 // 	b := GetBoardFromString(StartingBoard)
 // 	fmt.Println(b)
