@@ -131,6 +131,17 @@ class MyAppState extends ChangeNotifier {
   void printBoard() {
     print(boardString);
   }
+  void clearPieces() {
+    for (int i= 0; i<board.length; i++) {
+      for (int j=0; j<board[0].length; j++) {
+        String p = board[i][j];
+        if (p != BlackKing && p != WhiteKing) {
+          board[i][j] = Space;
+        }
+      }
+    }
+    notifyListeners();
+  }
 }
 
 class MyHomePage extends StatelessWidget {
@@ -139,24 +150,31 @@ class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-
     return Scaffold(
       body: Column( 
         //mainAxisAlignment: MainAxisAlignment.center,  
         children: [
           Text(appState.current.asLowerCase),
-          ElevatedButton(
-            onPressed: () {
-              appState.printBoard();
-            },
-            child: Text('Print'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              appState.unstageSetPiece();
-            },
-            child: Text('Unselect Piece'),
-          ),
+          Row(children: [
+            ElevatedButton(
+              onPressed: () {
+                appState.printBoard();
+              },
+              child: Text('Print'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                appState.unstageSetPiece();
+              },
+              child: Text('Unselect\nPiece'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                appState.clearPieces();
+              },
+              child: Text('Delete all\nexcept kings'),
+            ),
+          ],)
           ] 
           + myBoard(appState),
       ),
