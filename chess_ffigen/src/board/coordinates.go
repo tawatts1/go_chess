@@ -26,3 +26,7 @@ func (c coord) Add(yadd, xadd int) coord {
 func (c1 coord) Equals(c2 coord) bool {
 	return c1.y == c2.y && c1.x == c2.x
 }
+
+func (c coord) IsInBoard() bool {
+	return c.x >= 0 && c.y >= 0 && c.x < BoardWidth && c.y < BoardHeight
+}

@@ -7,11 +7,12 @@ import (
 	"github.com/tawatts1/go_chess/utility"
 )
 
-type board struct {
-	grid [8][8]rune
-}
-
 const StartingBoard string = "onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO"
+const BoardHeight, BoardWidth = 8, 8
+
+type board struct {
+	grid [BoardHeight][BoardWidth]rune
+}
 
 func check(e error) {
 	if e != nil {
