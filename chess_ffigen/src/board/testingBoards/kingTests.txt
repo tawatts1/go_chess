@@ -1,0 +1,19 @@
+#Make sure kings can move one space
+new,onbq0bno0ppppkpp00000000p0000000000K000000000P00PPPPP0PPONBQ0BNO
+has,1,5,0,4,,
+has,1,5,2,4,,
+has,1,5,2,5,,
+has,1,5,2,6,,
+num,1,5,4
+has,4,3,5,4,,
+has,4,3,3,2,,
+has,4,3,4,4,,
+num,4,3,8
+#verify kings cannot move into check
+#new,0000k0000N0ppp00000000000000K000000000000000n000000PPP0000000000
+#has,0,4,0,5,,
+#num,0,4,1
+#has,3,4,4,3,,
+#has,3,4,4,5,,
+#has,3,4,4,4,,
+#num,3,4,3
