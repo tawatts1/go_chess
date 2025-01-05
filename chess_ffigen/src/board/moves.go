@@ -26,8 +26,10 @@ func (m move) String() string {
 }
 
 const EnPassant rune = 'e'
-const PawnPromotion rune = 'p'
 const CastleBridge rune = 'c'
+
+var BlackPawnPromotion = &[]rune{BlackKnight, BlackBishop, BlackRookNC, BlackQueen}
+var WhitePawnPromotion = &[]rune{WhiteKnight, WhiteBishop, WhiteRookNC, WhiteQueen}
 
 func (b board) GetMoves(c coord, bcm, wcm map[coord]bool) []move {
 	piece := b.GetPiece(c)
@@ -47,15 +49,28 @@ func (b board) GetMoves(c coord, bcm, wcm map[coord]bool) []move {
 
 func (b board) GetPawnMoves(friends, enemies map[coord]bool, c coord, heading int) []move {
 	out := make([]move, 0, 2)
+	isBlack := heading == 1
 	//directly ahead of pawn
 	forward := c.Copy().Add(heading, 0)
 	_, hasFriend := friends[forward]
 	_, hasEnemy := enemies[forward]
 	if !hasFriend && !hasEnemy {
-		out = append(out, move{a: &c, b: &forward})
+		if (isBlack && c.y == 6) ||
+			(!isBlack && c.y == 1) {
+			var promotions *[]rune
+			if isBlack {
+				promotions = BlackPawnPromotion
+			} else {
+				promotions = WhitePawnPromotion
+			}
+			out = append(out, getPawnPromotionMoves(c, forward, promotions)...)
+		} else {
+			out = append(out, move{a: &c, b: &forward})
+		}
+
 		// two steps ahead of pawn, for opening
-		if (heading == -1 && c.y == 6) ||
-			(heading == 1 && c.y == 1) {
+		if (!isBlack && c.y == 6) ||
+			(isBlack && c.y == 1) {
 			forward2 := c.Copy().Add(heading*2, 0)
 			_, hasFriend2 := friends[forward2]
 			_, hasEnemy2 := enemies[forward2]
@@ -78,8 +93,29 @@ func (b board) GetPawnMoves(friends, enemies map[coord]bool, c coord, heading in
 		diagonalSquare := c.Copy().Add(heading, lr)
 		_, hasEnemy := enemies[diagonalSquare]
 		if hasEnemy {
-			out = append(out, move{a: &c, b: &diagonalSquare})
+			if (isBlack && c.y == 6) ||
+				(!isBlack && c.y == 1) {
+				var promotions *[]rune
+				if isBlack {
+					promotions = BlackPawnPromotion
+				} else {
+					promotions = WhitePawnPromotion
+				}
+				out = append(out, getPawnPromotionMoves(c, diagonalSquare, promotions)...)
+			} else {
+				out = append(out, move{a: &c, b: &diagonalSquare})
+			}
 		}
+	}
+	return out
+}
+
+func getPawnPromotionMoves(from, to coord, promotionCodes *[]rune) []move {
+	//when promoted, pawns can become knight, bishop, rook or queen.
+	numPromotions := len(*promotionCodes)
+	var out = make([]move, numPromotions, numPromotions)
+	for i := range numPromotions {
+		out[i] = move{a: &from, b: &to, special: (*promotionCodes)[i]}
 	}
 	return out
 }
