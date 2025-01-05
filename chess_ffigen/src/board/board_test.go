@@ -87,6 +87,13 @@ func TestGetPawnMoves(t *testing.T) {
 	}
 }
 
+func TestGetBishopMoves(t *testing.T) {
+	err := testMoveFile(boardsDir + "bishopTests.txt")
+	if err != "" {
+		t.Error(err)
+	}
+}
+
 // func TestGetBoardFromString(t *testing.T) {
 // 	b := GetBoardFromString(StartingBoard)
 // 	fmt.Println(b)
