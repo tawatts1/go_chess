@@ -31,47 +31,24 @@ const CastleBridge rune = 'c'
 var BlackPawnPromotion = &[]rune{BlackKnight, BlackBishop, BlackRookNC, BlackQueen}
 var WhitePawnPromotion = &[]rune{WhiteKnight, WhiteBishop, WhiteRookNC, WhiteQueen}
 
-func (b board) GetMoves(c coord, bcm, wcm map[coord]bool) []move {
+func (b board) GetMoves(friends, enemies map[coord]bool, c coord) []move {
 	piece := b.GetPiece(c)
-	blk := IsBlack(piece)
 	if IsPawn(piece) {
-		if blk {
-			heading := 1
-			return b.GetPawnMoves(bcm, wcm, c, heading)
-		} else {
-			heading := -1
-			return b.GetPawnMoves(wcm, bcm, c, heading)
+		heading := -1
+		if IsBlack(piece) {
+			heading = 1
 		}
+		return b.GetPawnMoves(friends, enemies, c, heading)
 	} else if IsBishop(piece) {
-		if blk {
-			return GetBishopMoves(bcm, wcm, c)
-		} else {
-			return GetBishopMoves(wcm, bcm, c)
-		}
+		return GetBishopMoves(friends, enemies, c)
 	} else if IsRook(piece) {
-		if blk {
-			return GetRookMoves(bcm, wcm, c)
-		} else {
-			return GetRookMoves(wcm, bcm, c)
-		}
+		return GetRookMoves(friends, enemies, c)
 	} else if IsQueen(piece) {
-		if blk {
-			return GetQueenMoves(bcm, wcm, c)
-		} else {
-			return GetQueenMoves(wcm, bcm, c)
-		}
+		return GetQueenMoves(friends, enemies, c)
 	} else if IsKnight(piece) {
-		if blk {
-			return GetKnightMoves(bcm, wcm, c)
-		} else {
-			return GetKnightMoves(wcm, bcm, c)
-		}
+		return GetKnightMoves(friends, enemies, c)
 	} else if IsKing(piece) {
-		if blk {
-			return GetKingMoves(bcm, wcm, c)
-		} else {
-			return GetKingMoves(wcm, bcm, c)
-		}
+		return GetKingMoves(friends, enemies, c)
 	} else {
 		panic("Not implemented")
 	}
@@ -232,4 +209,17 @@ func GetKingMoves(friends, enemies map[coord]bool, c coord) []move {
 		}
 	}
 	return out
+}
+
+func (b board) IsInCheck(friends, enemies map[coord]bool) bool {
+	king_coord := b.GetKingCoord(friends)
+	for enemy_coord := range enemies {
+		// note that we are checking what moves the enemy has, so the friends and enemies maps are switched.
+		for _, m := range b.GetMoves(enemies, friends, enemy_coord) {
+			if king_coord.Equals(m.b) {
+				return true
+			}
+		}
+	}
+	return false
 }
