@@ -107,3 +107,12 @@ func (b board) GetWhiteCoordMap() map[coord]bool {
 func (b board) GetPiece(c coord) rune {
 	return b.grid[c.y][c.x]
 }
+
+func (b board) GetKingCoord(friends map[coord]bool) coord {
+	for c := range friends {
+		if IsKing(b.GetPiece(c)) {
+			return c
+		}
+	}
+	panic("King not found!")
+}

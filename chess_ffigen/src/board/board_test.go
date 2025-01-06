@@ -44,7 +44,12 @@ func testMoveFile(fname string) string {
 			} else {
 				c = coord{y: y_, x: x_}
 			}
-			actual_len := len(b.GetMoves(c, bcm, wcm))
+			var actual_len int
+			if IsBlack(b.GetPiece(c)) {
+				actual_len = len(b.GetMoves(bcm, wcm, c))
+			} else {
+				actual_len = len(b.GetMoves(wcm, bcm, c))
+			}
 			if actual_len != expected_len {
 				return fmt.Sprintf("%v: expected %v, got %v", lineIndex+1, expected_len, actual_len)
 			}
@@ -71,7 +76,13 @@ func testMoveFile(fname string) string {
 				}
 			}
 			m = move{a: c1, b: c2, special: special}
-			moves := b.GetMoves(c1, bcm, wcm)
+			var moves []move
+			if IsBlack(b.GetPiece(c1)) {
+				moves = b.GetMoves(bcm, wcm, c1)
+			} else {
+				moves = b.GetMoves(wcm, bcm, c1)
+			}
+
 			if !AnyEqual(moves, m) {
 				return fmt.Sprintf("%v: expected %v to contain %v", lineIndex+1, moves, m)
 			}
@@ -120,6 +131,23 @@ func TestGetKingMoves(t *testing.T) {
 	if err != "" {
 		t.Error(err)
 	}
+}
+
+func TestIsInCheck(t *testing.T) {
+	test := func(bstring string, whiteresult, blackresult bool) {
+		b := GetBoardFromString(bstring)
+		bcm := b.GetBlackCoordMap()
+		wcm := b.GetWhiteCoordMap()
+		if b.IsInCheck(wcm, bcm) != whiteresult {
+			t.Error("failed to detect check")
+		}
+		if b.IsInCheck(bcm, wcm) != blackresult {
+			t.Error("Detected check when there was none")
+		}
+	}
+	test("onbq00no0ppppkbp00000000p0000000000K000000000P00PPPPP0PPONBQ0BNO", true, false)
+	test("0000000000000k000000P00000000000000000b0000000000000NPP00r000K00", true, true)
+	test("0000000Q00000k00000Q0P000pN00Q000Pn00qb0000000000000NPPr0R000K00", false, false)
 }
 
 // func TestGetBoardFromString(t *testing.T) {
