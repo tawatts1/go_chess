@@ -55,6 +55,13 @@ var whiteMap = map[rune]bool{
 	WhitePawnEP: true,
 }
 
+var CastleMap = map[rune]rune{
+	WhiteRookC: WhiteRookNC,
+	BlackRookC: BlackRookNC,
+	BlackKing:  BlackRookC,
+	WhiteKing:  WhiteRookC,
+}
+
 func IsPawn(p rune) bool {
 	switch p {
 	case BlackPawn:

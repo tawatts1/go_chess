@@ -43,9 +43,14 @@ func (b board) GetMoves(friends, enemies map[coord]bool, c coord, filterIllegalM
 	} else if IsBishop(piece) {
 		out = GetBishopMoves(friends, enemies, c)
 	} else if IsRook(piece) {
-		out = GetRookMoves(friends, enemies, c)
+		if IsRookCastleable(piece) {
+			out = b.GetRookMoves(friends, enemies, c, true)
+		} else {
+			out = b.GetRookMoves(friends, enemies, c, false)
+		}
+
 	} else if IsQueen(piece) {
-		out = GetQueenMoves(friends, enemies, c)
+		out = b.GetQueenMoves(friends, enemies, c)
 	} else if IsKnight(piece) {
 		out = GetKnightMoves(friends, enemies, c)
 	} else if IsKing(piece) {
@@ -56,7 +61,7 @@ func (b board) GetMoves(friends, enemies map[coord]bool, c coord, filterIllegalM
 	if filterIllegalMoves {
 		out = FilterIllegalMoves(b, out, piece)
 	}
-	//Now add in bridge moves manually
+	//Now add in castle/bridge moves manually
 	if IsKing(piece) && (!filterIllegalMoves || !b.IsInCheck(friends, enemies, b.GetKingCoord(friends))) {
 		castleMoves := make([]move, 0, 1)
 		if IsWhite(piece) && c.Equals(coord{y: 7, x: 4}) {
@@ -65,12 +70,12 @@ func (b board) GetMoves(friends, enemies map[coord]bool, c coord, filterIllegalM
 					b.IsLocEmpty(7, 1) &&
 					b.IsLocEmpty(7, 2) &&
 					b.IsLocEmpty(7, 3) &&
-					(!filterIllegalMoves || AnyEqual(out, move{a: c, b: coord{y: 7, x: 3}})) {
+					(!filterIllegalMoves || AnyEqual(out, move{a: c, b: coord{y: 7, x: 3}, special: WhiteKing})) {
 					castleMoves = append(castleMoves, move{a: c, b: coord{y: 7, x: 2}, special: CastleBridge})
 				} else if rook_coord.Equals(BottomRight) &&
 					b.IsLocEmpty(7, 5) &&
 					b.IsLocEmpty(7, 6) &&
-					(!filterIllegalMoves || AnyEqual(out, move{a: c, b: coord{y: 7, x: 5}})) {
+					(!filterIllegalMoves || AnyEqual(out, move{a: c, b: coord{y: 7, x: 5}, special: WhiteKing})) {
 					castleMoves = append(castleMoves, move{a: c, b: coord{y: 7, x: 6}, special: CastleBridge})
 				}
 			}
@@ -80,12 +85,12 @@ func (b board) GetMoves(friends, enemies map[coord]bool, c coord, filterIllegalM
 					b.IsLocEmpty(0, 1) &&
 					b.IsLocEmpty(0, 2) &&
 					b.IsLocEmpty(0, 3) &&
-					(!filterIllegalMoves || AnyEqual(out, move{a: c, b: coord{y: 0, x: 3}})) {
+					(!filterIllegalMoves || AnyEqual(out, move{a: c, b: coord{y: 0, x: 3}, special: BlackKing})) {
 					castleMoves = append(castleMoves, move{a: c, b: coord{y: 0, x: 2}, special: CastleBridge})
 				} else if rook_coord.Equals(TopRight) &&
 					b.IsLocEmpty(0, 5) &&
 					b.IsLocEmpty(0, 6) &&
-					(!filterIllegalMoves || AnyEqual(out, move{a: c, b: coord{y: 0, x: 5}})) {
+					(!filterIllegalMoves || AnyEqual(out, move{a: c, b: coord{y: 0, x: 5}, special: BlackKing})) {
 					castleMoves = append(castleMoves, move{a: c, b: coord{y: 0, x: 6}, special: CastleBridge})
 				}
 			}
@@ -216,8 +221,9 @@ func GetBishopMoves(friends, enemies map[coord]bool, c coord) []move {
 	return out
 }
 
-func GetRookMoves(friends, enemies map[coord]bool, c coord) []move {
+func (b board) GetRookMoves(friends, enemies map[coord]bool, c coord, isCastleable bool) []move {
 	out := make([]move, 0, 3)
+	piece := b.GetPiece(c)
 	var newSquare coord
 	// vectors used to add diagonal moves to the starting square
 	vectors := [4]coord{{y: 1, x: 0}, {y: -1, x: 0}, {y: 0, x: 1}, {y: 0, x: -1}}
@@ -228,7 +234,11 @@ func GetRookMoves(friends, enemies map[coord]bool, c coord) []move {
 				break // with the other vectors
 			}
 			//add move whether there is an enemy there or it is empty
-			out = append(out, move{a: c, b: newSquare})
+			if isCastleable {
+				out = append(out, move{a: c, b: newSquare, special: piece})
+			} else {
+				out = append(out, move{a: c, b: newSquare})
+			}
 			_, hasEnemy := enemies[newSquare]
 			if hasEnemy {
 				break // with the other vectors
@@ -238,8 +248,8 @@ func GetRookMoves(friends, enemies map[coord]bool, c coord) []move {
 	return out
 }
 
-func GetQueenMoves(friends, enemies map[coord]bool, c coord) []move {
-	return append(GetBishopMoves(friends, enemies, c), GetRookMoves(friends, enemies, c)...)
+func (b board) GetQueenMoves(friends, enemies map[coord]bool, c coord) []move {
+	return append(GetBishopMoves(friends, enemies, c), b.GetRookMoves(friends, enemies, c, false)...)
 }
 
 func GetKnightMoves(friends, enemies map[coord]bool, c coord) []move {
@@ -261,6 +271,7 @@ func GetKnightMoves(friends, enemies map[coord]bool, c coord) []move {
 
 func (b board) GetKingMoves(friends, enemies map[coord]bool, c coord) []move {
 	out := make([]move, 0, 2)
+	piece := b.GetPiece(c)
 	var newSquare coord
 	for _, sign := range [2]int{-1, 1} {
 		for _, vector := range [4]coord{{y: 1, x: 1}, {y: 1, x: 0}, {y: 0, x: 1}, {y: -1, x: 1}} {
@@ -268,7 +279,11 @@ func (b board) GetKingMoves(friends, enemies map[coord]bool, c coord) []move {
 			if newSquare.IsInBoard() {
 				_, hasFriend := friends[newSquare]
 				if !hasFriend {
-					out = append(out, move{a: c, b: newSquare})
+					if c.Equals(BlackKingHome) || c.Equals(WhiteKingHome) {
+						out = append(out, move{a: c, b: newSquare, special: piece})
+					} else {
+						out = append(out, move{a: c, b: newSquare})
+					}
 				}
 			}
 		}
@@ -298,6 +313,44 @@ func GetBoardAfterMove(b board, m move) board {
 		out.grid[a.y][b.x] = Space
 		out.grid[a.y][a.x] = Space
 		return out
+	} else if m.special == CastleBridge {
+		a, b := m.a, m.b
+		out = out.SimpleMove(a, b)
+		if b.x == 2 {
+			rook_destination := b.Add(0, 1)
+			out = out.SimpleMove(b.Add(0, -2), rook_destination)
+		} else if b.x == 6 {
+			rook_destination := b.Add(0, -1)
+			out = out.SimpleMove(b.Add(0, 1), rook_destination)
+			castlingRookCode := out.grid[rook_destination.y][rook_destination.x]
+			for i := range BoardHeight {
+				for j := range BoardWidth {
+					if out.grid[i][j] == castlingRookCode {
+						out.grid[i][j] = CastleMap[castlingRookCode]
+					}
+				}
+			}
+		} else {
+			panic("Bad bridge move")
+		}
+		return out
+	} else if m.special == BlackKing || m.special == WhiteKing {
+		//black/white king was moving from home position, check for castleable rooks and make then not castleable.
+		out = out.SimpleMove(m.a, m.b)
+		castleableRookCode := CastleMap[m.special]
+		for i := range BoardHeight {
+			for j := range BoardWidth {
+				if out.grid[i][j] == castleableRookCode {
+					out.grid[i][i] = CastleMap[castleableRookCode]
+				}
+			}
+		}
+		return out
+	} else if m.special == BlackRookC || m.special == WhiteRookC {
+		a, b := m.a, m.b
+		out.grid[b.y][b.x] = CastleMap[m.special]
+		out.grid[a.y][a.x] = Space
+		return out
 	}
 	for _, promotion := range append(BlackPawnPromotion, WhitePawnPromotion...) {
 		if m.special == promotion {
@@ -307,17 +360,6 @@ func GetBoardAfterMove(b board, m move) board {
 			return out
 		}
 	}
-	if m.special == CastleBridge {
-		a, b := m.a, m.b
-		out = out.SimpleMove(a, b)
-		if b.x == 2 {
-			out = out.SimpleMove(b.Add(0, -2), b.Add(0, 1))
-		} else if b.x == 6 {
-			out = out.SimpleMove(b.Add(0, 1), b.Add(0, -1))
-		} else {
-			panic("Bad bridge move")
-		}
-		return out
-	}
+
 	panic("Not implemented - special move")
 }
