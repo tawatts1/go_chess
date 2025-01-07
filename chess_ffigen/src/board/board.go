@@ -14,19 +14,40 @@ type board struct {
 	grid [BoardHeight][BoardWidth]rune
 }
 
+func (b board) Copy() board {
+	return board{grid: b.grid}
+}
+
+func (b1 board) Equals(b2 board) bool {
+	for i := range BoardHeight {
+		for j := range BoardWidth {
+			if b1.grid[i][j] != b2.grid[i][j] {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (b board) SimpleMove(c1, c2 coord) board {
+	b.grid[c2.y][c2.x] = b.grid[c1.y][c1.x]
+	b.grid[c1.y][c1.x] = Space
+	return b
+}
+
 func check(e error) {
 	if e != nil {
 		panic(e)
 	}
 }
 
-func GetBoardFromFile(fname string) *board {
+func GetBoardFromFile(fname string) board {
 	data, err := os.ReadFile(fname)
 	check(err)
 	return GetBoardFromString(string(data))
 }
 
-func GetBoardFromString(str string) *board {
+func GetBoardFromString(str string) board {
 	s := utility.RemoveWhitespace(str)
 	b := board{}
 	l, w := len(b.grid), len(b.grid[0])
@@ -37,7 +58,7 @@ func GetBoardFromString(str string) *board {
 		}
 		b.grid[i/w][i%w] = r
 	}
-	return &b
+	return b
 }
 
 func (b board) String() string {

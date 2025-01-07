@@ -21,7 +21,7 @@ func testMoveFile(fname string) string {
 	data, err := os.ReadFile(fname)
 	check(err)
 	lines := strings.Split(string(data), "\n")
-	var b *board
+	var b board
 	var bcm, wcm map[coord]bool
 	for lineIndex, line := range lines {
 		//fmt.Println(line)
@@ -46,9 +46,9 @@ func testMoveFile(fname string) string {
 			}
 			var actual_len int
 			if IsBlack(b.GetPiece(c)) {
-				actual_len = len(b.GetMoves(bcm, wcm, c))
+				actual_len = len(b.GetMoves(bcm, wcm, c, true))
 			} else {
-				actual_len = len(b.GetMoves(wcm, bcm, c))
+				actual_len = len(b.GetMoves(wcm, bcm, c, true))
 			}
 			if actual_len != expected_len {
 				return fmt.Sprintf("%v: expected %v, got %v", lineIndex+1, expected_len, actual_len)
@@ -78,9 +78,9 @@ func testMoveFile(fname string) string {
 			m = move{a: c1, b: c2, special: special}
 			var moves []move
 			if IsBlack(b.GetPiece(c1)) {
-				moves = b.GetMoves(bcm, wcm, c1)
+				moves = b.GetMoves(bcm, wcm, c1, true)
 			} else {
-				moves = b.GetMoves(wcm, bcm, c1)
+				moves = b.GetMoves(wcm, bcm, c1, true)
 			}
 
 			if !AnyEqual(moves, m) {
@@ -133,21 +133,39 @@ func TestGetKingMoves(t *testing.T) {
 	}
 }
 
+func TestMovingInOutOfCheck(t *testing.T) {
+	err := testMoveFile(boardsDir + "checkTests.txt")
+	if err != "" {
+		t.Error(err)
+	}
+}
+
 func TestIsInCheck(t *testing.T) {
 	test := func(bstring string, whiteresult, blackresult bool) {
 		b := GetBoardFromString(bstring)
+		//fmt.Println(b)
 		bcm := b.GetBlackCoordMap()
 		wcm := b.GetWhiteCoordMap()
-		if b.IsInCheck(wcm, bcm) != whiteresult {
+		if b.IsInCheck(wcm, bcm, b.GetKingCoord(wcm)) != whiteresult {
 			t.Error("failed to detect check")
 		}
-		if b.IsInCheck(bcm, wcm) != blackresult {
+		if b.IsInCheck(bcm, wcm, b.GetKingCoord(bcm)) != blackresult {
 			t.Error("Detected check when there was none")
 		}
 	}
 	test("onbq00no0ppppkbp00000000p0000000000K000000000P00PPPPP0PPONBQ0BNO", true, false)
 	test("0000000000000k000000P00000000000000000b0000000000000NPP00r000K00", true, true)
 	test("0000000Q00000k00000Q0P000pN00Q000Pn00qb0000000000000NPPr0R000K00", false, false)
+}
+
+func TestGetBoardAfterMove(t *testing.T) {
+	b1 := GetBoardFromString("o000k00op0ppnpbpbpn00qp00000p0000000P0000QNP0P0NP00BB0PPO000K00O")
+	b2 := GetBoardAfterMove(b1, move{a: coord{y: 5, x: 1}, b: coord{y: 1, x: 5}})
+
+	if b2.String() != GetBoardFromString("o000k00op0ppnQbpbpn00qp00000p0000000P00000NP0P0NP00BB0PPO000K00O").String() {
+		fmt.Println(b2)
+		t.Error("Move not effective")
+	}
 }
 
 // func TestGetBoardFromString(t *testing.T) {
