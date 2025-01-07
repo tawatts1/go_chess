@@ -7,6 +7,12 @@ type coord struct {
 	y, x int
 }
 
+var UnsetCoord = coord{y: -1, x: -1}
+var BottomLeft = coord{y: BoardHeight - 1, x: 0}
+var BottomRight = coord{y: BoardHeight - 1, x: BoardWidth - 1}
+var TopLeft = coord{y: 0, x: 0}
+var TopRight = coord{y: 0, x: BoardWidth - 1}
+
 func (c coord) String() string {
 	return fmt.Sprintf("(y:%v,x:%v)", c.y, c.x)
 }

@@ -137,3 +137,21 @@ func (b board) GetKingCoord(friends map[coord]bool) coord {
 	}
 	panic("King not found!")
 }
+
+func (b board) GetCastleableRooks(friends map[coord]bool) []coord {
+	out := make([]coord, 0, 2)
+	for c := range friends {
+		if IsRookCastleable(b.GetPiece(c)) {
+			out = append(out, c)
+		}
+	}
+	return out
+}
+
+func (b board) IsCoordEmpty(c coord) bool {
+	return b.IsLocEmpty(c.y, c.x)
+}
+
+func (b board) IsLocEmpty(y, x int) bool {
+	return b.grid[y][x] == Space
+}
