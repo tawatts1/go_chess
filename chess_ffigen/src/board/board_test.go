@@ -9,6 +9,7 @@ import (
 )
 
 var boardsDir string = "testingBoards/"
+var verbose = false
 
 func hasError(e error) bool {
 	if e != nil {
@@ -24,7 +25,9 @@ func testMoveFile(fname string) string {
 	var b board
 	var bcm, wcm map[coord]bool
 	for lineIndex, line := range lines {
-		//fmt.Println(line)
+		if verbose {
+			fmt.Println(line)
+		}
 		if len(line) < 5 || []rune(line)[0] == '#' {
 			continue
 		}
@@ -33,7 +36,10 @@ func testMoveFile(fname string) string {
 			b = GetBoardFromString(args[1])
 			bcm = b.GetBlackCoordMap()
 			wcm = b.GetWhiteCoordMap()
-			//fmt.Println(b)
+			if verbose {
+				fmt.Println(b)
+			}
+
 		} else if args[0] == "num" {
 			y_, ok1 := strconv.Atoi(args[1])
 			x_, ok2 := strconv.Atoi(args[2])
@@ -169,6 +175,7 @@ func TestGetBoardAfterMove(t *testing.T) {
 		b1 := GetBoardFromString(b1str)
 		b2 := GetBoardAfterMove(b1, m)
 		if b2.String() != GetBoardFromString(b2str).String() {
+			fmt.Println(GetBoardFromString(b2str).String())
 			fmt.Println(b2)
 			t.Error("Move not effective")
 		}
@@ -176,7 +183,15 @@ func TestGetBoardAfterMove(t *testing.T) {
 	test("o000k00op0ppnpbpbpn00qp00000p0000000P0000QNP0P0NP00BB0PPO000K00O",
 		"o000k00op0ppnQbpbpn00qp00000p0000000P00000NP0P0NP00BB0PPO000K00O",
 		move{a: coord{y: 5, x: 1}, b: coord{y: 1, x: 5}})
-	//test()
+	test("onbqkbnopppp0ppp000000000000p0000000P00000000000PPPP0PPPONBQK00O",
+		"onbqkbnopppp0ppp000000000000p0000000P00000000000PPPP0PPPRNBQ0RK0",
+		move{a: coord{y: 7, x: 4}, b: coord{y: 7, x: 6}, special: CastleBridge})
+	test("onbqkbnopppp0ppp000000000000p0000000P00000000000PPPP0PPPRNBQK00O",
+		"onbqkbnopppp0ppp000000000000p0000000P00000000000PPPPKPPPRNBQ000R",
+		move{a: coord{y: 7, x: 4}, b: coord{y: 6, x: 4}, special: WhiteKing})
+	test("onbqk00opppp0ppp00000n0000b0p000000000000000P000PPPP0PPPONBQK0R0",
+		"rnbq0rk0pppp0ppp00000n0000b0p000000000000000P000PPPP0PPPONBQK0R0",
+		move{a: coord{y: 0, x: 4}, b: coord{y: 0, x: 6}, special: CastleBridge})
 }
 
 // func TestGetBoardFromString(t *testing.T) {

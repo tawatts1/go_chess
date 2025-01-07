@@ -12,6 +12,8 @@ var BottomLeft = coord{y: BoardHeight - 1, x: 0}
 var BottomRight = coord{y: BoardHeight - 1, x: BoardWidth - 1}
 var TopLeft = coord{y: 0, x: 0}
 var TopRight = coord{y: 0, x: BoardWidth - 1}
+var WhiteKingHome = coord{y: BoardHeight - 1, x: 4}
+var BlackKingHome = coord{y: 0, x: 4}
 
 func (c coord) String() string {
 	return fmt.Sprintf("(y:%v,x:%v)", c.y, c.x)
