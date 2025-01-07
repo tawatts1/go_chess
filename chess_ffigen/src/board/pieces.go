@@ -95,6 +95,10 @@ func IsRook(p rune) bool {
 	}
 	return false
 }
+
+func IsRookCastleable(p rune) bool {
+	return p == BlackRookC || p == WhiteRookC
+}
 func IsQueen(p rune) bool {
 	if p == BlackQueen || p == WhiteQueen {
 		return true

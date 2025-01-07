@@ -140,6 +140,12 @@ func TestMovingInOutOfCheck(t *testing.T) {
 	}
 }
 
+func TestCastleMoves(t *testing.T) {
+	err := testMoveFile(boardsDir + "castleTests.txt")
+	if err != "" {
+		t.Error(err)
+	}
+}
 func TestIsInCheck(t *testing.T) {
 	test := func(bstring string, whiteresult, blackresult bool) {
 		b := GetBoardFromString(bstring)
@@ -159,13 +165,18 @@ func TestIsInCheck(t *testing.T) {
 }
 
 func TestGetBoardAfterMove(t *testing.T) {
-	b1 := GetBoardFromString("o000k00op0ppnpbpbpn00qp00000p0000000P0000QNP0P0NP00BB0PPO000K00O")
-	b2 := GetBoardAfterMove(b1, move{a: coord{y: 5, x: 1}, b: coord{y: 1, x: 5}})
-
-	if b2.String() != GetBoardFromString("o000k00op0ppnQbpbpn00qp00000p0000000P00000NP0P0NP00BB0PPO000K00O").String() {
-		fmt.Println(b2)
-		t.Error("Move not effective")
+	test := func(b1str, b2str string, m move) {
+		b1 := GetBoardFromString(b1str)
+		b2 := GetBoardAfterMove(b1, m)
+		if b2.String() != GetBoardFromString(b2str).String() {
+			fmt.Println(b2)
+			t.Error("Move not effective")
+		}
 	}
+	test("o000k00op0ppnpbpbpn00qp00000p0000000P0000QNP0P0NP00BB0PPO000K00O",
+		"o000k00op0ppnQbpbpn00qp00000p0000000P00000NP0P0NP00BB0PPO000K00O",
+		move{a: coord{y: 5, x: 1}, b: coord{y: 1, x: 5}})
+	//test()
 }
 
 // func TestGetBoardFromString(t *testing.T) {

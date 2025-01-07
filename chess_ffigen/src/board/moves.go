@@ -54,28 +54,69 @@ func (b board) GetMoves(friends, enemies map[coord]bool, c coord, filterIllegalM
 		panic("Not implemented")
 	}
 	if filterIllegalMoves {
-		filteredOut := make([]move, 0, len(out))
-		for i := 0; i < len(out); i++ {
-			m := out[i]
-			newBoard := GetBoardAfterMove(b, m)
-			wcm := newBoard.GetWhiteCoordMap()
-			bcm := newBoard.GetBlackCoordMap()
-			if IsWhite(piece) {
-				if !newBoard.IsInCheck(wcm, bcm, newBoard.GetKingCoord(wcm)) {
-					filteredOut = append(filteredOut, m)
-				}
-			} else {
-				// black piece moving
-				if !newBoard.IsInCheck(bcm, wcm, newBoard.GetKingCoord(bcm)) {
-					filteredOut = append(filteredOut, m)
+		out = FilterIllegalMoves(b, out, piece)
+	}
+	//Now add in bridge moves manually
+	if IsKing(piece) && (!filterIllegalMoves || !b.IsInCheck(friends, enemies, b.GetKingCoord(friends))) {
+		castleMoves := make([]move, 0, 1)
+		if IsWhite(piece) && c.Equals(coord{y: 7, x: 4}) {
+			for _, rook_coord := range b.GetCastleableRooks(friends) {
+				if rook_coord.Equals(BottomLeft) &&
+					b.IsLocEmpty(7, 1) &&
+					b.IsLocEmpty(7, 2) &&
+					b.IsLocEmpty(7, 3) &&
+					(!filterIllegalMoves || AnyEqual(out, move{a: c, b: coord{y: 7, x: 3}})) {
+					castleMoves = append(castleMoves, move{a: c, b: coord{y: 7, x: 2}, special: CastleBridge})
+				} else if rook_coord.Equals(BottomRight) &&
+					b.IsLocEmpty(7, 5) &&
+					b.IsLocEmpty(7, 6) &&
+					(!filterIllegalMoves || AnyEqual(out, move{a: c, b: coord{y: 7, x: 5}})) {
+					castleMoves = append(castleMoves, move{a: c, b: coord{y: 7, x: 6}, special: CastleBridge})
 				}
 			}
-
+		} else if IsBlack(piece) && c.Equals(coord{y: 0, x: 4}) {
+			for _, rook_coord := range b.GetCastleableRooks(friends) {
+				if rook_coord.Equals(TopLeft) &&
+					b.IsLocEmpty(0, 1) &&
+					b.IsLocEmpty(0, 2) &&
+					b.IsLocEmpty(0, 3) &&
+					(!filterIllegalMoves || AnyEqual(out, move{a: c, b: coord{y: 0, x: 3}})) {
+					castleMoves = append(castleMoves, move{a: c, b: coord{y: 0, x: 2}, special: CastleBridge})
+				} else if rook_coord.Equals(TopRight) &&
+					b.IsLocEmpty(0, 5) &&
+					b.IsLocEmpty(0, 6) &&
+					(!filterIllegalMoves || AnyEqual(out, move{a: c, b: coord{y: 0, x: 5}})) {
+					castleMoves = append(castleMoves, move{a: c, b: coord{y: 0, x: 6}, special: CastleBridge})
+				}
+			}
 		}
-		return filteredOut
-	} else {
-		return out
+		if filterIllegalMoves {
+			castleMoves = FilterIllegalMoves(b, castleMoves, piece)
+		}
+		out = append(out, castleMoves...)
 	}
+	return out
+}
+
+func FilterIllegalMoves(b board, moveSlice []move, piece rune) []move {
+	filteredOut := make([]move, 0, len(moveSlice))
+	for i := 0; i < len(moveSlice); i++ {
+		m := moveSlice[i]
+		newBoard := GetBoardAfterMove(b, m)
+		wcm := newBoard.GetWhiteCoordMap()
+		bcm := newBoard.GetBlackCoordMap()
+		if IsWhite(piece) {
+			if !newBoard.IsInCheck(wcm, bcm, newBoard.GetKingCoord(wcm)) {
+				filteredOut = append(filteredOut, m)
+			}
+		} else {
+			// black piece moving
+			if !newBoard.IsInCheck(bcm, wcm, newBoard.GetKingCoord(bcm)) {
+				filteredOut = append(filteredOut, m)
+			}
+		}
+	}
+	return filteredOut
 }
 
 func (b board) GetPawnMoves(friends, enemies map[coord]bool, c coord, heading int) []move {
@@ -265,6 +306,18 @@ func GetBoardAfterMove(b board, m move) board {
 			out.grid[a.y][a.x] = Space
 			return out
 		}
+	}
+	if m.special == CastleBridge {
+		a, b := m.a, m.b
+		out = out.SimpleMove(a, b)
+		if b.x == 2 {
+			out = out.SimpleMove(b.Add(0, -2), b.Add(0, 1))
+		} else if b.x == 6 {
+			out = out.SimpleMove(b.Add(0, 1), b.Add(0, -1))
+		} else {
+			panic("Bad bridge move")
+		}
+		return out
 	}
 	panic("Not implemented - special move")
 }

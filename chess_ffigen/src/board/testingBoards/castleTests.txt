@@ -1,0 +1,23 @@
+new,o000k00oppppqpppb0n0B00n00N0p000000000000BQb0NP00PPPPP0PO000K00O
+#black castles
+has,0,4,0,2,c,
+has,0,4,0,6,c,
+num,0,4,4
+#white castles
+has,7,4,7,2,c,
+has,7,4,7,6,c,
+num,7,4,4
+#test castle into check
+new,o000k00opppp00ppb0N0Bp0n0000p000000000000BqbPNP000PP0P0PO000K00O
+num,0,4,1
+num,7,4,2
+has,7,4,7,2,c,
+#test that castle doesn't work with moved rook
+new,o000k00r000000000000000000000000000000000000000000000000R000K00O
+has,0,4,0,2,c,
+num,0,4,6
+has,7,4,7,6,c,
+num,7,4,6
+new,o000000r00000000000000000000000000000000000000000000000kO000K00O
+has,7,4,7,2,c,
+num,7,4,6
