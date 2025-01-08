@@ -1,65 +1,7 @@
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-const piecesList = [
-  '0',
-  'p',
-  'n',
-  'b',
-  'r',
-  'q',
-  'k',
-  'o',
-  'a',
-  'P',
-  'N',
-  'B',
-  'R',
-  'Q',
-  'K',
-  'O',
-  'A'
-];
-
-const Space = '0';
-
-const BlackPawn = 'p';
-const BlackKnight = 'n';
-const BlackBishop = 'b';
-const BlackRookNC = 'r';
-const BlackQueen = 'q';
-const BlackKing = 'k';
-const BlackRookC = 'o';
-const BlackPawnEP = 'a';
-
-const WhitePawn =  'P';
-const WhiteKnight =  'N';
-const WhiteBishop =  'B';
-const WhiteRookNC =  'R';
-const WhiteQueen =  'Q';
-const WhiteKing =  'K';
-const WhiteRookC =  'O';
-const WhitePawnEP =  'A';
-
-const imageMap = {
-  BlackPawn: 'bp.png',
-  BlackKnight: 'bn.png',
-  BlackBishop: 'bb.png',
-  BlackRookNC: 'br.png',
-  BlackQueen: 'bq.png',
-  BlackKing: 'bk.png',
-  BlackRookC: 'br.png',
-  BlackPawnEP: 'bp.png',
-  WhitePawn: 'wp.png',
-  WhiteKnight: 'wn.png',
-  WhiteBishop: 'wb.png',
-  WhiteRookNC: 'wr.png',
-  WhiteQueen: 'wq.png',
-  WhiteKing: 'wk.png',
-  WhiteRookC: 'wr.png',
-  WhitePawnEP: 'wp.png'
-};
+import 'constants.dart';
 
 var boardString = '';
 
@@ -94,14 +36,14 @@ class MyAppState extends ChangeNotifier {
   var white = Color.fromARGB(255, 241, 189, 129);
   var black = const Color.fromARGB(255, 99, 46, 11);
   List<List<String>> board = [
-    ['o', 'n', 'b', 'q', 'k', 'b', 'n', 'o',],
-    ['p', 'p', 'p', 'p', '0', 'p', 'p', 'p',],
-    ['0', '0', '0', '0', '0', '0', '0', '0',],
-    ['0', '0', '0', '0', 'p', '0', '0', '0',],
-    ['0', '0', '0', '0', 'P', '0', '0', '0',],
-    ['0', '0', '0', '0', '0', '0', '0', '0',],
-    ['P', 'P', 'P', 'P', '0', 'P', 'P', 'P',],
-    ['O', 'N', 'B', 'Q', 'K', 'B', 'N', 'O',],
+    [BlackRookC, BlackKnight, BlackBishop, BlackQueen, BlackKing, BlackBishop, BlackKnight, BlackRookC,],
+    [BlackPawn,BlackPawn,BlackPawn,BlackPawn,BlackPawn,BlackPawn,BlackPawn,BlackPawn,],
+    [Space,Space,Space,Space,Space,Space,Space,Space,],
+    [Space,Space,Space,Space,Space,Space,Space,Space,],
+    [Space,Space,Space,Space,Space,Space,Space,Space,],
+    [Space,Space,Space,Space,Space,Space,Space,Space,],
+    [WhitePawn,WhitePawn,WhitePawn,WhitePawn,WhitePawn,WhitePawn,WhitePawn,WhitePawn,],
+    [WhiteRookC, WhiteKnight, WhiteBishop, WhiteQueen, WhiteKing, WhiteBishop, WhiteKnight, WhiteRookC,],
   ];
   void printBoard() {
     print(boardString);
