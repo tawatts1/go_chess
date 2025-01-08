@@ -31,6 +31,25 @@ const CastleBridge rune = 'c'
 var BlackPawnPromotion = []rune{BlackKnight, BlackBishop, BlackRookNC, BlackQueen}
 var WhitePawnPromotion = []rune{WhiteKnight, WhiteBishop, WhiteRookNC, WhiteQueen}
 
+func GetMoveDestinationsEncoded(boardStr string, y, x int) string {
+	b := GetBoardFromString(boardStr)
+	c := coord{y: y, x: x}
+	var friends, enemies map[coord]bool
+	if IsWhite(b.GetPiece(c)) {
+		friends = b.GetWhiteCoordMap()
+		enemies = b.GetBlackCoordMap()
+	} else {
+		friends = b.GetBlackCoordMap()
+		enemies = b.GetWhiteCoordMap()
+	}
+	moves := b.GetMoves(friends, enemies, c, true)
+	out := ""
+	for _, m := range moves {
+		out += fmt.Sprintf("%v,%v|", m.b.y, m.b.x)
+	}
+	return out
+}
+
 func (b board) GetMoves(friends, enemies map[coord]bool, c coord, filterIllegalMoves bool) []move {
 	var out []move
 	piece := b.GetPiece(c)

@@ -8,6 +8,8 @@ import 'generated_bindings.dart';
 
 int sum(int a, int b) => _bindings.sum(a, b);
 
+Pointer<Char> getNextMoves(Pointer<Char> boardStr, int y, int x) => _bindings.GetNextMoves(boardStr, y, x);
+
 Future<int> longSum(int a, int b) async {
   final SendPort helperIsolateSendPort = await _helperIsolateSendPort;
   final int requestId = _nextSumRequestId++;
