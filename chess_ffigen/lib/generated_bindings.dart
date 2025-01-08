@@ -26,6 +26,25 @@ class NativeLibrary {
           lookup)
       : _lookup = lookup;
 
+  ffi.Pointer<ffi.Char> GetNextMoves(
+    ffi.Pointer<ffi.Char> boardStr,
+    int y,
+    int x,
+  ) {
+    return _GetNextMoves(
+      boardStr,
+      y,
+      x,
+    );
+  }
+
+  late final _GetNextMovesPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Char> Function(
+              ffi.Pointer<ffi.Char>, ffi.Int, ffi.Int)>>('GetNextMoves');
+  late final _GetNextMoves = _GetNextMovesPtr.asFunction<
+      ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>, int, int)>();
+
   int sum(
     int a,
     int b,
