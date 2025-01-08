@@ -58,8 +58,15 @@ var whiteMap = map[rune]bool{
 var CastleMap = map[rune]rune{
 	WhiteRookC: WhiteRookNC,
 	BlackRookC: BlackRookNC,
-	BlackKing:  BlackRookC,
 	WhiteKing:  WhiteRookC,
+	BlackKing:  BlackRookC,
+}
+
+var EnPassantMap = map[rune]rune{
+	White:       BlackPawnEP, //on white's move, check for black pawns which have just two stepped.
+	Black:       WhitePawnEP, // and visa versa
+	WhitePawnEP: WhitePawn,
+	BlackPawnEP: BlackPawn,
 }
 
 func IsPawn(p rune) bool {

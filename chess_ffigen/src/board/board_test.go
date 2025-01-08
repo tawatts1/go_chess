@@ -192,6 +192,12 @@ func TestGetBoardAfterMove(t *testing.T) {
 	test("onbqk00opppp0ppp00000n0000b0p000000000000000P000PPPP0PPPONBQK0R0",
 		"rnbq0rk0pppp0ppp00000n0000b0p000000000000000P000PPPP0PPPONBQK0R0",
 		move{a: coord{y: 0, x: 4}, b: coord{y: 0, x: 6}, special: CastleBridge})
+	test("onbqkbnopp000ppp0000000000aPp0000000000000000000PPPP0PPPONBQKBNO",
+		"onbqkbnopp000ppp000P000000p0p0000000000000000000PPPP0PPPONBQKBNO",
+		move{a: coord{y: 3, x: 3}, b: coord{y: 2, x: 3}})
+	test("0000k00000q000000000000000000000000pA00000000000000P0P000000K000",
+		"0000k000000000000000000000000000000pP00000000000000P0P0000q0K000",
+		move{a: coord{y: 1, x: 2}, b: coord{y: 7, x: 2}})
 }
 
 // func TestGetBoardFromString(t *testing.T) {
