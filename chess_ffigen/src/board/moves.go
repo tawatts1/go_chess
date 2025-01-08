@@ -305,6 +305,16 @@ func (b board) IsInCheck(friends, enemies map[coord]bool, king_coord coord) bool
 
 func GetBoardAfterMove(b board, m move) board {
 	out := b.Copy()
+	color := GetColor(b.GetPiece(m.a))
+	epPawnPiece := EnPassantMap[color] // note that this piece is of the oposite color, according to the map.
+	for i := range BoardHeight {
+		for j := range BoardWidth {
+			if out.grid[i][j] == epPawnPiece {
+				out.grid[i][j] = EnPassantMap[epPawnPiece]
+			}
+		}
+	}
+
 	if m.special == 0 {
 		return out.SimpleMove(m.a, m.b)
 	} else if m.special == EnPassant {

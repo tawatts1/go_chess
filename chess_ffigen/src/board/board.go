@@ -85,6 +85,14 @@ func IsWhite(piece rune) bool {
 	return ok && wht
 }
 
+func GetColor(piece rune) rune {
+	if IsWhite(piece) {
+		return White
+	} else {
+		return Black
+	}
+}
+
 func (b board) GetWhiteCoords() []coord {
 	out := make([]coord, 0, 8)
 	for y := range len(b.grid) {
