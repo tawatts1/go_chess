@@ -29,7 +29,7 @@ func (b1 board) Equals(b2 board) bool {
 	return true
 }
 
-func (b board) SimpleMove(c1, c2 coord) board {
+func (b board) SimpleMove(c1, c2 Coord) board {
 	b.grid[c2.y][c2.x] = b.grid[c1.y][c1.x]
 	b.grid[c1.y][c1.x] = Space
 	return b
@@ -103,51 +103,51 @@ func GetColor(piece rune) rune {
 	}
 }
 
-func (b board) GetWhiteCoords() []coord {
-	out := make([]coord, 0, 8)
+func (b board) GetWhiteCoords() []Coord {
+	out := make([]Coord, 0, 8)
 	for y := range len(b.grid) {
 		for x := range len(b.grid[0]) {
 			if IsWhite(b.grid[y][x]) {
-				out = append(out, coord{y: y, x: x})
+				out = append(out, Coord{y: y, x: x})
 			}
 		}
 	}
 	return out
 }
 
-func (b board) GetBlackCoords() []coord {
-	out := make([]coord, 0, 8)
+func (b board) GetBlackCoords() []Coord {
+	out := make([]Coord, 0, 8)
 	for y := range len(b.grid) {
 		for x := range len(b.grid[0]) {
 			if IsBlack(b.grid[y][x]) {
-				out = append(out, coord{y: y, x: x})
+				out = append(out, Coord{y: y, x: x})
 			}
 		}
 	}
 	return out
 }
 
-func (b board) GetBlackCoordMap() map[coord]bool {
-	out := make(map[coord]bool)
+func (b board) GetBlackCoordMap() map[Coord]bool {
+	out := make(map[Coord]bool)
 	for _, c := range b.GetBlackCoords() {
 		out[c] = true
 	}
 	return out
 }
 
-func (b board) GetWhiteCoordMap() map[coord]bool {
-	out := make(map[coord]bool)
+func (b board) GetWhiteCoordMap() map[Coord]bool {
+	out := make(map[Coord]bool)
 	for _, c := range b.GetWhiteCoords() {
 		out[c] = true
 	}
 	return out
 }
 
-func (b board) GetPiece(c coord) rune {
+func (b board) GetPiece(c Coord) rune {
 	return b.grid[c.y][c.x]
 }
 
-func (b board) GetKingCoord(friends map[coord]bool) coord {
+func (b board) GetKingCoord(friends map[Coord]bool) Coord {
 	for c := range friends {
 		if IsKing(b.GetPiece(c)) {
 			return c
@@ -156,8 +156,8 @@ func (b board) GetKingCoord(friends map[coord]bool) coord {
 	panic("King not found!")
 }
 
-func (b board) GetCastleableRooks(friends map[coord]bool) []coord {
-	out := make([]coord, 0, 2)
+func (b board) GetCastleableRooks(friends map[Coord]bool) []Coord {
+	out := make([]Coord, 0, 2)
 	for c := range friends {
 		if IsRookCastleable(b.GetPiece(c)) {
 			out = append(out, c)
@@ -166,7 +166,7 @@ func (b board) GetCastleableRooks(friends map[coord]bool) []coord {
 	return out
 }
 
-func (b board) IsCoordEmpty(c coord) bool {
+func (b board) IsCoordEmpty(c Coord) bool {
 	return b.IsLocEmpty(c.y, c.x)
 }
 

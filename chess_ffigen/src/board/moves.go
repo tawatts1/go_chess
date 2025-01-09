@@ -4,7 +4,7 @@ import "fmt"
 
 // A way to encode a move via a move from one coordinate to another
 type move struct {
-	a, b    coord
+	a, b    Coord
 	special rune
 }
 
@@ -12,7 +12,7 @@ func (m1 move) Equals(m2 move) bool {
 	return m1.a.Equals(m2.a) && m1.b.Equals(m2.b) && m1.special == m2.special
 }
 
-func AnyEqual(moves []move, m move) bool {
+func Contains(moves []move, m move) bool {
 	for _, m2 := range moves {
 		if m2.Equals(m) {
 			return true
@@ -25,47 +25,21 @@ func (m move) String() string {
 	return fmt.Sprintf("{%v, %v, %c }", m.a, m.b, m.special)
 }
 
-const EnPassant rune = 'e'
-const CastleBridge rune = 'c'
+func (m move) Encode() string {
+	return fmt.Sprintf("%v,%v|", m.b.y, m.b.x)
+}
 
-var BlackPawnPromotion = []rune{BlackQueen, BlackKnight, BlackBishop, BlackRookNC}
-var WhitePawnPromotion = []rune{WhiteQueen, WhiteKnight, WhiteBishop, WhiteRookNC}
-
-func GetBoardAfterMoveEncoded(boardStr string, y1, x1, y2, x2 int) string {
-	b := GetBoardFromString(boardStr)
-	c1 := coord{y: y1, x: x1}
-	c2 := coord{y: y2, x: x2}
-	moves := GetMovesFromBoardCoord(b, c1)
+func GetFirstEqualMove(moves []move, c1, c2 Coord) move {
 	for _, m := range moves {
-		if m.b.Equals(c2) {
-			b2 := GetBoardAfterMove(b, m)
-			return b2.Encode()
+		if m.a.Equals(c1) && m.b.Equals(c2) {
+			return m
 		}
 	}
-	return ""
+	panic("Move match not found")
 }
 
-func GetMoveDestinationsEncoded(boardStr string, y, x int) string {
-	b := GetBoardFromString(boardStr)
-	c := coord{y: y, x: x}
-	var friends, enemies map[coord]bool
-	if IsWhite(b.GetPiece(c)) {
-		friends = b.GetWhiteCoordMap()
-		enemies = b.GetBlackCoordMap()
-	} else {
-		friends = b.GetBlackCoordMap()
-		enemies = b.GetWhiteCoordMap()
-	}
-	moves := b.GetMoves(friends, enemies, c, true)
-	out := ""
-	for _, m := range moves {
-		out += fmt.Sprintf("%v,%v|", m.b.y, m.b.x)
-	}
-	return out
-}
-
-func GetMovesFromBoardCoord(b board, c coord) []move {
-	var friends, enemies map[coord]bool
+func GetMovesFromBoardCoord(b board, c Coord) []move {
+	var friends, enemies map[Coord]bool
 	if IsWhite(b.GetPiece(c)) {
 		friends = b.GetWhiteCoordMap()
 		enemies = b.GetBlackCoordMap()
@@ -76,7 +50,7 @@ func GetMovesFromBoardCoord(b board, c coord) []move {
 	return b.GetMoves(friends, enemies, c, true)
 }
 
-func (b board) GetMoves(friends, enemies map[coord]bool, c coord, filterIllegalMoves bool) []move {
+func (b board) GetMoves(friends, enemies map[Coord]bool, c Coord, filterIllegalMoves bool) []move {
 	var out []move
 	piece := b.GetPiece(c)
 	if IsPawn(piece) {
@@ -109,34 +83,34 @@ func (b board) GetMoves(friends, enemies map[coord]bool, c coord, filterIllegalM
 	//Now add in castle/bridge moves manually
 	if IsKing(piece) && (!filterIllegalMoves || !b.IsInCheck(friends, enemies, b.GetKingCoord(friends))) {
 		castleMoves := make([]move, 0, 1)
-		if IsWhite(piece) && c.Equals(coord{y: 7, x: 4}) {
+		if IsWhite(piece) && c.Equals(Coord{y: 7, x: 4}) {
 			for _, rook_coord := range b.GetCastleableRooks(friends) {
 				if rook_coord.Equals(BottomLeft) &&
 					b.IsLocEmpty(7, 1) &&
 					b.IsLocEmpty(7, 2) &&
 					b.IsLocEmpty(7, 3) &&
-					(!filterIllegalMoves || AnyEqual(out, move{a: c, b: coord{y: 7, x: 3}, special: WhiteKing})) {
-					castleMoves = append(castleMoves, move{a: c, b: coord{y: 7, x: 2}, special: CastleBridge})
+					(!filterIllegalMoves || Contains(out, move{a: c, b: Coord{y: 7, x: 3}, special: WhiteKing})) {
+					castleMoves = append(castleMoves, move{a: c, b: Coord{y: 7, x: 2}, special: CastleBridge})
 				} else if rook_coord.Equals(BottomRight) &&
 					b.IsLocEmpty(7, 5) &&
 					b.IsLocEmpty(7, 6) &&
-					(!filterIllegalMoves || AnyEqual(out, move{a: c, b: coord{y: 7, x: 5}, special: WhiteKing})) {
-					castleMoves = append(castleMoves, move{a: c, b: coord{y: 7, x: 6}, special: CastleBridge})
+					(!filterIllegalMoves || Contains(out, move{a: c, b: Coord{y: 7, x: 5}, special: WhiteKing})) {
+					castleMoves = append(castleMoves, move{a: c, b: Coord{y: 7, x: 6}, special: CastleBridge})
 				}
 			}
-		} else if IsBlack(piece) && c.Equals(coord{y: 0, x: 4}) {
+		} else if IsBlack(piece) && c.Equals(Coord{y: 0, x: 4}) {
 			for _, rook_coord := range b.GetCastleableRooks(friends) {
 				if rook_coord.Equals(TopLeft) &&
 					b.IsLocEmpty(0, 1) &&
 					b.IsLocEmpty(0, 2) &&
 					b.IsLocEmpty(0, 3) &&
-					(!filterIllegalMoves || AnyEqual(out, move{a: c, b: coord{y: 0, x: 3}, special: BlackKing})) {
-					castleMoves = append(castleMoves, move{a: c, b: coord{y: 0, x: 2}, special: CastleBridge})
+					(!filterIllegalMoves || Contains(out, move{a: c, b: Coord{y: 0, x: 3}, special: BlackKing})) {
+					castleMoves = append(castleMoves, move{a: c, b: Coord{y: 0, x: 2}, special: CastleBridge})
 				} else if rook_coord.Equals(TopRight) &&
 					b.IsLocEmpty(0, 5) &&
 					b.IsLocEmpty(0, 6) &&
-					(!filterIllegalMoves || AnyEqual(out, move{a: c, b: coord{y: 0, x: 5}, special: BlackKing})) {
-					castleMoves = append(castleMoves, move{a: c, b: coord{y: 0, x: 6}, special: CastleBridge})
+					(!filterIllegalMoves || Contains(out, move{a: c, b: Coord{y: 0, x: 5}, special: BlackKing})) {
+					castleMoves = append(castleMoves, move{a: c, b: Coord{y: 0, x: 6}, special: CastleBridge})
 				}
 			}
 		}
@@ -169,7 +143,7 @@ func FilterIllegalMoves(b board, moveSlice []move, piece rune) []move {
 	return filteredOut
 }
 
-func (b board) GetPawnMoves(friends, enemies map[coord]bool, c coord, heading int) []move {
+func (b board) GetPawnMoves(friends, enemies map[Coord]bool, c Coord, heading int) []move {
 	out := make([]move, 0, 2)
 	piece := b.GetPiece(c)
 	isBlack := heading == 1
@@ -233,7 +207,7 @@ func (b board) GetPawnMoves(friends, enemies map[coord]bool, c coord, heading in
 	return out
 }
 
-func getPawnPromotionMoves(from, to coord, promotionCodes []rune) []move {
+func getPawnPromotionMoves(from, to Coord, promotionCodes []rune) []move {
 	//when promoted, pawns can become knight, bishop, rook or queen.
 	numPromotions := len(promotionCodes)
 	var out = make([]move, numPromotions, numPromotions)
@@ -243,9 +217,9 @@ func getPawnPromotionMoves(from, to coord, promotionCodes []rune) []move {
 	return out
 }
 
-func GetBishopMoves(friends, enemies map[coord]bool, c coord) []move {
+func GetBishopMoves(friends, enemies map[Coord]bool, c Coord) []move {
 	out := make([]move, 0, 3)
-	var newSquare coord
+	var newSquare Coord
 	// vectors used to add diagonal moves to the starting square
 	v_xs, v_ys := [2]int{-1, 1}, [2]int{-1, 1}
 	for _, v_x := range v_xs {
@@ -267,12 +241,12 @@ func GetBishopMoves(friends, enemies map[coord]bool, c coord) []move {
 	return out
 }
 
-func (b board) GetRookMoves(friends, enemies map[coord]bool, c coord, isCastleable bool) []move {
+func (b board) GetRookMoves(friends, enemies map[Coord]bool, c Coord, isCastleable bool) []move {
 	out := make([]move, 0, 3)
 	piece := b.GetPiece(c)
-	var newSquare coord
+	var newSquare Coord
 	// vectors used to add diagonal moves to the starting square
-	vectors := [4]coord{{y: 1, x: 0}, {y: -1, x: 0}, {y: 0, x: 1}, {y: 0, x: -1}}
+	vectors := [4]Coord{{y: 1, x: 0}, {y: -1, x: 0}, {y: 0, x: 1}, {y: 0, x: -1}}
 	for _, v := range vectors {
 		for newSquare = c.Copy().Add(v.y, v.x); newSquare.IsInBoard(); newSquare = newSquare.Copy().Add(v.y, v.x) {
 			_, hasFriend := friends[newSquare]
@@ -294,15 +268,15 @@ func (b board) GetRookMoves(friends, enemies map[coord]bool, c coord, isCastleab
 	return out
 }
 
-func (b board) GetQueenMoves(friends, enemies map[coord]bool, c coord) []move {
+func (b board) GetQueenMoves(friends, enemies map[Coord]bool, c Coord) []move {
 	return append(GetBishopMoves(friends, enemies, c), b.GetRookMoves(friends, enemies, c, false)...)
 }
 
-func GetKnightMoves(friends, enemies map[coord]bool, c coord) []move {
+func GetKnightMoves(friends, enemies map[Coord]bool, c Coord) []move {
 	out := make([]move, 0, 4)
-	var newSquare coord
+	var newSquare Coord
 	for _, sign := range [2]int{-1, 1} {
-		for _, vector := range [4]coord{{y: 1, x: 2}, {y: 2, x: 1}, {y: -1, x: 2}, {y: -2, x: 1}} {
+		for _, vector := range [4]Coord{{y: 1, x: 2}, {y: 2, x: 1}, {y: -1, x: 2}, {y: -2, x: 1}} {
 			newSquare = c.Add(sign*vector.y, sign*vector.x)
 			if newSquare.IsInBoard() {
 				_, hasFriend := friends[newSquare]
@@ -315,12 +289,12 @@ func GetKnightMoves(friends, enemies map[coord]bool, c coord) []move {
 	return out
 }
 
-func (b board) GetKingMoves(friends, enemies map[coord]bool, c coord) []move {
+func (b board) GetKingMoves(friends, enemies map[Coord]bool, c Coord) []move {
 	out := make([]move, 0, 2)
 	piece := b.GetPiece(c)
-	var newSquare coord
+	var newSquare Coord
 	for _, sign := range [2]int{-1, 1} {
-		for _, vector := range [4]coord{{y: 1, x: 1}, {y: 1, x: 0}, {y: 0, x: 1}, {y: -1, x: 1}} {
+		for _, vector := range [4]Coord{{y: 1, x: 1}, {y: 1, x: 0}, {y: 0, x: 1}, {y: -1, x: 1}} {
 			newSquare = c.Add(sign*vector.y, sign*vector.x)
 			if newSquare.IsInBoard() {
 				_, hasFriend := friends[newSquare]
@@ -337,7 +311,7 @@ func (b board) GetKingMoves(friends, enemies map[coord]bool, c coord) []move {
 	return out
 }
 
-func (b board) IsInCheck(friends, enemies map[coord]bool, king_coord coord) bool {
+func (b board) IsInCheck(friends, enemies map[Coord]bool, king_coord Coord) bool {
 	for enemy_coord := range enemies {
 		// note that we are checking what moves the enemy has, so the friends and enemies maps are switched.
 		for _, m := range b.GetMoves(enemies, friends, enemy_coord, false) {

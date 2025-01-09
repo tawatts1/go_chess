@@ -23,7 +23,7 @@ func testMoveFile(fname string) string {
 	check(err)
 	lines := strings.Split(string(data), "\n")
 	var b board
-	var bcm, wcm map[coord]bool
+	var bcm, wcm map[Coord]bool
 	for lineIndex, line := range lines {
 		if verbose {
 			fmt.Println(line)
@@ -44,11 +44,11 @@ func testMoveFile(fname string) string {
 			y_, ok1 := strconv.Atoi(args[1])
 			x_, ok2 := strconv.Atoi(args[2])
 			expected_len, ok3 := strconv.Atoi(args[3])
-			var c coord
+			var c Coord
 			if hasError(ok1) || hasError(ok2) || hasError(ok3) {
 				panic(fmt.Sprintf("failed to parse line %v", lineIndex+1))
 			} else {
-				c = coord{y: y_, x: x_}
+				c = Coord{y: y_, x: x_}
 			}
 			var actual_len int
 			if IsBlack(b.GetPiece(c)) {
@@ -65,13 +65,13 @@ func testMoveFile(fname string) string {
 			y2, ok3 := strconv.Atoi(args[3])
 			x2, ok4 := strconv.Atoi(args[4])
 			var special rune
-			var c1, c2 coord
+			var c1, c2 Coord
 			var m move
 			if hasError(ok1) || hasError(ok2) || hasError(ok3) || hasError(ok4) {
 				panic(fmt.Sprintf("failed to parse line %v", lineIndex+1))
 			} else {
-				c1 = coord{y: y1, x: x1}
-				c2 = coord{y: y2, x: x2}
+				c1 = Coord{y: y1, x: x1}
+				c2 = Coord{y: y2, x: x2}
 			}
 			if len(args) >= 6 {
 				r := []rune(args[5])
@@ -89,7 +89,7 @@ func testMoveFile(fname string) string {
 				moves = b.GetMoves(wcm, bcm, c1, true)
 			}
 
-			if !AnyEqual(moves, m) {
+			if !Contains(moves, m) {
 				return fmt.Sprintf("%v: expected %v to contain %v", lineIndex+1, moves, m)
 			}
 		}
@@ -182,22 +182,22 @@ func TestGetBoardAfterMove(t *testing.T) {
 	}
 	test("o000k00op0ppnpbpbpn00qp00000p0000000P0000QNP0P0NP00BB0PPO000K00O",
 		"o000k00op0ppnQbpbpn00qp00000p0000000P00000NP0P0NP00BB0PPO000K00O",
-		move{a: coord{y: 5, x: 1}, b: coord{y: 1, x: 5}})
+		move{a: Coord{y: 5, x: 1}, b: Coord{y: 1, x: 5}})
 	test("onbqkbnopppp0ppp000000000000p0000000P00000000000PPPP0PPPONBQK00O",
 		"onbqkbnopppp0ppp000000000000p0000000P00000000000PPPP0PPPRNBQ0RK0",
-		move{a: coord{y: 7, x: 4}, b: coord{y: 7, x: 6}, special: CastleBridge})
+		move{a: Coord{y: 7, x: 4}, b: Coord{y: 7, x: 6}, special: CastleBridge})
 	test("onbqkbnopppp0ppp000000000000p0000000P00000000000PPPP0PPPRNBQK00O",
 		"onbqkbnopppp0ppp000000000000p0000000P00000000000PPPPKPPPRNBQ000R",
-		move{a: coord{y: 7, x: 4}, b: coord{y: 6, x: 4}, special: WhiteKing})
+		move{a: Coord{y: 7, x: 4}, b: Coord{y: 6, x: 4}, special: WhiteKing})
 	test("onbqk00opppp0ppp00000n0000b0p000000000000000P000PPPP0PPPONBQK0R0",
 		"rnbq0rk0pppp0ppp00000n0000b0p000000000000000P000PPPP0PPPONBQK0R0",
-		move{a: coord{y: 0, x: 4}, b: coord{y: 0, x: 6}, special: CastleBridge})
+		move{a: Coord{y: 0, x: 4}, b: Coord{y: 0, x: 6}, special: CastleBridge})
 	test("onbqkbnopp000ppp0000000000aPp0000000000000000000PPPP0PPPONBQKBNO",
 		"onbqkbnopp000ppp000P000000p0p0000000000000000000PPPP0PPPONBQKBNO",
-		move{a: coord{y: 3, x: 3}, b: coord{y: 2, x: 3}})
+		move{a: Coord{y: 3, x: 3}, b: Coord{y: 2, x: 3}})
 	test("0000k00000q000000000000000000000000pA00000000000000P0P000000K000",
 		"0000k000000000000000000000000000000pP00000000000000P0P0000q0K000",
-		move{a: coord{y: 1, x: 2}, b: coord{y: 7, x: 2}})
+		move{a: Coord{y: 1, x: 2}, b: Coord{y: 7, x: 2}})
 }
 
 // func TestGetBoardFromString(t *testing.T) {
@@ -228,10 +228,10 @@ func TestGetBoardAfterMove(t *testing.T) {
 // }
 
 func TestMoveEquals(t *testing.T) {
-	a1 := coord{y: -5, x: 0}
-	m1 := move{a: a1, b: coord{y: 1, x: 1}}
+	a1 := Coord{y: -5, x: 0}
+	m1 := move{a: a1, b: Coord{y: 1, x: 1}}
 	a2 := a1.Copy()
-	m2 := move{a: a2, b: coord{y: 1, x: 1}}
+	m2 := move{a: a2, b: Coord{y: 1, x: 1}}
 	if !m1.Equals(m2) {
 		t.Error("moves not equal")
 	}
@@ -240,7 +240,7 @@ func TestMoveEquals(t *testing.T) {
 func TestCoordAdd(t *testing.T) {
 	ys := []int{0, 1, 2, 3, -5, -5, -5, 10000, 978, 67674664}
 	xs := []int{-1, 1, -5, 0, 2, 3, -5, -5, -5, -100}
-	testCoords := []coord{{y: 0, x: 0}, {y: -1, x: 0}, {y: 1000, x: 3}}
+	testCoords := []Coord{{y: 0, x: 0}, {y: -1, x: 0}, {y: 1000, x: 3}}
 	for i := range len(ys) {
 		y := ys[i]
 		x := xs[i]
@@ -254,9 +254,9 @@ func TestCoordAdd(t *testing.T) {
 }
 
 func TestCoordEquals(t *testing.T) {
-	c1 := coord{y: -4, x: 1}
-	c2 := coord{y: -4, x: 1}
-	c3 := coord{y: 0, x: 0}
+	c1 := Coord{y: -4, x: 1}
+	c2 := Coord{y: -4, x: 1}
+	c3 := Coord{y: 0, x: 0}
 	if !c1.Equals(c2) {
 		t.Error("should be equal")
 	}
