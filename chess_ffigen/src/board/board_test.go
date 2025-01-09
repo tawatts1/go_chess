@@ -66,7 +66,7 @@ func testMoveFile(fname string) string {
 			x2, ok4 := strconv.Atoi(args[4])
 			var special rune
 			var c1, c2 Coord
-			var m move
+			var m Move
 			if hasError(ok1) || hasError(ok2) || hasError(ok3) || hasError(ok4) {
 				panic(fmt.Sprintf("failed to parse line %v", lineIndex+1))
 			} else {
@@ -81,8 +81,8 @@ func testMoveFile(fname string) string {
 					special = r[0]
 				}
 			}
-			m = move{a: c1, b: c2, special: special}
-			var moves []move
+			m = Move{a: c1, b: c2, special: special}
+			var moves []Move
 			if IsBlack(b.GetPiece(c1)) {
 				moves = b.GetMoves(bcm, wcm, c1, true)
 			} else {
@@ -171,7 +171,7 @@ func TestIsInCheck(t *testing.T) {
 }
 
 func TestGetBoardAfterMove(t *testing.T) {
-	test := func(b1str, b2str string, m move) {
+	test := func(b1str, b2str string, m Move) {
 		b1 := GetBoardFromString(b1str)
 		b2 := GetBoardAfterMove(b1, m)
 		if b2.String() != GetBoardFromString(b2str).String() {
@@ -182,22 +182,22 @@ func TestGetBoardAfterMove(t *testing.T) {
 	}
 	test("o000k00op0ppnpbpbpn00qp00000p0000000P0000QNP0P0NP00BB0PPO000K00O",
 		"o000k00op0ppnQbpbpn00qp00000p0000000P00000NP0P0NP00BB0PPO000K00O",
-		move{a: Coord{y: 5, x: 1}, b: Coord{y: 1, x: 5}})
+		Move{a: Coord{y: 5, x: 1}, b: Coord{y: 1, x: 5}})
 	test("onbqkbnopppp0ppp000000000000p0000000P00000000000PPPP0PPPONBQK00O",
 		"onbqkbnopppp0ppp000000000000p0000000P00000000000PPPP0PPPRNBQ0RK0",
-		move{a: Coord{y: 7, x: 4}, b: Coord{y: 7, x: 6}, special: CastleBridge})
+		Move{a: Coord{y: 7, x: 4}, b: Coord{y: 7, x: 6}, special: CastleBridge})
 	test("onbqkbnopppp0ppp000000000000p0000000P00000000000PPPP0PPPRNBQK00O",
 		"onbqkbnopppp0ppp000000000000p0000000P00000000000PPPPKPPPRNBQ000R",
-		move{a: Coord{y: 7, x: 4}, b: Coord{y: 6, x: 4}, special: WhiteKing})
+		Move{a: Coord{y: 7, x: 4}, b: Coord{y: 6, x: 4}, special: WhiteKing})
 	test("onbqk00opppp0ppp00000n0000b0p000000000000000P000PPPP0PPPONBQK0R0",
 		"rnbq0rk0pppp0ppp00000n0000b0p000000000000000P000PPPP0PPPONBQK0R0",
-		move{a: Coord{y: 0, x: 4}, b: Coord{y: 0, x: 6}, special: CastleBridge})
+		Move{a: Coord{y: 0, x: 4}, b: Coord{y: 0, x: 6}, special: CastleBridge})
 	test("onbqkbnopp000ppp0000000000aPp0000000000000000000PPPP0PPPONBQKBNO",
 		"onbqkbnopp000ppp000P000000p0p0000000000000000000PPPP0PPPONBQKBNO",
-		move{a: Coord{y: 3, x: 3}, b: Coord{y: 2, x: 3}})
+		Move{a: Coord{y: 3, x: 3}, b: Coord{y: 2, x: 3}})
 	test("0000k00000q000000000000000000000000pA00000000000000P0P000000K000",
 		"0000k000000000000000000000000000000pP00000000000000P0P0000q0K000",
-		move{a: Coord{y: 1, x: 2}, b: Coord{y: 7, x: 2}})
+		Move{a: Coord{y: 1, x: 2}, b: Coord{y: 7, x: 2}})
 }
 
 // func TestGetBoardFromString(t *testing.T) {
@@ -229,9 +229,9 @@ func TestGetBoardAfterMove(t *testing.T) {
 
 func TestMoveEquals(t *testing.T) {
 	a1 := Coord{y: -5, x: 0}
-	m1 := move{a: a1, b: Coord{y: 1, x: 1}}
+	m1 := Move{a: a1, b: Coord{y: 1, x: 1}}
 	a2 := a1.Copy()
-	m2 := move{a: a2, b: Coord{y: 1, x: 1}}
+	m2 := Move{a: a2, b: Coord{y: 1, x: 1}}
 	if !m1.Equals(m2) {
 		t.Error("moves not equal")
 	}

@@ -15,6 +15,18 @@ var TopRight = Coord{y: 0, x: BoardWidth - 1}
 var WhiteKingHome = Coord{y: BoardHeight - 1, x: 4}
 var BlackKingHome = Coord{y: 0, x: 4}
 
+var AllCoordinates [BoardHeight * BoardWidth]Coord = [BoardHeight * BoardWidth]Coord(getAllCoordinates())
+
+func getAllCoordinates() []Coord {
+	out := make([]Coord, 0, BoardHeight*BoardWidth)
+	for i := range BoardHeight {
+		for j := range BoardWidth {
+			out = append(out, Coord{y: i, x: j})
+		}
+	}
+	return out
+}
+
 func NewCoord(y, x int) Coord {
 	return Coord{y: y, x: x}
 }
