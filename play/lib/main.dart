@@ -55,6 +55,7 @@ class MyAppState extends ChangeNotifier {
   int? selectedI;
   int? selectedJ;
   String moveDestinations = '';
+  bool isWhiteTurn = true;
 
   var white = const Color.fromARGB(255, 241, 189, 129);
   var black = const Color.fromARGB(255, 99, 46, 11);
@@ -76,16 +77,20 @@ class MyAppState extends ChangeNotifier {
     moveDestinations = '';
   }
   void selectButton(int i, int j){
+    String piece = board[i][j];
     if (selectedI == null || selectedJ == null) {
       // no selection has been made
-      if (board[i][j] != Space) {
+      if (piece == Space) {
+        print('try clicking on a piece!');
+      } else if ((isWhiteTurn && (whiteMap[piece] ?? false)) ||
+                 (!isWhiteTurn && !(whiteMap[piece] ?? true))) {
         //mark down the selection and populate the move destinations
         selectedI = i;
         selectedJ = j;
         moveDestinations = getMoves(boardString, i, j);
         print(moveDestinations);
       } else {
-        print('try clicking on a piece!');
+        print('not that colors turn');
       }
     } else if (selectedI != null && selectedJ != null) {
       // a move has already been selected. 
@@ -97,6 +102,7 @@ class MyAppState extends ChangeNotifier {
           for (int k=0; k<newBoardStr.length; k++){
             board[k ~/BoardWidth][k%BoardWidth] = newBoardStr[k];
           }
+          isWhiteTurn = !isWhiteTurn;
         }
       } else {
         print('not one of the legal moves. Clearing selection');

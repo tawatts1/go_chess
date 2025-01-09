@@ -61,3 +61,22 @@ const imageMap = {
   WhiteRookC: 'wr.png',
   WhitePawnEP: 'wp.png'
 };
+
+const Map<String, bool> whiteMap = {
+  BlackPawn: false,
+  BlackKnight: false,
+  BlackBishop: false,
+  BlackRookNC: false,
+  BlackQueen: false,
+  BlackKing: false,
+  BlackRookC: false,
+  BlackPawnEP: false,
+  WhitePawn: true,
+  WhiteKnight: true,
+  WhiteBishop: true,
+  WhiteRookNC: true,
+  WhiteQueen: true,
+  WhiteKing: true,
+  WhiteRookC: true,
+  WhitePawnEP: true,
+};
