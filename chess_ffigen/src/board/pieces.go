@@ -128,3 +128,9 @@ func IsKing(p rune) bool {
 	}
 	return false
 }
+
+const EnPassant rune = 'e'
+const CastleBridge rune = 'c'
+
+var BlackPawnPromotion = []rune{BlackQueen, BlackKnight, BlackBishop, BlackRookNC}
+var WhitePawnPromotion = []rune{WhiteQueen, WhiteKnight, WhiteBishop, WhiteRookNC}
