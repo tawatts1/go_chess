@@ -75,6 +75,16 @@ func (b board) String() string {
 	return out
 }
 
+func (b board) Encode() string {
+	out := ""
+	for i := range BoardHeight {
+		for j := range BoardWidth {
+			out += string(b.grid[i][j])
+		}
+	}
+	return out
+}
+
 func IsBlack(piece rune) bool {
 	blk, ok := blackMap[piece]
 	return ok && blk

@@ -3,10 +3,13 @@ import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
+import 'package:ffi/ffi.dart';
 
 import 'generated_bindings.dart';
 
 int sum(int a, int b) => _bindings.sum(a, b);
+
+Pointer<Char> getBoardAfterMove(Pointer<Char> boardStr, int y1, int x1, int y2, int x2) => _bindings.GetBoardAfterMove(boardStr, y1, x1, y2, x2);
 
 Pointer<Char> getNextMoves(Pointer<Char> boardStr, int y, int x) => _bindings.GetNextMoves(boardStr, y, x);
 

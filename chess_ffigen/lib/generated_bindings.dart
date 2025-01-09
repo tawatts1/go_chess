@@ -26,6 +26,30 @@ class NativeLibrary {
           lookup)
       : _lookup = lookup;
 
+  ffi.Pointer<ffi.Char> GetBoardAfterMove(
+    ffi.Pointer<ffi.Char> boardStr,
+    int y1,
+    int x1,
+    int y2,
+    int x2,
+  ) {
+    return _GetBoardAfterMove(
+      boardStr,
+      y1,
+      x1,
+      y2,
+      x2,
+    );
+  }
+
+  late final _GetBoardAfterMovePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>, ffi.Int,
+              ffi.Int, ffi.Int, ffi.Int)>>('GetBoardAfterMove');
+  late final _GetBoardAfterMove = _GetBoardAfterMovePtr.asFunction<
+      ffi.Pointer<ffi.Char> Function(
+          ffi.Pointer<ffi.Char>, int, int, int, int)>();
+
   ffi.Pointer<ffi.Char> GetNextMoves(
     ffi.Pointer<ffi.Char> boardStr,
     int y,
