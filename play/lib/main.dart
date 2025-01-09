@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ffi/ffi.dart';
 import 'constants.dart';
-import 'coordinate.dart';
 
 import 'package:go_chess/go_chess.dart' as go_chess;
 
