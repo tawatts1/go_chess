@@ -5,8 +5,6 @@ import "C"
 import (
 	"math"
 	"time"
-
-	"github.com/tawatts1/go_chess/board"
 )
 
 //export GetBoardAfterMove
