@@ -22,7 +22,7 @@ func testMoveFile(fname string) string {
 	data, err := os.ReadFile(fname)
 	check(err)
 	lines := strings.Split(string(data), "\n")
-	var b board
+	var b Board
 	var bcm, wcm map[Coord]bool
 	for lineIndex, line := range lines {
 		if verbose {

@@ -10,15 +10,15 @@ import (
 const StartingBoard string = "onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO"
 const BoardHeight, BoardWidth = 8, 8
 
-type board struct {
+type Board struct {
 	grid [BoardHeight][BoardWidth]rune
 }
 
-func (b board) Copy() board {
-	return board{grid: b.grid}
+func (b Board) Copy() Board {
+	return Board{grid: b.grid}
 }
 
-func (b1 board) Equals(b2 board) bool {
+func (b1 Board) Equals(b2 Board) bool {
 	for i := range BoardHeight {
 		for j := range BoardWidth {
 			if b1.grid[i][j] != b2.grid[i][j] {
@@ -29,7 +29,7 @@ func (b1 board) Equals(b2 board) bool {
 	return true
 }
 
-func (b board) SimpleMove(c1, c2 Coord) board {
+func (b Board) SimpleMove(c1, c2 Coord) Board {
 	b.grid[c2.y][c2.x] = b.grid[c1.y][c1.x]
 	b.grid[c1.y][c1.x] = Space
 	return b
@@ -41,15 +41,15 @@ func check(e error) {
 	}
 }
 
-func GetBoardFromFile(fname string) board {
+func GetBoardFromFile(fname string) Board {
 	data, err := os.ReadFile(fname)
 	check(err)
 	return GetBoardFromString(string(data))
 }
 
-func GetBoardFromString(str string) board {
+func GetBoardFromString(str string) Board {
 	s := utility.RemoveWhitespace(str)
-	b := board{}
+	b := Board{}
 	l, w := len(b.grid), len(b.grid[0])
 	numSquares := l * w
 	for i, r := range s {
@@ -61,7 +61,7 @@ func GetBoardFromString(str string) board {
 	return b
 }
 
-func (b board) String() string {
+func (b Board) String() string {
 	out := ""
 	divider := "\n+--+--+--+--+--+--+--+--+\n"
 	out += divider
@@ -75,7 +75,7 @@ func (b board) String() string {
 	return out
 }
 
-func (b board) Encode() string {
+func (b Board) Encode() string {
 	out := ""
 	for i := range BoardHeight {
 		for j := range BoardWidth {
@@ -103,7 +103,7 @@ func GetColor(piece rune) rune {
 	}
 }
 
-func (b board) GetWhiteCoords() []Coord {
+func (b Board) GetWhiteCoords() []Coord {
 	out := make([]Coord, 0, 8)
 	for y := range len(b.grid) {
 		for x := range len(b.grid[0]) {
@@ -115,7 +115,7 @@ func (b board) GetWhiteCoords() []Coord {
 	return out
 }
 
-func (b board) GetBlackCoords() []Coord {
+func (b Board) GetBlackCoords() []Coord {
 	out := make([]Coord, 0, 8)
 	for y := range len(b.grid) {
 		for x := range len(b.grid[0]) {
@@ -127,7 +127,7 @@ func (b board) GetBlackCoords() []Coord {
 	return out
 }
 
-func (b board) GetBlackCoordMap() map[Coord]bool {
+func (b Board) GetBlackCoordMap() map[Coord]bool {
 	out := make(map[Coord]bool)
 	for _, c := range b.GetBlackCoords() {
 		out[c] = true
@@ -135,7 +135,7 @@ func (b board) GetBlackCoordMap() map[Coord]bool {
 	return out
 }
 
-func (b board) GetWhiteCoordMap() map[Coord]bool {
+func (b Board) GetWhiteCoordMap() map[Coord]bool {
 	out := make(map[Coord]bool)
 	for _, c := range b.GetWhiteCoords() {
 		out[c] = true
@@ -143,11 +143,11 @@ func (b board) GetWhiteCoordMap() map[Coord]bool {
 	return out
 }
 
-func (b board) GetPiece(c Coord) rune {
+func (b Board) GetPiece(c Coord) rune {
 	return b.grid[c.y][c.x]
 }
 
-func (b board) GetKingCoord(friends map[Coord]bool) Coord {
+func (b Board) GetKingCoord(friends map[Coord]bool) Coord {
 	for c := range friends {
 		if IsKing(b.GetPiece(c)) {
 			return c
@@ -156,7 +156,7 @@ func (b board) GetKingCoord(friends map[Coord]bool) Coord {
 	panic("King not found!")
 }
 
-func (b board) GetCastleableRooks(friends map[Coord]bool) []Coord {
+func (b Board) GetCastleableRooks(friends map[Coord]bool) []Coord {
 	out := make([]Coord, 0, 2)
 	for c := range friends {
 		if IsRookCastleable(b.GetPiece(c)) {
@@ -166,10 +166,10 @@ func (b board) GetCastleableRooks(friends map[Coord]bool) []Coord {
 	return out
 }
 
-func (b board) IsCoordEmpty(c Coord) bool {
+func (b Board) IsCoordEmpty(c Coord) bool {
 	return b.IsLocEmpty(c.y, c.x)
 }
 
-func (b board) IsLocEmpty(y, x int) bool {
+func (b Board) IsLocEmpty(y, x int) bool {
 	return b.grid[y][x] == Space
 }
