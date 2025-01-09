@@ -49,17 +49,19 @@ String getMoves(String boardStr, int i, int j){
   return movesStr;
 }
 
+const colorChange = 15;
+
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
   int? selectedI;
   int? selectedJ;
   String moveDestinations = '';
   bool isWhiteTurn = true;
-
-  var white = const Color.fromARGB(255, 241, 189, 129);
-  var black = const Color.fromARGB(255, 99, 46, 11);
-  var selectedColor = const Color.fromARGB(255, 216, 141, 1);
-  var optionColor = const Color.fromARGB(255, 4, 172, 149);
+  var white = const Color.fromARGB(255, 223, 150, 82);
+  var greyedWhite = const Color.fromARGB(255, 223-colorChange, 150-colorChange, 82-colorChange);
+  var black = const Color.fromARGB(255, 116, 59, 6);
+  var greyedBlack = const Color.fromARGB(255, 116-colorChange, 59-colorChange, 0);
+  var selectedColor = const Color.fromARGB(255, 100, 20, 200);
   List<List<String>> board = [
     [BlackRookC, BlackKnight, BlackBishop, BlackQueen, BlackKing, BlackBishop, BlackKnight, BlackRookC,],
     [BlackPawn,BlackPawn,BlackPawn,BlackPawn,BlackPawn,BlackPawn,BlackPawn,BlackPawn,],
@@ -124,7 +126,33 @@ class MyAppState extends ChangeNotifier {
     }
     notifyListeners();
   }
+  Color getColor(int i, int j){
+    bool isLightSquare = (i+j)%2==0;
+    if (i==selectedI && j==selectedJ) {
+      return selectedColor;
+    } else if (moveDestinations.contains('$i,$j')){
+      if (isLightSquare){
+        return greyedWhite;
+      } else {
+        return greyedBlack;
+      }
+    } else if (isLightSquare){
+      return white;
+    } else {
+      return black;
+    }
+  }
+  double getRadius(int i, int j){
+    if (moveDestinations.contains('$i,$j')) {
+      return 15;
+    } else if (selectedI!= null && selectedJ != null && selectedI! == i && selectedJ! == j) {
+      return 15;
+    } else {
+      return 1;
+    }
+  }
 }
+
 
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
@@ -166,17 +194,11 @@ class MyHomePage extends StatelessWidget {
       var row = appState.board[i];
       List<Widget> rowView = [];
       for (int j=0; j<row.length; j++) {
-        Color color;
-        switch ((i+j)%2){
-          case 0:
-            color=appState.white;
-            break;
-          default: 
-            color=appState.black;
-        }
+        Color color = appState.getColor(i, j);
+        var radius = appState.getRadius(i,j);      
         var pieceCode = row[j];
         rowView.add(
-          Square(pieceCode: pieceCode, color: color, i: i, j: j)
+          Square(pieceCode: pieceCode, color: color, radius: radius, i: i, j: j)
         );
         boardString += pieceCode;
       } 
@@ -193,12 +215,14 @@ class Square extends StatelessWidget {
     super.key,
     required this.pieceCode,
     required this.color,
+    required this.radius,
     required this.i,
     required this.j
   });
 
   final String pieceCode;
   final Color color;
+  final double radius;
   final int i;
   final int j;
   
@@ -213,7 +237,7 @@ class Square extends StatelessWidget {
     ButtonStyle style = ElevatedButton.styleFrom(
       backgroundColor: color,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(1),
+        borderRadius: BorderRadius.circular(radius),
       ),
       );
     String iconLoc = '';

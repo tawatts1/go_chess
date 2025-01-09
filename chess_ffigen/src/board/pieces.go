@@ -67,6 +67,8 @@ var EnPassantMap = map[rune]rune{
 	Black:       WhitePawnEP, // and visa versa
 	WhitePawnEP: WhitePawn,
 	BlackPawnEP: BlackPawn,
+	WhitePawn:   WhitePawnEP,
+	BlackPawn:   BlackPawnEP,
 }
 
 func IsPawn(p rune) bool {
