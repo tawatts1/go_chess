@@ -9,6 +9,11 @@ import (
 	"github.com/tawatts1/go_chess/board"
 )
 
+//export GetBoardAfterMove
+func GetBoardAfterMove(boardStr *C.char, y1, x1, y2, x2 C.int) *C.char {
+	return C.CString(board.GetBoardAfterMoveEncoded(C.GoString(boardStr), int(y1), int(x1), int(y2), int(x2)))
+}
+
 //export GetNextMoves
 func GetNextMoves(boardStr *C.char, y C.int, x C.int) *C.char {
 	return C.CString(board.GetMoveDestinationsEncoded(C.GoString(boardStr), int(y), int(x)))

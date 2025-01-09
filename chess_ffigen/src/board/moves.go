@@ -31,6 +31,20 @@ const CastleBridge rune = 'c'
 var BlackPawnPromotion = []rune{BlackKnight, BlackBishop, BlackRookNC, BlackQueen}
 var WhitePawnPromotion = []rune{WhiteKnight, WhiteBishop, WhiteRookNC, WhiteQueen}
 
+func GetBoardAfterMoveEncoded(boardStr string, y1, x1, y2, x2 int) string {
+	b := GetBoardFromString(boardStr)
+	c1 := coord{y: y1, x: x1}
+	c2 := coord{y: y2, x: x2}
+	moves := GetMovesFromBoardCoord(b, c1)
+	for _, m := range moves {
+		if m.b.Equals(c2) {
+			b2 := GetBoardAfterMove(b, m)
+			return b2.Encode()
+		}
+	}
+	return ""
+}
+
 func GetMoveDestinationsEncoded(boardStr string, y, x int) string {
 	b := GetBoardFromString(boardStr)
 	c := coord{y: y, x: x}
@@ -48,6 +62,18 @@ func GetMoveDestinationsEncoded(boardStr string, y, x int) string {
 		out += fmt.Sprintf("%v,%v|", m.b.y, m.b.x)
 	}
 	return out
+}
+
+func GetMovesFromBoardCoord(b board, c coord) []move {
+	var friends, enemies map[coord]bool
+	if IsWhite(b.GetPiece(c)) {
+		friends = b.GetWhiteCoordMap()
+		enemies = b.GetBlackCoordMap()
+	} else {
+		friends = b.GetBlackCoordMap()
+		enemies = b.GetWhiteCoordMap()
+	}
+	return b.GetMoves(friends, enemies, c, true)
 }
 
 func (b board) GetMoves(friends, enemies map[coord]bool, c coord, filterIllegalMoves bool) []move {

@@ -19,6 +19,9 @@ const piecesList = [
   'A'
 ];
 
+const BoardHeight = 8;
+const BoardWidth = 8;
+
 const Space = '0';
 
 const BlackPawn = 'p';
