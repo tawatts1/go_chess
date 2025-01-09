@@ -28,8 +28,8 @@ func (m move) String() string {
 const EnPassant rune = 'e'
 const CastleBridge rune = 'c'
 
-var BlackPawnPromotion = []rune{BlackKnight, BlackBishop, BlackRookNC, BlackQueen}
-var WhitePawnPromotion = []rune{WhiteKnight, WhiteBishop, WhiteRookNC, WhiteQueen}
+var BlackPawnPromotion = []rune{BlackQueen, BlackKnight, BlackBishop, BlackRookNC}
+var WhitePawnPromotion = []rune{WhiteQueen, WhiteKnight, WhiteBishop, WhiteRookNC}
 
 func GetBoardAfterMoveEncoded(boardStr string, y1, x1, y2, x2 int) string {
 	b := GetBoardFromString(boardStr)
@@ -171,6 +171,7 @@ func FilterIllegalMoves(b board, moveSlice []move, piece rune) []move {
 
 func (b board) GetPawnMoves(friends, enemies map[coord]bool, c coord, heading int) []move {
 	out := make([]move, 0, 2)
+	piece := b.GetPiece(c)
 	isBlack := heading == 1
 	//directly ahead of pawn
 	forward := c.Copy().Add(heading, 0)
@@ -197,7 +198,7 @@ func (b board) GetPawnMoves(friends, enemies map[coord]bool, c coord, heading in
 			_, hasFriend2 := friends[forward2]
 			_, hasEnemy2 := enemies[forward2]
 			if !hasFriend2 && !hasEnemy2 {
-				out = append(out, move{a: c, b: forward2})
+				out = append(out, move{a: c, b: forward2, special: EnPassantMap[piece]})
 			}
 		}
 	}
@@ -414,6 +415,12 @@ func GetBoardAfterMove(b board, m move) board {
 			out.grid[a.y][a.x] = Space
 			return out
 		}
+	}
+	if m.special == BlackPawnEP || m.special == WhitePawnEP {
+		a, b := m.a, m.b
+		out.grid[b.y][b.x] = m.special
+		out.grid[a.y][a.x] = Space
+		return out
 	}
 
 	panic("Not implemented - special move")
