@@ -33,11 +33,24 @@ class MyApp extends StatelessWidget {
   }
 }
 
+String getAiChosenMove(String boardStr, bool isWhite, String aiName, int N){
+  final ffi.Pointer<ffi.Char> cBoardStr = boardStr.toNativeUtf8().cast<ffi.Char>();
+  int isWhiteInt = isWhite ? 1 : 0;
+  final ffi.Pointer<ffi.Char> cAiName = aiName.toNativeUtf8().cast<ffi.Char>();
+  final ffi.Pointer<Utf8> movePtr = go_chess.getAiChosenMove(cBoardStr, isWhiteInt, cAiName, N).cast<Utf8>();
+  final moveString = movePtr.toDartString();
+  calloc.free(cBoardStr);
+  calloc.free(cAiName);
+  calloc.free(movePtr);
+  return moveString;
+}
+
 String getBoardAfterMove(String boardStr, int i1, int j1, int i2, int j2){
-  final cBoardStr1 = boardStr.toNativeUtf8().cast<ffi.Char>();
+  final ffi.Pointer<ffi.Char> cBoardStr1 = boardStr.toNativeUtf8().cast<ffi.Char>();
   final ffi.Pointer<Utf8> boardPtr = go_chess.getBoardAfterMove(cBoardStr1, i1, j1, i2, j2).cast<Utf8>();
   final newBoardStr = boardPtr.toDartString();
   calloc.free(boardPtr);
+  calloc.free(cBoardStr1);
   return newBoardStr;
 }
 
@@ -46,6 +59,7 @@ String getMoves(String boardStr, int i, int j){
   final ffi.Pointer<Utf8> movesPtr = go_chess.getNextMoves(cBoardStr, i, j).cast<Utf8>();
   final movesStr = movesPtr.toDartString();
   calloc.free(movesPtr);
+  calloc.free(cBoardStr);
   return movesStr;
 }
 
@@ -57,6 +71,8 @@ class MyAppState extends ChangeNotifier {
   int? selectedJ;
   String moveDestinations = '';
   bool isWhiteTurn = true;
+  bool isBlackAi = true;
+  bool isWhiteAi = false;
   var white = const Color.fromARGB(255, 223, 150, 82);
   var greyedWhite = const Color.fromARGB(255, 223-colorChange, 150-colorChange, 82-colorChange);
   var black = const Color.fromARGB(255, 116, 59, 6);
@@ -79,6 +95,7 @@ class MyAppState extends ChangeNotifier {
   }
   void selectButton(int i, int j){
     String piece = board[i][j];
+    bool isNotifyAi = false;
     if (selectedI == null || selectedJ == null) {
       // no selection has been made
       if (piece == Space) {
@@ -104,13 +121,25 @@ class MyAppState extends ChangeNotifier {
             board[k ~/BoardWidth][k%BoardWidth] = newBoardStr[k];
           }
           isWhiteTurn = !isWhiteTurn;
+          isNotifyAi = true;
         }
       } else {
         print('not one of the legal moves. Clearing selection');
       }
       clearSelection();
     }
+
     notifyListeners();
+    if (isNotifyAi) {
+      notifyAi();
+    }
+  }
+  void notifyAi() {
+    if ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi)) {
+      //it is the ai's turn
+      setBoardString();
+      print(getAiChosenMove(boardString, isWhiteTurn, 'simple', 1));
+    }
   }
   void printBoard() {
     print(boardString);
@@ -149,6 +178,14 @@ class MyAppState extends ChangeNotifier {
       return 15;
     } else {
       return 1;
+    }
+  }
+  void setBoardString() {
+    boardString = '';
+    for (int i=0; i<board.length; i++) {
+      for (int j=0; j<board[i].length; j++) {
+        boardString += board[i][j];
+      }
     }
   }
 }

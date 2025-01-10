@@ -35,6 +35,10 @@ func (c Coord) String() string {
 	return fmt.Sprintf("(y:%v,x:%v)", c.y, c.x)
 }
 
+func (c Coord) Encode() string {
+	return fmt.Sprintf("%v,%v", c.y, c.x)
+}
+
 func (c Coord) Copy() Coord {
 	copy := Coord{y: c.y,
 		x: c.x}

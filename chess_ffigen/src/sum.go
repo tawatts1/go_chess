@@ -5,19 +5,31 @@ import "C"
 import (
 	"math"
 	"time"
+
+	"github.com/tawatts1/go_chess/ai"
+	"github.com/tawatts1/go_chess/board"
 )
+
+//export GetAiChosenMove
+func GetAiChosenMove(boardStr *C.char, isWhite C.int, aiName *C.char, N C.int) *C.char {
+	whiteBool := int(isWhite) == 1
+	return C.CString(getAiChosenMove(C.GoString(boardStr), whiteBool, C.GoString(aiName), int(N)))
+}
+
+func getAiChosenMove(boardStr string, isWhite bool, aiName string, N int) string {
+	a := ai.GetAiFromString(aiName)
+	b := board.GetBoardFromString(boardStr)
+	m := a.ChooseMove(b, isWhite, N)
+	time.Sleep(4 * time.Second)
+	return m.Encode()
+}
 
 //export GetBoardAfterMove
 func GetBoardAfterMove(boardStr *C.char, y1, x1, y2, x2 C.int) *C.char {
-	return C.CString(GetBoardAfterMoveEncoded(C.GoString(boardStr), int(y1), int(x1), int(y2), int(x2)))
+	return C.CString(getBoardAfterMoveEncoded(C.GoString(boardStr), int(y1), int(x1), int(y2), int(x2)))
 }
 
-//export GetNextMoves
-func GetNextMoves(boardStr *C.char, y C.int, x C.int) *C.char {
-	return C.CString(GetMoveDestinationsEncoded(C.GoString(boardStr), int(y), int(x)))
-}
-
-func GetBoardAfterMoveEncoded(boardStr string, y1, x1, y2, x2 int) string {
+func getBoardAfterMoveEncoded(boardStr string, y1, x1, y2, x2 int) string {
 	b := board.GetBoardFromString(boardStr)
 	c1 := board.NewCoord(y1, x1)
 	c2 := board.NewCoord(y2, x2)
@@ -27,7 +39,12 @@ func GetBoardAfterMoveEncoded(boardStr string, y1, x1, y2, x2 int) string {
 	return b2.Encode()
 }
 
-func GetMoveDestinationsEncoded(boardStr string, y, x int) string {
+//export GetNextMoves
+func GetNextMoves(boardStr *C.char, y C.int, x C.int) *C.char {
+	return C.CString(getMoveDestinationsEncoded(C.GoString(boardStr), int(y), int(x)))
+}
+
+func getMoveDestinationsEncoded(boardStr string, y, x int) string {
 	b := board.GetBoardFromString(boardStr)
 	c := board.NewCoord(y, x)
 	var friends, enemies map[board.Coord]bool
@@ -41,7 +58,7 @@ func GetMoveDestinationsEncoded(boardStr string, y, x int) string {
 	moves := b.GetMoves(friends, enemies, c, true)
 	out := ""
 	for _, m := range moves {
-		out += m.Encode()
+		out += m.EncodeB() + "|"
 	}
 	return out
 }
