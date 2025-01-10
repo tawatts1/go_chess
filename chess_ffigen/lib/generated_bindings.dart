@@ -26,6 +26,28 @@ class NativeLibrary {
           lookup)
       : _lookup = lookup;
 
+  ffi.Pointer<ffi.Char> GetAiChosenMove(
+    ffi.Pointer<ffi.Char> boardStr,
+    int isWhite,
+    ffi.Pointer<ffi.Char> aiName,
+    int N,
+  ) {
+    return _GetAiChosenMove(
+      boardStr,
+      isWhite,
+      aiName,
+      N,
+    );
+  }
+
+  late final _GetAiChosenMovePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>, ffi.Int,
+              ffi.Pointer<ffi.Char>, ffi.Int)>>('GetAiChosenMove');
+  late final _GetAiChosenMove = _GetAiChosenMovePtr.asFunction<
+      ffi.Pointer<ffi.Char> Function(
+          ffi.Pointer<ffi.Char>, int, ffi.Pointer<ffi.Char>, int)>();
+
   ffi.Pointer<ffi.Char> GetBoardAfterMove(
     ffi.Pointer<ffi.Char> boardStr,
     int y1,

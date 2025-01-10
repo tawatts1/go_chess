@@ -8,6 +8,10 @@ type Move struct {
 	special rune
 }
 
+func NewMove(c1, c2 Coord, special rune) Move {
+	return Move{a: c1, b: c2, special: special}
+}
+
 func (m1 Move) Equals(m2 Move) bool {
 	return m1.a.Equals(m2.a) && m1.b.Equals(m2.b) && m1.special == m2.special
 }
@@ -26,7 +30,11 @@ func (m Move) String() string {
 }
 
 func (m Move) Encode() string {
-	return fmt.Sprintf("%v,%v|", m.b.y, m.b.x)
+	return fmt.Sprintf("%v,%v,%v,%v", m.a.y, m.a.x, m.b.y, m.b.x)
+}
+
+func (m Move) EncodeB() string {
+	return m.b.Encode()
 }
 
 func GetFirstEqualMove(moves []Move, c1, c2 Coord) Move {
@@ -48,6 +56,27 @@ func GetMovesFromBoardCoord(b Board, c Coord) []Move {
 		enemies = b.GetWhiteCoordMap()
 	}
 	return b.GetMoves(friends, enemies, c, true)
+}
+
+func (b Board) GetLegalMoves(isWhite bool) []Move {
+
+	var friends, enemies map[Coord]bool
+
+	if isWhite {
+		friends = b.GetWhiteCoordMap()
+		enemies = b.GetBlackCoordMap()
+	} else {
+		friends = b.GetBlackCoordMap()
+		enemies = b.GetWhiteCoordMap()
+	}
+	out := make([]Move, 0, 2*len(friends))
+	for _, c := range AllCoordinates {
+		_, hasCoord := friends[c]
+		if hasCoord {
+			out = append(out, b.GetMoves(friends, enemies, c, true)...)
+		}
+	}
+	return out
 }
 
 func (b Board) GetMoves(friends, enemies map[Coord]bool, c Coord, filterIllegalMoves bool) []Move {
