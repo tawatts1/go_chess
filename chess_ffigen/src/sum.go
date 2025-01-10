@@ -20,7 +20,7 @@ func getAiChosenMove(boardStr string, isWhite bool, aiName string, N int) string
 	a := ai.GetAiFromString(aiName)
 	b := board.GetBoardFromString(boardStr)
 	m := a.ChooseMove(b, isWhite, N)
-	time.Sleep(4 * time.Second)
+	//time.Sleep(4 * time.Second)
 	return m.Encode()
 }
 

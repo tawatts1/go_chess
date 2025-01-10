@@ -33,16 +33,17 @@ class MyApp extends StatelessWidget {
   }
 }
 
-void getAiChosenMove(String boardStr, bool isWhite, String aiName, int N) async {
+Future<String> getAiChosenMove(String boardStr, bool isWhite, String aiName, int N) async {
   final ffi.Pointer<ffi.Char> cBoardStr = boardStr.toNativeUtf8().cast<ffi.Char>();
   int isWhiteInt = isWhite ? 1 : 0;
   final ffi.Pointer<ffi.Char> cAiName = aiName.toNativeUtf8().cast<ffi.Char>();
+  //?? do I need to free the pointer<char> below??
   final ffi.Pointer<Utf8> movePtr = (await go_chess.getAiChosenMove(cBoardStr, isWhiteInt, cAiName, N)).cast<Utf8>();
   final moveString = movePtr.toDartString();
   calloc.free(cBoardStr);
   calloc.free(cAiName);
   calloc.free(movePtr);
-  print(moveString);
+  return moveString;
 }
 
 String getBoardAfterMove(String boardStr, int i1, int j1, int i2, int j2){
@@ -63,7 +64,7 @@ String getMoves(String boardStr, int i, int j){
   return movesStr;
 }
 
-const colorChange = 15;
+const colorChange = 30;
 
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
@@ -73,11 +74,12 @@ class MyAppState extends ChangeNotifier {
   bool isWhiteTurn = true;
   bool isBlackAi = true;
   bool isWhiteAi = false;
+  String indicatedCoords = '';
   var white = const Color.fromARGB(255, 223, 150, 82);
-  var greyedWhite = const Color.fromARGB(255, 223-colorChange, 150-colorChange, 82-colorChange);
+  var greyedWhite = const Color.fromARGB(255, 180,170,170);
   var black = const Color.fromARGB(255, 116, 59, 6);
-  var greyedBlack = const Color.fromARGB(255, 116-colorChange, 59-colorChange, 0);
-  var selectedColor = const Color.fromARGB(255, 100, 20, 200);
+  var greyedBlack = const Color.fromARGB(255, 90,75,75);
+  var selectedColor = const Color.fromARGB(255, 120, 0, 100);
   List<List<String>> board = [
     [BlackRookC, BlackKnight, BlackBishop, BlackQueen, BlackKing, BlackBishop, BlackKnight, BlackRookC,],
     [BlackPawn,BlackPawn,BlackPawn,BlackPawn,BlackPawn,BlackPawn,BlackPawn,BlackPawn,],
@@ -122,6 +124,7 @@ class MyAppState extends ChangeNotifier {
           }
           isWhiteTurn = !isWhiteTurn;
           isNotifyAi = true;
+          indicatedCoords = '$selectedI,$selectedJ|$i,$j';
         }
       } else {
         print('not one of the legal moves. Clearing selection');
@@ -138,9 +141,35 @@ class MyAppState extends ChangeNotifier {
     if ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi)) {
       //it is the ai's turn
       setBoardString();
-      getAiChosenMove(boardString, isWhiteTurn, 'simple', 1);
+      Future<String> aiMove = getAiChosenMove(boardString, isWhiteTurn, 'simple', 1);
+      aiMove.then((value) => simulateClickBoard(value))
+      .catchError((error) => print(error));
     }
   }
+  void simulateClickBoard(String moveStr) {
+    List<String> indexList = moveStr.split(',');
+    if (indexList.length == 4) {
+      try {
+        int i1 = int.parse(indexList[0]);
+        int j1 = int.parse(indexList[1]);
+        int i2 = int.parse(indexList[2]);
+        int j2 = int.parse(indexList[3]);
+        selectButton(i1,j1);
+        selectButton(i2,j2);
+        // Future<String> endMoveStr = waitAndClickPiece(i2, j2);
+        // endMoveStr.then((value) => print(value))
+        // .catchError((error) => print(error));
+        // notifyListeners();
+      } catch(ex) {
+        print("failed to parse ai move");
+      }
+    }
+  }
+  // Future<String> waitAndClickPiece(int i, int j) async {
+  //   Future.delayed(const Duration(milliseconds:500));
+  //   selectButton(i,j);
+  //   return "Ai finished move";
+  // }
   void printBoard() {
     print(boardString);
   }
@@ -159,7 +188,7 @@ class MyAppState extends ChangeNotifier {
     bool isLightSquare = (i+j)%2==0;
     if (i==selectedI && j==selectedJ) {
       return selectedColor;
-    } else if (moveDestinations.contains('$i,$j')){
+    } else if (indicatedCoords.contains('$i,$j')){
       if (isLightSquare){
         return greyedWhite;
       } else {
