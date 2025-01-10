@@ -33,16 +33,16 @@ class MyApp extends StatelessWidget {
   }
 }
 
-String getAiChosenMove(String boardStr, bool isWhite, String aiName, int N){
+void getAiChosenMove(String boardStr, bool isWhite, String aiName, int N) async {
   final ffi.Pointer<ffi.Char> cBoardStr = boardStr.toNativeUtf8().cast<ffi.Char>();
   int isWhiteInt = isWhite ? 1 : 0;
   final ffi.Pointer<ffi.Char> cAiName = aiName.toNativeUtf8().cast<ffi.Char>();
-  final ffi.Pointer<Utf8> movePtr = go_chess.getAiChosenMove(cBoardStr, isWhiteInt, cAiName, N).cast<Utf8>();
+  final ffi.Pointer<Utf8> movePtr = (await go_chess.getAiChosenMove(cBoardStr, isWhiteInt, cAiName, N)).cast<Utf8>();
   final moveString = movePtr.toDartString();
   calloc.free(cBoardStr);
   calloc.free(cAiName);
   calloc.free(movePtr);
-  return moveString;
+  print(moveString);
 }
 
 String getBoardAfterMove(String boardStr, int i1, int j1, int i2, int j2){
@@ -138,7 +138,7 @@ class MyAppState extends ChangeNotifier {
     if ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi)) {
       //it is the ai's turn
       setBoardString();
-      print(getAiChosenMove(boardString, isWhiteTurn, 'simple', 1));
+      getAiChosenMove(boardString, isWhiteTurn, 'simple', 1);
     }
   }
   void printBoard() {
