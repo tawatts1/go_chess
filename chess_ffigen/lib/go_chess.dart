@@ -9,7 +9,16 @@ import 'generated_bindings.dart';
 
 int sum(int a, int b) => _bindings.sum(a, b);
 
-Pointer<Char> getAiChosenMove(Pointer<Char> boardStr, int isWhite, Pointer<Char> aiName, int N) => _bindings.GetAiChosenMove(boardStr, isWhite, aiName, N);
+Future<Pointer<Char>> getAiChosenMove(Pointer<Char> boardStr, int isWhite, Pointer<Char> aiName, int N) async {
+  final SendPort helperIsolateSendPort = await _helperIsolateSendPort;
+  final int requestId = _nextMoveRequestId++;
+  final _MoveRequest request = _MoveRequest(requestId, boardStr, isWhite, aiName, N);
+  final Completer<Pointer<Char>> completer = Completer<Pointer<Char>>();
+  _moveRequests[requestId] = completer;
+  helperIsolateSendPort.send(request);
+  return completer.future;
+}
+//=> _bindings.GetAiChosenMove(boardStr, isWhite, aiName, N);
 
 Pointer<Char> getBoardAfterMove(Pointer<Char> boardStr, int y1, int x1, int y2, int x2) => _bindings.GetBoardAfterMove(boardStr, y1, x1, y2, x2);
 
@@ -56,6 +65,17 @@ class _SumRequest {
   const _SumRequest(this.id, this.a, this.b);
 }
 
+// request to compute a move
+class _MoveRequest {
+  final int id;
+  final Pointer<Char> boardStr;
+  final int isWhite;
+  final Pointer<Char> aiName;
+  final int N;
+
+  const _MoveRequest(this.id, this.boardStr, this.isWhite, this.aiName, this.N);
+}
+
 /// A response with the result of `sum`.
 ///
 /// Typically sent from one isolate to another.
@@ -66,11 +86,21 @@ class _SumResponse {
   const _SumResponse(this.id, this.result);
 }
 
+//response with move request result
+class _MoveResponse {
+  final int id;
+  final Pointer<Char> result;
+  
+  const _MoveResponse(this.id, this.result);
+}
+
 /// Counter to identify [_SumRequest]s and [_SumResponse]s.
 int _nextSumRequestId = 0;
+int _nextMoveRequestId = 0;
 
 /// Mapping from [_SumRequest] `id`s to the completers corresponding to the correct future of the pending request.
 final Map<int, Completer<int>> _sumRequests = <int, Completer<int>>{};
+final Map<int, Completer<Pointer<Char>>> _moveRequests = <int, Completer<Pointer<Char>>>{};
 
 /// The SendPort belonging to the helper isolate.
 Future<SendPort> _helperIsolateSendPort = () async {
@@ -95,6 +125,11 @@ Future<SendPort> _helperIsolateSendPort = () async {
         _sumRequests.remove(data.id);
         completer.complete(data.result);
         return;
+      } else if (data is _MoveResponse) {
+        final Completer<Pointer<Char>> completer = _moveRequests[data.id]!;
+        _moveRequests.remove(data.id);
+        completer.complete(data.result);
+        return;
       }
       throw UnsupportedError('Unsupported message type: ${data.runtimeType}');
     });
@@ -109,6 +144,11 @@ Future<SendPort> _helperIsolateSendPort = () async {
           final _SumResponse response = _SumResponse(data.id, result);
           sendPort.send(response);
           return;
+        } else if (data is _MoveRequest) {
+          final Pointer<Char> result = _bindings.GetAiChosenMove(data.boardStr, data.isWhite, data.aiName, data.N);
+          final _MoveResponse response = _MoveResponse(data.id, result);
+          sendPort.send(response);
+          return;
         }
         throw UnsupportedError('Unsupported message type: ${data.runtimeType}');
       });
@@ -121,3 +161,4 @@ Future<SendPort> _helperIsolateSendPort = () async {
   // can start sending requests.
   return completer.future;
 }();
+
