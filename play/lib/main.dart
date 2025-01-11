@@ -9,6 +9,16 @@ import 'constants.dart';
 import 'package:go_chess/go_chess.dart' as go_chess;
 
 var boardString = '';
+List<List<String>> parseBoardString(String boardStr) {
+  List<List<String>> board = [[],[],[],[],[],[],[],[],];
+  if (boardStr.length == BoardHeight * BoardWidth) {
+    for (int k=0; k<boardStr.length; k++){
+      board[k ~/BoardWidth].add(boardStr[k]);
+    }
+  }
+  return board;
+}
+
 
 void main() {
   runApp(MyApp());
@@ -71,29 +81,43 @@ class MyAppState extends ChangeNotifier {
   int? selectedI;
   int? selectedJ;
   String moveDestinations = '';
-  bool isWhiteTurn = true;
-  bool isBlackAi = true;
-  bool isWhiteAi = false;
+  bool isWhiteTurn = false;
+  bool isBlackAi = false;
+  bool isWhiteAi = true;
+  String gameStatus = statusWhiteMove;
+  bool isGameOver = false;
   String indicatedCoords = '';
   var white = const Color.fromARGB(255, 223, 150, 82);
   var greyedWhite = const Color.fromARGB(255, 180,170,170);
   var black = const Color.fromARGB(255, 116, 59, 6);
   var greyedBlack = const Color.fromARGB(255, 90,75,75);
   var selectedColor = const Color.fromARGB(255, 120, 0, 100);
-  List<List<String>> board = [
-    [BlackRookC, BlackKnight, BlackBishop, BlackQueen, BlackKing, BlackBishop, BlackKnight, BlackRookC,],
-    [BlackPawn,BlackPawn,BlackPawn,BlackPawn,BlackPawn,BlackPawn,BlackPawn,BlackPawn,],
-    [Space,Space,Space,Space,Space,Space,Space,Space,],
-    [Space,Space,Space,Space,Space,Space,Space,Space,],
-    [Space,Space,Space,Space,Space,Space,Space,Space,],
-    [Space,Space,Space,Space,Space,Space,Space,Space,],
-    [WhitePawn,WhitePawn,WhitePawn,WhitePawn,WhitePawn,WhitePawn,WhitePawn,WhitePawn,],
-    [WhiteRookC, WhiteKnight, WhiteBishop, WhiteQueen, WhiteKing, WhiteBishop, WhiteKnight, WhiteRookC,],
-  ];
+  List<List<String>> board = parseBoardString(boardBeforeWhiteCheckmate);
+  void resetGame() {
+    board = parseBoardString(startingBoard);
+    moveDestinations = '';
+    isWhiteTurn = true;
+    isBlackAi = true;
+    isWhiteAi = false;
+    gameStatus = statusWhiteMove;
+    isGameOver = false;
+    indicatedCoords = '';
+  }
+  
   void clearSelection() {
     selectedI = null;
     selectedJ = null;
     moveDestinations = '';
+  }
+  void humanSelectButton(int i, int j){
+    //functions that humans have to use to select the buttons
+    if (isGameOver) {
+      print('game is over');
+    } else if ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi)){
+      print('It is an AIs turn');
+    } else {
+      selectButton(i,j);
+    }
   }
   void selectButton(int i, int j){
     String piece = board[i][j];
@@ -117,15 +141,21 @@ class MyAppState extends ChangeNotifier {
       var moveStr = '$i,$j';
       if (moveDestinations.contains(moveStr)){
         print('legal move');
-        String newBoardStr = getBoardAfterMove(boardString, selectedI!, selectedJ!, i, j);
-        if (newBoardStr.length == BoardHeight * BoardWidth) {
-          for (int k=0; k<newBoardStr.length; k++){
-            board[k ~/BoardWidth][k%BoardWidth] = newBoardStr[k];
+        String boardResult = getBoardAfterMove(boardString, selectedI!, selectedJ!, i, j);
+        List<String> resultList = boardResult.split(',');
+        if (resultList.length == 2) {
+          String newBoardStr = resultList[0];
+          gameStatus = resultList[1];
+          if (gameStatus == statusCheckMate || gameStatus == statusStaleMate){
+            isGameOver = true;
           }
+
+          board = parseBoardString(newBoardStr);
           isWhiteTurn = !isWhiteTurn;
           isNotifyAi = true;
           indicatedCoords = '$selectedI,$selectedJ|$i,$j';
         }
+        
       } else {
         print('not one of the legal moves. Clearing selection');
       }
@@ -138,7 +168,7 @@ class MyAppState extends ChangeNotifier {
     }
   }
   void notifyAi() {
-    if ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi)) {
+    if (!isGameOver && ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi))) {
       //it is the ai's turn
       setBoardString();
       Future<String> aiMove = getAiChosenMove(boardString, isWhiteTurn, 'simple', 1);
@@ -230,7 +260,7 @@ class MyHomePage extends StatelessWidget {
       body: Column( 
         //mainAxisAlignment: MainAxisAlignment.center,  
         children: [
-          Text(appState.current.asLowerCase),
+          Text(appState.gameStatus),
           Row(children: [
             ElevatedButton(
               onPressed: () {
@@ -318,7 +348,7 @@ class Square extends StatelessWidget {
           child: ElevatedButton(
             style:style,
             onPressed: () {
-              appState.selectButton(i,j);
+              appState.humanSelectButton(i,j);
             }, 
             child: Text('')
           ),
@@ -331,7 +361,7 @@ class Square extends StatelessWidget {
           style:style,
           icon: Image.asset(iconLoc),
           onPressed: () {
-            appState.selectButton(i,j);
+            appState.humanSelectButton(i,j);
           },
           
         )

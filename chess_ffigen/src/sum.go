@@ -3,6 +3,7 @@ package main
 
 import "C"
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -20,7 +21,7 @@ func getAiChosenMove(boardStr string, isWhite bool, aiName string, N int) string
 	a := ai.GetAiFromString(aiName)
 	b := board.GetBoardFromString(boardStr)
 	m := a.ChooseMove(b, isWhite, N)
-	//time.Sleep(4 * time.Second)
+	time.Sleep(1 * time.Second)
 	return m.Encode()
 }
 
@@ -36,7 +37,10 @@ func getBoardAfterMoveEncoded(boardStr string, y1, x1, y2, x2 int) string {
 	moves := board.GetMovesFromBoardCoord(b, c1)
 	m := board.GetFirstEqualMove(moves, c1, c2)
 	b2 := board.GetBoardAfterMove(b, m)
-	return b2.Encode()
+	encodedBoard := b2.Encode()
+	isOtherColorWhite := !board.IsWhite(b2.GetPiece(c2))
+	gameStatus := board.GetGameStatus(b2, isOtherColorWhite)
+	return fmt.Sprintf("%v,%v", encodedBoard, gameStatus)
 }
 
 //export GetNextMoves
