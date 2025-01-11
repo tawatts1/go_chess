@@ -47,7 +47,6 @@ Future<String> getAiChosenMove(String boardStr, bool isWhite, String aiName, int
   final ffi.Pointer<ffi.Char> cBoardStr = boardStr.toNativeUtf8().cast<ffi.Char>();
   int isWhiteInt = isWhite ? 1 : 0;
   final ffi.Pointer<ffi.Char> cAiName = aiName.toNativeUtf8().cast<ffi.Char>();
-  //?? do I need to free the pointer<char> below??
   final ffi.Pointer<Utf8> movePtr = (await go_chess.getAiChosenMove(cBoardStr, isWhiteInt, cAiName, N)).cast<Utf8>();
   final moveString = movePtr.toDartString();
   calloc.free(cBoardStr);
