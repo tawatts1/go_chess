@@ -198,6 +198,10 @@ func TestGetBoardAfterMove(t *testing.T) {
 	test("0000k00000q000000000000000000000000pA00000000000000P0P000000K000",
 		"0000k000000000000000000000000000000pP00000000000000P0P0000q0K000",
 		Move{a: Coord{y: 1, x: 2}, b: Coord{y: 7, x: 2}})
+	test("o00qkb0op0pp0pppnp000p000000000Q00BP000000000000PPP00P0PONB0K0Nb",
+		"o00qkb0op0pp0pppnp000p000000000Q00BP000000000000PPPK0P0PRNB000Nb",
+		Move{a: Coord{y: 7, x: 4}, b: Coord{y: 6, x: 3}, special: WhiteKing})
+
 }
 
 func TestGetGameStatus(t *testing.T) {
