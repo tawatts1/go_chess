@@ -1,4 +1,12 @@
 
+const statusCheckMate = "Check Mate";
+const statusStaleMate = "Stale Mate";
+const statusBlackMove = "Black's Move";
+const statusWhiteMove = "White's Move";
+
+const startingBoard = "onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO";
+const boardBeforeWhiteCheckmate = "o00qkb0op0pp0pppnp000p000000000Q00BP000000000000PPP00PbPONB0K0NO";
+
 const piecesList = [
   '0',
   'p',
