@@ -405,7 +405,7 @@ func GetBoardAfterMove(b Board, m Move) Board {
 		for i := range BoardHeight {
 			for j := range BoardWidth {
 				if out.grid[i][j] == castleableRookCode {
-					out.grid[i][i] = CastleMap[castleableRookCode]
+					out.grid[i][j] = CastleMap[castleableRookCode]
 				}
 			}
 		}
