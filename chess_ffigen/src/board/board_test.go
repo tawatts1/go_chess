@@ -200,6 +200,23 @@ func TestGetBoardAfterMove(t *testing.T) {
 		Move{a: Coord{y: 1, x: 2}, b: Coord{y: 7, x: 2}})
 }
 
+func TestGetGameStatus(t *testing.T) {
+	test := func(b1str, status string, isWhite bool) {
+		b1 := GetBoardFromString(b1str)
+		calcStatus := GetGameStatus(b1, isWhite)
+		if calcStatus != status {
+			t.Errorf("expected (%v) but got (%v)", status, calcStatus)
+		}
+	}
+	test("onbqkbnopppp0Qpp000000000000p00000B0P00000000000PPPP0PPPONB0K0NO", StatusCheckMate, false)
+	test("onbqkbnopppp00pp000000000000p0Q000B0P00000000000PPPP0PPPONB0K0NO", StatusBlackMove, false)
+	test("0000k00000000000000000000000000000000000000000000r000000r000K000", StatusCheckMate, true)
+	test("0000k000000000000000000000000000000r0r00000000000r0000000000K000", StatusStaleMate, true)
+	test("00000k000000000000000NPP000000000B0r0r00000000000r0000000000K000", StatusBlackMove, false)
+	test("00000k000000000000000NPP000P00000BPr0r000P0000000r0000000000K000", StatusCheckMate, false)
+	test("00000k00000000000000000P00000000000r0r00000000000r0000000000K000", StatusWhiteMove, true)
+}
+
 // func TestGetBoardFromString(t *testing.T) {
 // 	b := GetBoardFromString(StartingBoard)
 // 	fmt.Println(b)

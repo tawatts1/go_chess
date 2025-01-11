@@ -2,6 +2,11 @@ package board
 
 import "fmt"
 
+const StatusCheckMate = "Check Mate"
+const StatusStaleMate = "Stale Mate"
+const StatusBlackMove = "Black's Move"
+const StatusWhiteMove = "White's Move"
+
 // A way to encode a Move via a Move from one coordinate to another
 type Move struct {
 	a, b    Coord
@@ -427,4 +432,28 @@ func GetBoardAfterMove(b Board, m Move) Board {
 	}
 
 	panic("Not implemented - special move")
+}
+
+func GetGameStatus(b Board, isWhite bool) string {
+	var friends, enemies map[Coord]bool
+	if isWhite {
+		friends = b.GetWhiteCoordMap()
+		enemies = b.GetBlackCoordMap()
+	} else {
+		friends = b.GetBlackCoordMap()
+		enemies = b.GetWhiteCoordMap()
+	}
+	if len(b.GetLegalMoves(isWhite)) == 0 {
+		if b.IsInCheck(friends, enemies, b.GetKingCoord(friends)) {
+			return StatusCheckMate
+		} else {
+			return StatusStaleMate
+		}
+	} else {
+		if isWhite {
+			return StatusWhiteMove
+		} else {
+			return StatusBlackMove
+		}
+	}
 }
