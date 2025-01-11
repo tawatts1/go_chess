@@ -81,9 +81,9 @@ class MyAppState extends ChangeNotifier {
   int? selectedI;
   int? selectedJ;
   String moveDestinations = '';
-  bool isWhiteTurn = false;
-  bool isBlackAi = false;
-  bool isWhiteAi = true;
+  bool isWhiteTurn = true;
+  bool isBlackAi = true;
+  bool isWhiteAi = false;
   String gameStatus = statusWhiteMove;
   bool isGameOver = false;
   String indicatedCoords = '';
@@ -92,7 +92,7 @@ class MyAppState extends ChangeNotifier {
   var black = const Color.fromARGB(255, 116, 59, 6);
   var greyedBlack = const Color.fromARGB(255, 90,75,75);
   var selectedColor = const Color.fromARGB(255, 120, 0, 100);
-  List<List<String>> board = parseBoardString(boardBeforeWhiteCheckmate);
+  List<List<String>> board = parseBoardString(startingBoard);
   void resetGame() {
     board = parseBoardString(startingBoard);
     moveDestinations = '';
@@ -102,6 +102,7 @@ class MyAppState extends ChangeNotifier {
     gameStatus = statusWhiteMove;
     isGameOver = false;
     indicatedCoords = '';
+    notifyListeners();
   }
   
   void clearSelection() {
@@ -203,17 +204,6 @@ class MyAppState extends ChangeNotifier {
   void printBoard() {
     print(boardString);
   }
-  void clearPieces() {
-    for (int i= 0; i<board.length; i++) {
-      for (int j=0; j<board[0].length; j++) {
-        String p = board[i][j];
-        if (p != BlackKing && p != WhiteKing) {
-          board[i][j] = Space;
-        }
-      }
-    }
-    notifyListeners();
-  }
   Color getColor(int i, int j){
     bool isLightSquare = (i+j)%2==0;
     if (i==selectedI && j==selectedJ) {
@@ -270,9 +260,9 @@ class MyHomePage extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                appState.clearPieces();
+                appState.resetGame();
               },
-              child: Text('Delete all\nexcept kings'),
+              child: Text('Reset Game'),
             ),
           ],)
           ] 
