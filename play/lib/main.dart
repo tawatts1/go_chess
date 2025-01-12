@@ -91,6 +91,7 @@ class MyAppState extends ChangeNotifier {
   var black = const Color.fromARGB(255, 116, 59, 6);
   var greyedBlack = const Color.fromARGB(255, 90,75,75);
   var selectedColor = const Color.fromARGB(255, 120, 0, 100);
+  int aiDropdownDepth = 1;
   List<List<String>> board = parseBoardString(startingBoard);
   void resetGame() {
     board = parseBoardString(startingBoard);
@@ -101,6 +102,7 @@ class MyAppState extends ChangeNotifier {
     gameStatus = statusWhiteMove;
     isGameOver = false;
     indicatedCoords = '';
+    clearSelection();
     notifyListeners();
   }
   
@@ -171,7 +173,7 @@ class MyAppState extends ChangeNotifier {
     if (!isGameOver && ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi))) {
       //it is the ai's turn
       setBoardString();
-      Future<String> aiMove = getAiChosenMove(boardString, isWhiteTurn, 'simple', 1);
+      Future<String> aiMove = getAiChosenMove(boardString, isWhiteTurn, 'simple', aiDropdownDepth);
       aiMove.then((value) => simulateClickBoard(value))
       .catchError((error) => print(error));
     }
@@ -236,6 +238,10 @@ class MyAppState extends ChangeNotifier {
       }
     }
   }
+  void setAiDepth(int d) {
+    aiDropdownDepth = d;
+    notifyListeners();
+  }
 }
 
 
@@ -262,9 +268,23 @@ class MyHomePage extends StatelessWidget {
                 onPressed: () {
                   appState.resetGame();
                 },
-                child: const Text('Reset Game'),
+                child: const Text('Reset\nGame'),
               ),
-            ],),
+              DropdownButton<int>(
+                value: appState.aiDropdownDepth,
+                icon: const Icon(Icons.arrow_downward),
+                elevation: 16,
+                underline: Container(height: 2, color:Colors.grey,),
+                onChanged: (int? value) {
+                  appState.setAiDepth(value!); 
+                },
+                items: aiDropdownList.map<DropdownMenuItem<int>>((int value) {
+                  return DropdownMenuItem<int>(value:value, child:Text('$value'),
+                  );
+                }).toList(),
+              )
+            ]
+            ),
           ),
           Text(appState.gameStatus, style: const TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
           ] 
@@ -360,5 +380,3 @@ class Square extends StatelessWidget {
       );
   }
 }
-
-
