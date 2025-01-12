@@ -18,9 +18,9 @@ func GetAiChosenMove(boardStr *C.char, isWhite C.int, aiName *C.char, N C.int) *
 }
 
 func getAiChosenMove(boardStr string, isWhite bool, aiName string, N int) string {
-	a := ai.GetAiFromString(aiName)
+	//a := ai.GetAiFromString(aiName)
 	b := board.GetBoardFromString(boardStr)
-	m := a.ChooseMove(b, isWhite, N)
+	m := ai.ChooseMove(b, isWhite, N)
 	time.Sleep(1 * time.Second)
 	return m.Encode()
 }
