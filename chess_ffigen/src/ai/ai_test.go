@@ -47,7 +47,7 @@ func testAiMoveFile(fname string) string {
 			} else {
 				N = Nparsed
 			}
-		} else if args[0] == "move" {
+		} else if args[0] == "move" || args[0] == "notmove" {
 			color := args[1]
 			y1, ok1 := strconv.Atoi(args[2])
 			x1, ok2 := strconv.Atoi(args[3])
@@ -78,8 +78,10 @@ func testAiMoveFile(fname string) string {
 			}
 			mExpected := board.NewMove(c1, c2, special)
 			mResult := ChooseMove(b, isWhite, N)
-			if !mResult.Equals(mExpected) {
+			if args[0] == "move" && !mResult.Equals(mExpected) {
 				return fmt.Sprintf("line %v: Expected %v but got %v", lineIndex+1, mExpected, mResult)
+			} else if args[0] == "notmove" && mResult.Equals(mExpected) {
+				return fmt.Sprintf("line %v: Expected anything but %v", lineIndex+1, mResult)
 			}
 		}
 	}
