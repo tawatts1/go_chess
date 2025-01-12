@@ -2,18 +2,14 @@ package ai
 
 import "github.com/tawatts1/go_chess/board"
 
-type boardPieceScore struct {
-	pieceMap map[rune]float64
-}
-
-func (bs boardPieceScore) getScore(b board.Board, isWhite bool) float64 {
+func getScore(b board.Board, isWhite bool) float64 {
 	var out float64
 	var multiplier float64 = 1
 	if isWhite {
 		multiplier = -1
 	}
 	for _, c := range board.AllCoordinates {
-		out += multiplier * bs.pieceMap[b.GetPiece(c)]
+		out += multiplier * defaultPieceValue[b.GetPiece(c)]
 	}
 	return out
 }

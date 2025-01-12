@@ -27,7 +27,7 @@ func testAiMoveFile(fname string) string {
 	data, err := os.ReadFile(fname)
 	check(err)
 	lines := strings.Split(string(data), "\n")
-	var a ai
+	//var a ai
 	var N int
 	var b board.Board
 	for lineIndex, line := range lines {
@@ -39,7 +39,7 @@ func testAiMoveFile(fname string) string {
 		}
 		args := strings.Split(line, ",")
 		if args[0] == "new" {
-			a = GetAiFromString(args[1])
+			//a = GetAiFromString(args[1])
 			Nparsed, ok := strconv.Atoi(args[2])
 			b = board.GetBoardFromString(args[3])
 			if hasError(ok) {
@@ -77,7 +77,7 @@ func testAiMoveFile(fname string) string {
 				special = r[0]
 			}
 			mExpected := board.NewMove(c1, c2, special)
-			mResult := a.ChooseMove(b, isWhite, N)
+			mResult := ChooseMove(b, isWhite, N)
 			if !mResult.Equals(mExpected) {
 				return fmt.Sprintf("line %v: Expected %v but got %v", lineIndex+1, mExpected, mResult)
 			}
