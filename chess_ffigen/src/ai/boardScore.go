@@ -2,7 +2,7 @@ package ai
 
 import "github.com/tawatts1/go_chess/board"
 
-func getScore(b board.Board, isWhite bool) float64 {
+func getScoreFromBoard(b board.Board, isWhite bool) float64 {
 	var out float64
 	var multiplier float64 = 1
 	if isWhite {

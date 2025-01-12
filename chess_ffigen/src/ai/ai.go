@@ -9,12 +9,14 @@ import (
 
 const Epsilon = 0.0001
 
+var inf float64 = 1000000
+
 var simpleAICode = "simple"
 
 func GetScoreAfterMove(b board.Board, m board.Move, isWhite bool) float64 {
 	var out float64 = 0
 	boardAfterMove := board.GetBoardAfterMove(b, m)
-	out += getScore(boardAfterMove, isWhite)
+	out += getScoreFromBoard(boardAfterMove, isWhite)
 	return out
 }
 
@@ -22,7 +24,7 @@ func GetScoreAfterMove(b board.Board, m board.Move, isWhite bool) float64 {
 
 func GetAiFromString(aiCode string) func(board.Board, bool) float64 {
 	if aiCode == simpleAICode {
-		return getScore
+		return getScoreFromBoard
 	} else {
 		panic("ai code does not match")
 	}
@@ -66,16 +68,42 @@ func (mList moveList) GetMaxScoreMove() board.Move {
 func ChooseMove(b board.Board, isWhite bool, depth int) board.Move {
 	mList := newMoveList(b.GetLegalMoves(isWhite))
 	if depth == 0 {
-		return mList.moves[rand.Intn(mList.size)]
-	} else if depth == 1 {
+		return mList.GetMaxScoreMove()
+		// } else if depth == 1 {
+		// 	for i := range mList.size {
+		// 		mList.scores[i] = GetScoreAfterMove(b, mList.moves[i], isWhite)
+		// 	}
+		// 	return mList.GetMaxScoreMove()
+	} else if depth > 0 {
 		for i := range mList.size {
-			mList.scores[i] = GetScoreAfterMove(b, mList.moves[i], isWhite)
+			mList.scores[i] = -GetScore(
+				board.GetBoardAfterMove(b, mList.moves[i]),
+				!isWhite,
+				depth-1)
 		}
 		return mList.GetMaxScoreMove()
-		//} else if depth > 1 {
-
 	} else {
 		panic("This depth is not implemented. ")
 	}
+}
 
+func GetScore(b board.Board, isWhite bool, depth int) float64 {
+	if depth == 0 {
+		return getScoreFromBoard(b, isWhite)
+	} else if depth > 0 {
+		moves := b.GetLegalMoves(isWhite)
+		maxScore := -2 * inf
+		for i := range len(moves) {
+			score := -GetScore(
+				board.GetBoardAfterMove(b, moves[i]),
+				!isWhite,
+				depth-1)
+			if score > maxScore {
+				maxScore = score
+			}
+		}
+		return maxScore
+	} else {
+		panic("invalid depth")
+	}
 }
