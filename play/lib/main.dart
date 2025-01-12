@@ -249,21 +249,24 @@ class MyHomePage extends StatelessWidget {
       body: Column( 
         //mainAxisAlignment: MainAxisAlignment.center,  
         children: [
-          Text(appState.gameStatus),
-          Row(children: [
-            ElevatedButton(
-              onPressed: () {
-                appState.printBoard();
-              },
-              child: Text('Print'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                appState.resetGame();
-              },
-              child: Text('Reset Game'),
-            ),
-          ],)
+          Padding(
+            padding: const EdgeInsets.only(top:20.0),
+            child: Row(children: [
+              ElevatedButton(
+                onPressed: () {
+                  appState.printBoard();
+                },
+                child: Text('Print'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  appState.resetGame();
+                },
+                child: const Text('Reset Game'),
+              ),
+            ],),
+          ),
+          Text(appState.gameStatus, style: const TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
           ] 
           + myBoard(appState),
       ),
@@ -296,7 +299,7 @@ class MyHomePage extends StatelessWidget {
 }
 
 class Square extends StatelessWidget {
-  Square({
+  const Square({
     super.key,
     required this.pieceCode,
     required this.color,
