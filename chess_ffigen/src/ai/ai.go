@@ -11,21 +11,18 @@ const Epsilon = 0.0001
 
 var simpleAICode = "simple"
 
-type ai struct {
-	s0 boardPieceScore
-	//eventually the scoring ai will be more complicated, including other scoring methods like position.
-}
-
-func (a ai) GetScoreAfterMove(b board.Board, m board.Move, isWhite bool) float64 {
+func GetScoreAfterMove(b board.Board, m board.Move, isWhite bool) float64 {
 	var out float64 = 0
 	boardAfterMove := board.GetBoardAfterMove(b, m)
-	out += a.s0.getScore(boardAfterMove, isWhite)
+	out += getScore(boardAfterMove, isWhite)
 	return out
 }
 
-func GetAiFromString(aiCode string) ai {
+// func GetScore(b board.Board)
+
+func GetAiFromString(aiCode string) func(board.Board, bool) float64 {
 	if aiCode == simpleAICode {
-		return ai{boardPieceScore{pieceMap: defaultPieceValue}}
+		return getScore
 	} else {
 		panic("ai code does not match")
 	}
@@ -66,15 +63,17 @@ func (mList moveList) GetMaxScoreMove() board.Move {
 	}
 }
 
-func (a ai) ChooseMove(b board.Board, isWhite bool, depth int) board.Move {
+func ChooseMove(b board.Board, isWhite bool, depth int) board.Move {
 	mList := newMoveList(b.GetLegalMoves(isWhite))
 	if depth == 0 {
 		return mList.moves[rand.Intn(mList.size)]
 	} else if depth == 1 {
 		for i := range mList.size {
-			mList.scores[i] = a.GetScoreAfterMove(b, mList.moves[i], isWhite)
+			mList.scores[i] = GetScoreAfterMove(b, mList.moves[i], isWhite)
 		}
 		return mList.GetMaxScoreMove()
+		//} else if depth > 1 {
+
 	} else {
 		panic("This depth is not implemented. ")
 	}
