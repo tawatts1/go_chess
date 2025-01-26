@@ -49,10 +49,10 @@ func testAiMoveFile(fname string) string {
 			}
 		} else if args[0] == "move" || args[0] == "notmove" {
 			color := args[1]
-			y1, ok1 := strconv.Atoi(args[2])
-			x1, ok2 := strconv.Atoi(args[3])
-			y2, ok3 := strconv.Atoi(args[4])
-			x2, ok4 := strconv.Atoi(args[5])
+			y1, ok1 := strconv.Atoi(strings.TrimSpace(args[2]))
+			x1, ok2 := strconv.Atoi(strings.TrimSpace(args[3]))
+			y2, ok3 := strconv.Atoi(strings.TrimSpace(args[4]))
+			x2, ok4 := strconv.Atoi(strings.TrimSpace(args[5]))
 			var isWhite bool
 			if color == string(board.White) {
 				isWhite = true
@@ -70,7 +70,7 @@ func testAiMoveFile(fname string) string {
 				c2 = board.NewCoord(y2, x2)
 			}
 
-			r := []rune(args[6])
+			r := []rune(strings.TrimSpace(args[6]))
 			if len(r) > 1 {
 				return fmt.Sprintf("%v: special column must be one or zero characters. ", lineIndex+1)
 			} else if len(r) == 1 {
