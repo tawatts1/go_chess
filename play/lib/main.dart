@@ -1,6 +1,6 @@
+import 'dart:developer';
 import 'dart:ffi' as ffi;
 
-import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ffi/ffi.dart';
@@ -44,6 +44,7 @@ class MyApp extends StatelessWidget {
 }
 
 Future<String> getAiChosenMove(String boardStr, bool isWhite, String aiName, int N) async {
+  log('$aiName,$boardStr,$N,${isWhite?"w":"b"}');
   final ffi.Pointer<ffi.Char> cBoardStr = boardStr.toNativeUtf8().cast<ffi.Char>();
   int isWhiteInt = isWhite ? 1 : 0;
   final ffi.Pointer<ffi.Char> cAiName = aiName.toNativeUtf8().cast<ffi.Char>();
@@ -76,7 +77,6 @@ String getMoves(String boardStr, int i, int j){
 const colorChange = 30;
 
 class MyAppState extends ChangeNotifier {
-  var current = WordPair.random();
   int? selectedI;
   int? selectedJ;
   String moveDestinations = '';
@@ -114,9 +114,9 @@ class MyAppState extends ChangeNotifier {
   void humanSelectButton(int i, int j){
     //functions that humans have to use to select the buttons
     if (isGameOver) {
-      print('game is over');
+      log('game is over');
     } else if ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi)){
-      print('It is an AIs turn');
+      log('It is an AIs turn');
     } else {
       selectButton(i,j);
     }
@@ -127,22 +127,22 @@ class MyAppState extends ChangeNotifier {
     if (selectedI == null || selectedJ == null) {
       // no selection has been made
       if (piece == Space) {
-        print('try clicking on a piece!');
+        log('try clicking on a piece!');
       } else if ((isWhiteTurn && (whiteMap[piece] ?? false)) ||
                  (!isWhiteTurn && !(whiteMap[piece] ?? true))) {
         //mark down the selection and populate the move destinations
         selectedI = i;
         selectedJ = j;
         moveDestinations = getMoves(boardString, i, j);
-        print(moveDestinations);
+        log(moveDestinations);
       } else {
-        print('not that colors turn');
+        log('not that colors turn');
       }
     } else if (selectedI != null && selectedJ != null) {
       // a move has already been selected. 
       var moveStr = '$i,$j';
       if (moveDestinations.contains(moveStr)){
-        print('legal move');
+        log('legal move');
         String boardResult = getBoardAfterMove(boardString, selectedI!, selectedJ!, i, j);
         List<String> resultList = boardResult.split(',');
         if (resultList.length == 2) {
@@ -159,7 +159,7 @@ class MyAppState extends ChangeNotifier {
         }
         
       } else {
-        print('not one of the legal moves. Clearing selection');
+        log('not one of the legal moves. Clearing selection');
       }
       clearSelection();
     }
@@ -175,7 +175,7 @@ class MyAppState extends ChangeNotifier {
       setBoardString();
       Future<String> aiMove = getAiChosenMove(boardString, isWhiteTurn, 'simple', aiDropdownDepth);
       aiMove.then((value) => simulateClickBoard(value))
-      .catchError((error) => print(error));
+      .catchError((error) => log(error));
     }
   }
   void simulateClickBoard(String moveStr) {
@@ -189,11 +189,11 @@ class MyAppState extends ChangeNotifier {
         selectButton(i1,j1);
         selectButton(i2,j2);
         // Future<String> endMoveStr = waitAndClickPiece(i2, j2);
-        // endMoveStr.then((value) => print(value))
-        // .catchError((error) => print(error));
+        // endMoveStr.then((value) => log(value))
+        // .catchError((error) => log(error));
         // notifyListeners();
       } catch(ex) {
-        print("failed to parse ai move");
+        log("failed to parse ai move");
       }
     }
   }
@@ -203,7 +203,7 @@ class MyAppState extends ChangeNotifier {
   //   return "Ai finished move";
   // }
   void printBoard() {
-    print(boardString);
+    log(boardString);
   }
   Color getColor(int i, int j){
     bool isLightSquare = (i+j)%2==0;
