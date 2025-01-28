@@ -56,14 +56,20 @@ func (mList moveList) GetMaxScoreMove() board.Move {
 
 func ChooseMove(b board.Board, isWhite bool, depth int) board.Move {
 	mList := newMoveList(b.GetLegalMoves(isWhite))
+	wcs := -utility.Infinity //worst case scenario
 	if depth == 0 {
 		return mList.GetMaxScoreMove()
 	} else if depth > 0 {
 		for i := range mList.size {
-			mList.scores[i] = -GetScore(
+			score_i := -GetScore(
 				board.GetBoardAfterMove(b, mList.moves[i]),
 				!isWhite,
-				depth-1)
+				depth-1,
+				-wcs)
+			mList.scores[i] = score_i
+			if score_i > wcs {
+				wcs = score_i
+			}
 		}
 		return mList.GetMaxScoreMove()
 	} else {
@@ -71,19 +77,37 @@ func ChooseMove(b board.Board, isWhite bool, depth int) board.Move {
 	}
 }
 
-func GetScore(b board.Board, isWhite bool, depth int) float64 {
+func GetScore(b board.Board, isWhite bool, depth int, parent_wcs float64) float64 {
+	wcs := -utility.Infinity
 	if depth == 0 {
 		return getScoreFromBoard(b, isWhite)
 	} else if depth > 0 {
 		moves := b.GetLegalMoves(isWhite)
-		maxScore := -2 * utility.Infinity
+		maxScore := wcs
 		for i := range len(moves) {
 			score := -GetScore(
 				board.GetBoardAfterMove(b, moves[i]),
 				!isWhite,
-				depth-1)
+				depth-1,
+				-wcs)
+			// Let us say if white does move A, the worst that will happen
+			// after that is white gaining 5 points, so great for them!
+			// Now white is considering move B. After move B, White pretends
+			// to be black, and the value -5 is passed as the parent_wcs.
+			// If after move B, black does move Alpha which can force a loss
+			// of only 2 points, black would be glad since white didn't
+			// do move A which would have been way worse for them.
+			// So white should not consider move B anymore after seeing that
+			// black could get a better deal.
+			// the key metric there is that -2 > -5, or score > parent_wcs
 			if score > maxScore {
 				maxScore = score
+				if score > parent_wcs && !utility.IsClose(score, parent_wcs) {
+					break
+				}
+				if score > wcs {
+					wcs = score
+				}
 			}
 		}
 		return maxScore
