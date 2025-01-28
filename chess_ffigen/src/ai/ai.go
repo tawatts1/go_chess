@@ -1,15 +1,10 @@
 package ai
 
 import (
-	"math"
-
 	"github.com/tawatts1/go_chess/board"
+	"github.com/tawatts1/go_chess/utility"
 	"golang.org/x/exp/rand"
 )
-
-const Epsilon = 0.0001
-
-var inf float64 = 1000000
 
 var simpleAICode = "simple"
 
@@ -19,8 +14,6 @@ func GetScoreAfterMove(b board.Board, m board.Move, isWhite bool) float64 {
 	out += getScoreFromBoard(boardAfterMove, isWhite)
 	return out
 }
-
-// func GetScore(b board.Board)
 
 func GetAiFromString(aiCode string) func(board.Board, bool) float64 {
 	if aiCode == simpleAICode {
@@ -40,10 +33,6 @@ func newMoveList(moves []board.Move) moveList {
 	return moveList{moves: moves, scores: make([]float64, len(moves), len(moves)), size: len(moves)}
 }
 
-func IsClose(num1, num2 float64) bool {
-	return math.Abs(num1-num2) < Epsilon
-}
-
 // after the scores are calculated, choose the best move. No need for this function to be efficient as it is called only once.
 func (mList moveList) GetMaxScoreMove() board.Move {
 	if mList.size > 0 {
@@ -55,7 +44,7 @@ func (mList moveList) GetMaxScoreMove() board.Move {
 		}
 		bestMoves := make([]board.Move, 0)
 		for i := 0; i < mList.size; i++ {
-			if IsClose(maxScore, mList.scores[i]) {
+			if utility.IsClose(maxScore, mList.scores[i]) {
 				bestMoves = append(bestMoves, mList.moves[i])
 			}
 		}
@@ -69,11 +58,6 @@ func ChooseMove(b board.Board, isWhite bool, depth int) board.Move {
 	mList := newMoveList(b.GetLegalMoves(isWhite))
 	if depth == 0 {
 		return mList.GetMaxScoreMove()
-		// } else if depth == 1 {
-		// 	for i := range mList.size {
-		// 		mList.scores[i] = GetScoreAfterMove(b, mList.moves[i], isWhite)
-		// 	}
-		// 	return mList.GetMaxScoreMove()
 	} else if depth > 0 {
 		for i := range mList.size {
 			mList.scores[i] = -GetScore(
@@ -92,7 +76,7 @@ func GetScore(b board.Board, isWhite bool, depth int) float64 {
 		return getScoreFromBoard(b, isWhite)
 	} else if depth > 0 {
 		moves := b.GetLegalMoves(isWhite)
-		maxScore := -2 * inf
+		maxScore := -2 * utility.Infinity
 		for i := range len(moves) {
 			score := -GetScore(
 				board.GetBoardAfterMove(b, moves[i]),
