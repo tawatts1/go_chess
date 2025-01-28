@@ -3,14 +3,14 @@ package ai
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/tawatts1/go_chess/board"
+	"github.com/tawatts1/go_chess/utility"
 )
 
-var verbose bool = true
+var verbosity int = 2
 var testFolder = "testingMoves/"
 
 func check(e error) {
@@ -31,17 +31,22 @@ func testAiMoveFile(fname string) string {
 	var N int
 	var b board.Board
 	for lineIndex, line := range lines {
-		if verbose {
-			fmt.Println(line)
-		}
+
 		if len(line) < 5 || []rune(line)[0] == '#' {
 			continue
+		}
+		if verbosity > 0 {
+			fmt.Println(line)
 		}
 		args := strings.Split(line, ",")
 		if args[0] == "new" {
 			//a = GetAiFromString(args[1])
-			Nparsed, ok := strconv.Atoi(args[2])
+
+			Nparsed, ok := utility.StrToInt(args[2])
 			b = board.GetBoardFromString(args[3])
+			if verbosity > 1 {
+				fmt.Println(b)
+			}
 			if hasError(ok) {
 				panic("failed to parse N")
 			} else {
@@ -49,10 +54,10 @@ func testAiMoveFile(fname string) string {
 			}
 		} else if args[0] == "move" || args[0] == "notmove" {
 			color := args[1]
-			y1, ok1 := strconv.Atoi(strings.TrimSpace(args[2]))
-			x1, ok2 := strconv.Atoi(strings.TrimSpace(args[3]))
-			y2, ok3 := strconv.Atoi(strings.TrimSpace(args[4]))
-			x2, ok4 := strconv.Atoi(strings.TrimSpace(args[5]))
+			y1, ok1 := utility.StrToInt(args[2])
+			x1, ok2 := utility.StrToInt(args[3])
+			y2, ok3 := utility.StrToInt(args[4])
+			x2, ok4 := utility.StrToInt(args[5])
 			var isWhite bool
 			if color == string(board.White) {
 				isWhite = true
