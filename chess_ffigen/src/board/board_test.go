@@ -3,9 +3,10 @@ package board
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/tawatts1/go_chess/utility"
 )
 
 var boardsDir string = "testingBoards/"
@@ -41,9 +42,9 @@ func testMoveFile(fname string) string {
 			}
 
 		} else if args[0] == "num" {
-			y_, ok1 := strconv.Atoi(strings.TrimSpace(args[1]))
-			x_, ok2 := strconv.Atoi(strings.TrimSpace(args[2]))
-			expected_len, ok3 := strconv.Atoi(strings.TrimSpace(args[3]))
+			y_, ok1 := utility.StrToInt(args[1])
+			x_, ok2 := utility.StrToInt(args[2])
+			expected_len, ok3 := utility.StrToInt(args[3])
 			var c Coord
 			if hasError(ok1) || hasError(ok2) || hasError(ok3) {
 				panic(fmt.Sprintf("failed to parse line %v", lineIndex+1))
@@ -60,10 +61,10 @@ func testMoveFile(fname string) string {
 				return fmt.Sprintf("%v: expected %v, got %v", lineIndex+1, expected_len, actual_len)
 			}
 		} else if args[0] == "has" {
-			y1, ok1 := strconv.Atoi(strings.TrimSpace(args[1]))
-			x1, ok2 := strconv.Atoi(strings.TrimSpace(args[2]))
-			y2, ok3 := strconv.Atoi(strings.TrimSpace(args[3]))
-			x2, ok4 := strconv.Atoi(strings.TrimSpace(args[4]))
+			y1, ok1 := utility.StrToInt(args[1])
+			x1, ok2 := utility.StrToInt(args[2])
+			y2, ok3 := utility.StrToInt(args[3])
+			x2, ok4 := utility.StrToInt(args[4])
 			var special rune
 			var c1, c2 Coord
 			var m Move
