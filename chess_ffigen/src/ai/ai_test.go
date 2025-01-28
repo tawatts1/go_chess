@@ -100,3 +100,31 @@ func TestChooseMove(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func BenchmarkOpening3(b *testing.B) {
+	startingBoard := board.GetBoardFromString("onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO")
+	for n := 0; n < b.N; n++ {
+		ChooseMove(startingBoard, true, 3)
+	}
+}
+
+func BenchmarkOpening4(b *testing.B) {
+	startingBoard := board.GetBoardFromString("onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO")
+	for n := 0; n < b.N; n++ {
+		ChooseMove(startingBoard, true, 4)
+	}
+}
+
+func BenchmarkPawns5(b *testing.B) {
+	startingBoard := board.GetBoardFromString("00000000ppp0000000000k000000000000000PPP00000000000000000K000000")
+	for n := 0; n < b.N; n++ {
+		ChooseMove(startingBoard, true, 5)
+	}
+}
+
+func BenchmarkFork4(b *testing.B) {
+	startingBoard := board.GetBoardFromString("onb0kb0opp000ppp00000n000N0qp0000000000000000Q00PPPP0PPPO0B0KB0O")
+	for n := 0; n < b.N; n++ {
+		ChooseMove(startingBoard, true, 4)
+	}
+}
