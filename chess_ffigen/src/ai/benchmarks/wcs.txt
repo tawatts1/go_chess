@@ -1,0 +1,10 @@
+goos: linux
+goarch: amd64
+pkg: github.com/tawatts1/go_chess/ai
+cpu: AMD Ryzen 7 5800X 8-Core Processor             
+BenchmarkOpening3-16    	      10	 108198732 ns/op	46270084 B/op	  301908 allocs/op
+BenchmarkOpening4-16    	       1	2285106109 ns/op	1020328296 B/op	 6527651 allocs/op
+BenchmarkPawns5-16      	       3	 353985950 ns/op	84718597 B/op	  891047 allocs/op
+BenchmarkFork4-16       	       1	2771057470 ns/op	1518083280 B/op	 7790520 allocs/op
+PASS
+ok  	github.com/tawatts1/go_chess/ai	8.668s
