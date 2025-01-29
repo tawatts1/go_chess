@@ -1,6 +1,8 @@
 package ai
 
 import (
+	"fmt"
+
 	"github.com/tawatts1/go_chess/board"
 	"github.com/tawatts1/go_chess/utility"
 	"golang.org/x/exp/rand"
@@ -56,10 +58,16 @@ func (mList moveList) GetMaxScoreMove() board.Move {
 
 func ChooseMove(b board.Board, isWhite bool, depth int) board.Move {
 	mList := newMoveList(b.GetLegalMoves(isWhite))
-	wcs := -utility.Infinity //worst case scenario
+	mList = mList.SortMoveList(b, isWhite, depth)
+	return mList.GetMaxScoreMove()
+}
+
+func (mList moveList) SortMoveList(b board.Board, isWhite bool, depth int) moveList {
+	// calculate score of moves for a certain depth, then return sorted moveList
 	if depth == 0 {
-		return mList.GetMaxScoreMove()
+		return mList
 	} else if depth > 0 {
+		wcs := -utility.Infinity
 		for i := range mList.size {
 			score_i := -GetScore(
 				board.GetBoardAfterMove(b, mList.moves[i]),
@@ -71,10 +79,34 @@ func ChooseMove(b board.Board, isWhite bool, depth int) board.Move {
 				wcs = score_i
 			}
 		}
-		return mList.GetMaxScoreMove()
+		// Now sort moves list based on scores, in descending order.
+		// Insertion sort
+		for i := 1; i < mList.size; i++ {
+			for j := i; j > 0; j-- {
+				if mList.scores[j] > mList.scores[j-1] && !utility.IsClose(mList.scores[j], mList.scores[j-1]) {
+					mList.scores[j], mList.scores[j-1] = mList.scores[j-1], mList.scores[j]
+					mList.moves[j], mList.moves[j-1] = mList.moves[j-1], mList.moves[j]
+				} else {
+					break
+				}
+			}
+		}
+		if !mList.isSortedDesc() {
+			panic("list not sorted properly")
+		}
+		return mList
 	} else {
-		panic("This depth is not implemented. ")
+		panic(fmt.Sprintf("Invalid depth: %v", depth))
 	}
+}
+
+func (mList moveList) isSortedDesc() bool {
+	for i := 1; i < mList.size; i++ {
+		if !utility.IsApproxGreaterThanOrEq(mList.scores[i-1], mList.scores[i]) {
+			return false
+		}
+	}
+	return true
 }
 
 func GetScore(b board.Board, isWhite bool, depth int, parent_wcs float64) float64 {
