@@ -24,3 +24,7 @@ func StrToInt(s string) (int, error) {
 func IsClose(num1, num2 float64) bool {
 	return math.Abs(num1-num2) < Epsilon
 }
+
+func IsApproxGreaterThanOrEq(num1, num2 float64) bool {
+	return num1 > num2 || IsClose(num1, num2)
+}
