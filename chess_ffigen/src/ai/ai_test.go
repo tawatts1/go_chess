@@ -128,3 +128,12 @@ func BenchmarkFork4(b *testing.B) {
 		ChooseMove(startingBoard, true, 4)
 	}
 }
+
+func BenchmarkCaptureChains4(b *testing.B) {
+	sb1 := board.GetBoardFromString("00b0k0000n00000000ppppr00P000000000PPP00000BNB00000000000000K000")
+	sb2 := board.GetBoardFromString("000nk00000npp00000b00p00R00p00000000P00000NP0000000PPP000000K000")
+	for n := 0; n < b.N; n++ {
+		ChooseMove(sb1, true, 4)
+		ChooseMove(sb2, true, 4)
+	}
+}
