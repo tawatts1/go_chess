@@ -58,15 +58,18 @@ func (mList moveList) GetMaxScoreMove() board.Move {
 
 func ChooseMove(b board.Board, isWhite bool, depth int) board.Move {
 	mList := newMoveList(b.GetLegalMoves(isWhite))
-	mList = mList.SortMoveList(b, isWhite, depth)
+	mList = SortMoveList(mList, b, isWhite, depth)
 	return mList.GetMaxScoreMove()
 }
 
-func (mList moveList) SortMoveList(b board.Board, isWhite bool, depth int) moveList {
+func SortMoveList(mList moveList, b board.Board, isWhite bool, depth int) moveList {
 	// calculate score of moves for a certain depth, then return sorted moveList
 	if depth == 0 {
 		return mList
 	} else if depth > 0 {
+		if depth > 1 {
+			mList = SortMoveList(mList, b, isWhite, depth-1)
+		}
 		wcs := -utility.Infinity
 		for i := range mList.size {
 			score_i := -GetScore(
