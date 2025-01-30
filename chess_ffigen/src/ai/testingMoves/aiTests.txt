@@ -27,6 +27,11 @@ new,simple,onbqkbnopppp0ppp000000000000p0N00000P000000P0000PPP00PPPONBQKB0O
 notmove,2,b,0,3,3,6,,do not attack protected knight with queen
 new,simple,onbqkbnopppp0ppp000000000000p0N00000P000000P0000PPP00PPPON0QKB0O
 move,2,b,0,3,3,6,,do attack unprotected knight with queen
-verbosity,0
 new,simple,on00kb0oppp0p0p000000000000N0p00000P000p0000000PPPP00PP00000K0NO
 move,4,b,0,1,2,0,,
+new,simple,000kn0n000ppp00P00000p0pp00000000P000000P0000000000PPP000000K000
+move,1,w,1,7,0,6,Q,
+move,2,w,1,7,0,6,Q,
+move,3,w,1,7,0,6,Q,
+move,4,w,4,1,3,0,,
+verbosity,2
