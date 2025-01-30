@@ -116,15 +116,18 @@ func (mList moveList) isSortedDesc() bool {
 
 // Get the score by looking 'depth' number of moves ahead.
 func GetScore(b board.Board, isWhite bool, depth int, parent_wcs float64) float64 {
-	wcs := -utility.Infinity
 	if depth == 0 {
 		return getScoreFromBoard(b, isWhite)
 	} else if depth > 0 {
-		moves := b.GetLegalMoves(isWhite)
+		wcs := -utility.Infinity
 		maxScore := wcs
-		for i := range len(moves) {
+		mList := newMoveList(b.GetLegalMoves(isWhite))
+		if depth > 2 {
+			mList = ScoreSortMoveList(mList, b, isWhite, depth-2)
+		}
+		for i := range mList.size {
 			score := -GetScore(
-				board.GetBoardAfterMove(b, moves[i]),
+				board.GetBoardAfterMove(b, mList.moves[i]),
 				!isWhite,
 				depth-1,
 				-wcs)
@@ -148,6 +151,7 @@ func GetScore(b board.Board, isWhite bool, depth int, parent_wcs float64) float6
 				}
 			}
 		}
+
 		return maxScore
 	} else {
 		panic("invalid depth")
