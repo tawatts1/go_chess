@@ -8,22 +8,20 @@ import (
 	"golang.org/x/exp/rand"
 )
 
-var simpleAICode = "simple"
+// func GetScoreAfterMove(b board.Board, m board.Move, isWhite bool) float64 {
+// 	var out float64 = 0
+// 	boardAfterMove := board.GetBoardAfterMove(b, m)
+// 	out += getScoreFromBoard(boardAfterMove, isWhite)
+// 	return out
+// }
 
-func GetScoreAfterMove(b board.Board, m board.Move, isWhite bool) float64 {
-	var out float64 = 0
-	boardAfterMove := board.GetBoardAfterMove(b, m)
-	out += getScoreFromBoard(boardAfterMove, isWhite)
-	return out
-}
-
-func GetAiFromString(aiCode string) func(board.Board, bool) float64 {
-	if aiCode == simpleAICode {
-		return getScoreFromBoard
-	} else {
-		panic("ai code does not match")
-	}
-}
+// func GetAiFromString(aiCode string) func(board.Board, bool) float64 {
+// 	if aiCode == simpleAICode {
+// 		return getScoreFromBoard
+// 	} else {
+// 		panic("ai code does not match")
+// 	}
+// }
 
 type moveList struct {
 	scores []float64
@@ -59,18 +57,18 @@ func (mList moveList) GetMaxScoreMove() board.Move {
 // Calculate moves and their scores and return one of the moves with the max score
 func ChooseMove(b board.Board, isWhite bool, depth int) board.Move {
 	mList := newMoveList(b.GetLegalMoves(isWhite))
-	mList = ScoreSortMoveList(mList, b, isWhite, depth)
+	mList = ScoreSortMoveList(mList, b, isWhite, depth, ScoringDefaultPieceValue)
 	return mList.GetMaxScoreMove()
 }
 
 // Score and sort the move list.
-func ScoreSortMoveList(mList moveList, b board.Board, isWhite bool, depth int) moveList {
+func ScoreSortMoveList(mList moveList, b board.Board, isWhite bool, depth int, scoringFuncName string) moveList {
 	// calculate score of moves for a certain depth, then return sorted moveList
 	if depth == 0 {
 		return mList
 	} else if depth > 0 {
 		if depth > 1 {
-			mList = ScoreSortMoveList(mList, b, isWhite, depth-1)
+			mList = ScoreSortMoveList(mList, b, isWhite, depth-1, scoringFuncName)
 		}
 		wcs := -utility.Infinity
 		for i := range mList.size {
@@ -78,7 +76,8 @@ func ScoreSortMoveList(mList moveList, b board.Board, isWhite bool, depth int) m
 				board.GetBoardAfterMove(b, mList.moves[i]),
 				!isWhite,
 				depth-1,
-				-wcs)
+				-wcs,
+				scoringFuncName)
 			mList.scores[i] = score_i
 			if score_i > wcs {
 				wcs = score_i
@@ -115,22 +114,23 @@ func (mList moveList) isSortedDesc() bool {
 }
 
 // Get the score by looking 'depth' number of moves ahead.
-func GetScore(b board.Board, isWhite bool, depth int, parent_wcs float64) float64 {
+func GetScore(b board.Board, isWhite bool, depth int, parent_wcs float64, scoringFuncName string) float64 {
 	if depth == 0 {
-		return getScoreFromBoard(b, isWhite)
+		return getScoringFunction(scoringFuncName)(b, isWhite)
 	} else if depth > 0 {
 		wcs := -utility.Infinity
 		maxScore := wcs
 		mList := newMoveList(b.GetLegalMoves(isWhite))
 		if depth > 2 {
-			mList = ScoreSortMoveList(mList, b, isWhite, depth-2)
+			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFuncName)
 		}
 		for i := range mList.size {
 			score := -GetScore(
 				board.GetBoardAfterMove(b, mList.moves[i]),
 				!isWhite,
 				depth-1,
-				-wcs)
+				-wcs,
+				scoringFuncName)
 			// Let us say if white does move A, the worst that will happen
 			// after that is white gaining 5 points, so great for them!
 			// Now white is considering move B. After move B, White pretends
