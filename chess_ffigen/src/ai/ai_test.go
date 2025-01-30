@@ -94,6 +94,46 @@ func testAiMoveFile(fname string) string {
 	return ""
 }
 
+func ContainsMove(moveSlice []board.Move, m1 board.Move) bool {
+	for _, m2 := range moveSlice {
+		if m1.Equals(m2) {
+			return true
+		}
+	}
+	return false
+}
+
+func TestSortMoveList(t *testing.T) {
+	b := board.GetBoardFromString("000k00000np0p0000000000000n000000P000000000N0000000P0P000000K000")
+	mList := newMoveList(b.GetLegalMoves(true))
+	mList = SortMoveList(mList, b, true, 1)
+	pawnAttack := board.NewMove(board.NewCoord(4, 1), board.NewCoord(3, 2), 0)
+	knightAttack := board.NewMove(board.NewCoord(5, 3), board.NewCoord(3, 2), 0)
+	if utility.IsClose(mList.scores[0], mList.scores[1]) &&
+		ContainsMove(mList.moves[0:2], pawnAttack) &&
+		ContainsMove(mList.moves[0:2], knightAttack) {
+	} else {
+		t.Error("failed n=1")
+	}
+
+	mList = SortMoveList(mList, b, true, 2)
+	if !utility.IsClose(mList.scores[0], mList.scores[1]) &&
+		mList.moves[0].Equals(pawnAttack) &&
+		mList.moves[1].Equals(knightAttack) {
+	} else {
+		t.Error("failed n=2")
+	}
+	// after sorting with depth=3, either attack is fine, but the pawn attack
+	// should still be ordered first because it is better for depth=2.
+	mList = SortMoveList(mList, b, true, 3)
+	if utility.IsClose(mList.scores[0], mList.scores[1]) &&
+		mList.moves[0].Equals(pawnAttack) &&
+		mList.moves[1].Equals(knightAttack) {
+	} else {
+		t.Error("failed n=3")
+	}
+}
+
 func TestChooseMove(t *testing.T) {
 	err := testAiMoveFile(testFolder + "aiTests.txt")
 	if err != "" {
