@@ -91,7 +91,7 @@ class MyAppState extends ChangeNotifier {
   var black = const Color.fromARGB(255, 116, 59, 6);
   var greyedBlack = const Color.fromARGB(255, 90,75,75);
   var selectedColor = const Color.fromARGB(255, 120, 0, 100);
-  int aiDropdownDepth = 1;
+  int aiDropdownDepth = 4;
   List<List<String>> board = parseBoardString(startingBoard);
   void resetGame() {
     board = parseBoardString(startingBoard);
