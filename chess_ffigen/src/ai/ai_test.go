@@ -134,6 +134,35 @@ func TestSortMoveList(t *testing.T) {
 	}
 }
 
+func TestSortMoveListPositionScoring(t *testing.T) {
+	//opening board after white puts a random pawn forward:
+	b := board.GetBoardFromString("onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO")
+	if !utility.IsClose(getPositionScoreValue(b, false), 0) {
+		t.Error("error")
+	}
+	b_1bp := board.GetBoardFromString("0000k00000p0000000000000000000000000000000000000000000000000K000")
+	//fmt.Println(b_1bp)
+	if !utility.IsClose(getPositionScoreValue(b_1bp, false), 1+positionScalingFactor*.5) {
+		t.Error("error")
+	}
+
+	if !utility.IsClose(getPositionScoreValue(b_1bp, true), -(1 + positionScalingFactor*.5)) {
+		t.Error("error")
+	}
+
+	b_1wp := board.GetBoardFromString("0000k0000000000000000000000000000000000000000000000000P00000K000")
+	if !utility.IsClose(getPositionScoreValue(b_1wp, false), -(1 + positionScalingFactor*.5)) {
+		t.Error("error")
+	}
+	//moving knight should give the same score as moving a pawn two spaces.
+	bAfterKnight := board.GetBoardAfterMove(b, board.NewMove(board.NewCoord(0, 1), board.NewCoord(2, 2), 0))
+	bAfterPawn := board.GetBoardAfterMove(b, board.NewMove(board.NewCoord(1, 0), board.NewCoord(3, 0), 0))
+	if !utility.IsClose(getPositionScoreValue(bAfterKnight, false),
+		getPositionScoreValue(bAfterPawn, false)) {
+		t.Error("error")
+	}
+}
+
 func TestChooseMove(t *testing.T) {
 	err := testAiMoveFile(testFolder + "aiTests.txt")
 	if err != "" {
@@ -143,9 +172,9 @@ func TestChooseMove(t *testing.T) {
 
 func TestGetPositionScore(t *testing.T) {
 	testSingleFunc := func(y, x int, isWhite bool, p rune, expectedScore float64) {
-		result := GetPositionScore(board.NewCoord(y, x), isWhite, p)
+		result := GetPositionScore(board.NewCoord(y, x), p)
 		if !(utility.IsClose(expectedScore, result)) {
-			t.Errorf("Expected %v but got %v ((%v, %v), %v, %v)", expectedScore, result, x, y, isWhite, p)
+			t.Errorf("Expected %v but got %v ((%v, %v), %v, %c)", expectedScore, result, x, y, isWhite, p)
 		}
 	}
 	testBothFunc := func(y, x int, isWhite bool, p rune, expectedScore float64, testBothColors, testSymmetries bool) {
@@ -193,12 +222,20 @@ func TestGetPositionScore(t *testing.T) {
 	testBothFunc(5, 4, false, 'q', 1, true, true)
 	testBothFunc(0, 7, false, 'q', 0.5, true, true)
 	// KNIGHTS
+	testBothFunc(0, 0, false, 'n', 0.25, true, true)
+	testBothFunc(1, 0, false, 'n', 3.0/8.0, true, false)
+	testBothFunc(6, 0, false, 'n', 3.0/8.0, true, false)
+	testBothFunc(1, 7, false, 'n', 3.0/8.0, true, false)
+	testBothFunc(6, 7, false, 'n', 3.0/8.0, true, false)
+	testBothFunc(0, 1, false, 'n', 0.5, true, false)
+	testBothFunc(0, 6, false, 'n', 0.5, true, false)
+	testBothFunc(7, 1, false, 'n', 0.5, true, false)
+	testBothFunc(7, 6, false, 'n', 0.5, true, false)
 	testBothFunc(1, 4, false, 'n', 0.75, true, true)
 	testBothFunc(1, 1, false, 'n', 0.5, true, true)
-	testBothFunc(0, 0, false, 'n', 0.25, true, true)
-	testBothFunc(1, 0, false, 'n', 3.0/8.0, true, true)
-	testBothFunc(4, 4, false, 'n', 1, true, true)
 	testBothFunc(2, 2, false, 'n', 1, true, true)
+	testBothFunc(2, 3, false, 'n', 1, true, true)
+	testBothFunc(4, 4, false, 'n', 1, true, true)
 	testBothFunc(6, 4, false, 'n', 0.75, true, true)
 }
 

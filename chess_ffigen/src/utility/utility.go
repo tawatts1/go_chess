@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-const Epsilon = 0.0001
+const Epsilon = 0.000001
 
 var Infinity float64 = 1000000
 
