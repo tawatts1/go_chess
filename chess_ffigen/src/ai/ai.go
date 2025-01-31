@@ -55,9 +55,9 @@ func (mList moveList) GetMaxScoreMove() board.Move {
 }
 
 // Calculate moves and their scores and return one of the moves with the max score
-func ChooseMove(b board.Board, isWhite bool, depth int) board.Move {
+func ChooseMove(b board.Board, isWhite bool, depth int, scoringFunctionName string) board.Move {
 	mList := newMoveList(b.GetLegalMoves(isWhite))
-	mList = ScoreSortMoveList(mList, b, isWhite, depth, ScoringDefaultPieceValue)
+	mList = ScoreSortMoveList(mList, b, isWhite, depth, scoringFunctionName)
 	return mList.GetMaxScoreMove()
 }
 

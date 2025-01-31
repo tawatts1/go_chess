@@ -78,7 +78,7 @@ func testAiMoveFile(fname string) string {
 				special = r[0]
 			}
 			mExpected := board.NewMove(c1, c2, special)
-			mResult := ChooseMove(b, isWhite, N)
+			mResult := ChooseMove(b, isWhite, N, ScoringDefaultPieceValue)
 			if args[0] == "move" && !mResult.Equals(mExpected) {
 				return fmt.Sprintf("line %v: Expected %v but got %v", lineIndex+1, mExpected, mResult)
 			} else if args[0] == "notmove" && mResult.Equals(mExpected) {
@@ -141,31 +141,92 @@ func TestChooseMove(t *testing.T) {
 	}
 }
 
+func TestGetPositionScore(t *testing.T) {
+	testSingleFunc := func(y, x int, isWhite bool, p rune, expectedScore float64) {
+		result := GetPositionScore(board.NewCoord(y, x), isWhite, p)
+		if !(utility.IsClose(expectedScore, result)) {
+			t.Errorf("Expected %v but got %v ((%v, %v), %v, %v)", expectedScore, result, x, y, isWhite, p)
+		}
+	}
+	testBothFunc := func(y, x int, isWhite bool, p rune, expectedScore float64, testBothColors, testSymmetries bool) {
+		testSingleFunc(y, x, isWhite, p, expectedScore)
+		if testBothColors {
+			testSingleFunc(y, x, !isWhite, p, expectedScore)
+		}
+		if testSymmetries {
+			testSingleFunc(y, 7-x, isWhite, p, expectedScore)
+			testSingleFunc(7-y, x, isWhite, p, expectedScore)
+			testSingleFunc(7-y, 7-x, isWhite, p, expectedScore)
+			testSingleFunc(x, y, isWhite, p, expectedScore)
+			testSingleFunc(x, 7-y, isWhite, p, expectedScore)
+			testSingleFunc(7-x, y, isWhite, p, expectedScore)
+			testSingleFunc(7-x, 7-y, isWhite, p, expectedScore)
+		}
+	}
+	// PAWNS
+	testBothFunc(1, 4, false, 'p', 0.5, false, false)
+	testBothFunc(2, 4, false, 'p', 0, false, false)
+	testBothFunc(3, 4, false, 'p', 1, false, false)
+	testBothFunc(4, 4, false, 'p', 2, false, false)
+	testBothFunc(5, 4, false, 'p', 3, false, false)
+	testBothFunc(6, 4, false, 'p', 4, false, false)
+	testBothFunc(7-1, 5, true, 'P', 0.5, false, false)
+	testBothFunc(7-2, 5, true, 'P', 0, false, false)
+	testBothFunc(7-3, 5, true, 'P', 1, false, false)
+	testBothFunc(7-4, 5, true, 'P', 2, false, false)
+	testBothFunc(7-5, 5, true, 'P', 3, false, false)
+	testBothFunc(7-6, 5, true, 'P', 4, false, false)
+	// BISHOPS
+	testBothFunc(1, 4, false, 'b', 0.5, true, true)
+	testBothFunc(2, 3, false, 'b', 1, true, true)
+	testBothFunc(3, 4, false, 'b', 1.5, true, true)
+	testBothFunc(4, 3, false, 'b', 1.5, true, true)
+	testBothFunc(4, 4, false, 'b', 1.5, true, true)
+	testBothFunc(5, 4, false, 'b', 1, true, true)
+	testBothFunc(0, 7, false, 'b', 0.5, true, true)
+	// QUEENS
+	testBothFunc(1, 4, false, 'q', 0.5, true, true)
+	testBothFunc(2, 3, false, 'q', 1, true, true)
+	testBothFunc(3, 4, false, 'q', 1.5, true, true)
+	testBothFunc(4, 3, false, 'q', 1.5, true, true)
+	testBothFunc(4, 4, false, 'q', 1.5, true, true)
+	testBothFunc(5, 4, false, 'q', 1, true, true)
+	testBothFunc(0, 7, false, 'q', 0.5, true, true)
+	// KNIGHTS
+	testBothFunc(1, 4, false, 'n', 0.75, true, true)
+	testBothFunc(1, 1, false, 'n', 0.5, true, true)
+	testBothFunc(0, 0, false, 'n', 0.25, true, true)
+	testBothFunc(1, 0, false, 'n', 3.0/8.0, true, true)
+	testBothFunc(4, 4, false, 'n', 1, true, true)
+	testBothFunc(2, 2, false, 'n', 1, true, true)
+	testBothFunc(6, 4, false, 'n', 0.75, true, true)
+}
+
 func BenchmarkOpening3(b *testing.B) {
 	startingBoard := board.GetBoardFromString("onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(startingBoard, true, 3)
+		ChooseMove(startingBoard, true, 3, ScoringPiecePositionValue)
 	}
 }
 
 func BenchmarkOpening4(b *testing.B) {
 	startingBoard := board.GetBoardFromString("onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(startingBoard, true, 4)
+		ChooseMove(startingBoard, true, 4, ScoringPiecePositionValue)
 	}
 }
 
 func BenchmarkPawns5(b *testing.B) {
 	startingBoard := board.GetBoardFromString("00000000ppp0000000000k000000000000000PPP00000000000000000K000000")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(startingBoard, true, 5)
+		ChooseMove(startingBoard, true, 5, ScoringPiecePositionValue)
 	}
 }
 
 func BenchmarkFork4(b *testing.B) {
 	startingBoard := board.GetBoardFromString("onb0kb0opp000ppp00000n000N0qp0000000000000000Q00PPPP0PPPO0B0KB0O")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(startingBoard, true, 4)
+		ChooseMove(startingBoard, true, 4, ScoringPiecePositionValue)
 	}
 }
 
@@ -173,7 +234,7 @@ func BenchmarkCaptureChains4(b *testing.B) {
 	sb1 := board.GetBoardFromString("00b0k0000n00000000ppppr00P000000000PPP00000BNB00000000000000K000")
 	sb2 := board.GetBoardFromString("000nk00000npp00000b00p00R00p00000000P00000NP0000000PPP000000K000")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(sb1, true, 4)
-		ChooseMove(sb2, true, 4)
+		ChooseMove(sb1, true, 4, ScoringPiecePositionValue)
+		ChooseMove(sb2, true, 4, ScoringPiecePositionValue)
 	}
 }

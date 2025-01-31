@@ -58,3 +58,11 @@ func (c1 Coord) Equals(c2 Coord) bool {
 func (c Coord) IsInBoard() bool {
 	return c.x >= 0 && c.y >= 0 && c.x < BoardWidth && c.y < BoardHeight
 }
+
+func (c Coord) GetY() int {
+	return c.y
+}
+
+func (c Coord) GetX() int {
+	return c.x
+}
