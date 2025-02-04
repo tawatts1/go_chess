@@ -33,6 +33,26 @@ func newMoveList(moves []board.Move) moveList {
 	return moveList{moves: moves, scores: make([]float64, len(moves), len(moves)), size: len(moves)}
 }
 
+func (mList1 moveList) Equals(mList2 moveList) bool {
+	if mList1.size == mList2.size {
+		for i := range mList1.size {
+			matchFound := false
+			for j := range mList1.size {
+				if mList1.moves[i].Equals(mList2.moves[j]) && mList1.scores[i] == mList2.scores[j] {
+					matchFound = true
+					break
+				}
+			}
+			if !matchFound {
+				return false
+			}
+		}
+		return true
+	} else {
+		return false
+	}
+}
+
 // after the scores are calculated, choose the best move. No need for this function to be efficient as it is called only once.
 func (mList moveList) GetMaxScoreMove() board.Move {
 	if mList.size > 0 {
@@ -55,29 +75,50 @@ func (mList moveList) GetMaxScoreMove() board.Move {
 }
 
 // Calculate moves and their scores and return one of the moves with the max score
-func ChooseMove(b board.Board, isWhite bool, depth int, scoringFunctionName string) board.Move {
+func ChooseMove(b board.Board, isWhite bool, depth int, scoringFunctionName string, useCache bool, verbosity int) board.Move {
 	mList := newMoveList(b.GetLegalMoves(isWhite))
-	mList = ScoreSortMoveList(mList, b, isWhite, depth, scoringFunctionName)
+	cache := NewLruCacheList(depth+1, 20*20*20)
+	mList = ScoreSortMoveList(mList, b, isWhite, depth, 0, scoringFunctionName, cache, useCache)
+	if verbosity > 0 {
+		fmt.Println(cache)
+	}
 	return mList.GetMaxScoreMove()
 }
 
 // Score and sort the move list.
-func ScoreSortMoveList(mList moveList, b board.Board, isWhite bool, depth int, scoringFuncName string) moveList {
+// arguments of note:
+// depth: how many moves to look ahead.
+// movesAhead: how many moves ahead it is already looking. This is used in caching.
+// scoringFuncName: The identifier for the desired scoring function
+// cache: Pointer to cache which is used to store board calculations
+// useCache: Whether to read and write to the cache. Should be true except for testing cases.
+func ScoreSortMoveList(mList moveList, b board.Board, isWhite bool,
+	depth int, movesAhead int, scoringFuncName string,
+	cache *lruCacheList, useCache bool) moveList {
 	// calculate score of moves for a certain depth, then return sorted moveList
 	if depth == 0 {
 		return mList
 	} else if depth > 0 {
 		if depth > 1 {
-			mList = ScoreSortMoveList(mList, b, isWhite, depth-1, scoringFuncName)
+			// !!! should the below be changed to depth-2?
+			mList = ScoreSortMoveList(mList, b, isWhite, depth-1, movesAhead, scoringFuncName, cache, useCache)
 		}
 		wcs := -utility.Infinity
+		newDepth := depth - 1
+		newMovesAhead := movesAhead + 1
+		newColor := !isWhite
+		var score_i float64
 		for i := range mList.size {
-			score_i := -GetScore(
-				board.GetBoardAfterMove(b, mList.moves[i]),
-				!isWhite,
-				depth-1,
+			newBoard := board.GetBoardAfterMove(b, mList.moves[i])
+			score_i = -GetScore(
+				newBoard,
+				newColor,
+				newDepth,
+				newMovesAhead,
 				-wcs,
-				scoringFuncName)
+				scoringFuncName,
+				cache,
+				useCache)
 			mList.scores[i] = score_i
 			if score_i > wcs {
 				wcs = score_i
@@ -114,23 +155,54 @@ func (mList moveList) isSortedDesc() bool {
 }
 
 // Get the score by looking 'depth' number of moves ahead.
-func GetScore(b board.Board, isWhite bool, depth int, parent_wcs float64, scoringFuncName string) float64 {
+// arguments of note:
+// depth: how many moves to look ahead.
+// movesAhead: how many moves ahead it is already looking. This is used in caching.
+// parent_wcs: The worst case scenario one recursion step above. Used to cut a calculation short.
+// scoringFuncName: The identifier for the desired scoring function
+// cache: Pointer to cache which is used to store board calculations
+// useCache: Whether to read and write to the cache. Should be true except for testing cases.
+func GetScore(b board.Board, isWhite bool, depth, movesAhead int, parent_wcs float64,
+	scoringFuncName string, cache *lruCacheList, useCache bool) float64 {
+
+	var maxScore float64
+	current_args := newScoreArgs(b, depth, isWhite)
+	// check cache to see if this score has already been calculated.
+	current_cached, current_hit := cache.Get(movesAhead, current_args)
+	if current_hit {
+		return current_cached
+	}
+
 	if depth == 0 {
-		return getScoringFunction(scoringFuncName)(b, isWhite)
+		maxScore = getScoringFunction(scoringFuncName)(b, isWhite)
+		if useCache {
+			cache.SetNewKey(movesAhead, current_args, maxScore)
+		}
+		return maxScore
 	} else if depth > 0 {
 		wcs := -utility.Infinity
-		maxScore := wcs
+		maxScore = wcs
 		mList := newMoveList(b.GetLegalMoves(isWhite))
 		if depth > 2 {
-			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFuncName)
+			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, movesAhead, scoringFuncName, cache, useCache)
 		}
+		addScoreToCache := true
+		var score_i float64
+		newDepth := depth - 1
+		newColor := !isWhite
+		newMovesAhead := movesAhead + 1
 		for i := range mList.size {
-			score := -GetScore(
-				board.GetBoardAfterMove(b, mList.moves[i]),
-				!isWhite,
-				depth-1,
+			newBoard := board.GetBoardAfterMove(b, mList.moves[i])
+			score_i = -GetScore(
+				newBoard,
+				newColor,
+				newDepth,
+				newMovesAhead,
 				-wcs,
-				scoringFuncName)
+				scoringFuncName,
+				cache,
+				useCache)
+
 			// Let us say if white does move A, the worst that will happen
 			// after that is white gaining 5 points, so great for them!
 			// Now white is considering move B. After move B, White pretends
@@ -140,16 +212,23 @@ func GetScore(b board.Board, isWhite bool, depth int, parent_wcs float64, scorin
 			// do move A which would have been way worse for them.
 			// So white should not consider move B anymore after seeing that
 			// black could get a better deal.
-			// the key metric there is that -2 > -5, or score > parent_wcs
-			if score > maxScore {
-				maxScore = score
-				if score > parent_wcs && !utility.IsClose(score, parent_wcs) {
+			// the key metric there is that -2 > -5, or score_i > parent_wcs
+			if score_i > maxScore {
+				maxScore = score_i
+				if score_i > parent_wcs && !utility.IsClose(score_i, parent_wcs) {
+					// stopping because the score is too high. So the actual
+					// score for board b is greater than or equal to 'score'
+					addScoreToCache = false
 					break
 				}
-				if score > wcs {
-					wcs = score
+				if score_i > wcs {
+					wcs = score_i
 				}
 			}
+
+		} // end for loop
+		if addScoreToCache && useCache {
+			cache.SetNewKey(movesAhead, current_args, maxScore)
 		}
 
 		return maxScore

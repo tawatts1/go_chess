@@ -9,14 +9,15 @@ import (
 func TestLruCache(t *testing.T) {
 	// making the testing cache size such that it is filled completely in the test
 	var testingLruCachePtr = NewLRUCache(69)
+	cacheList := NewLruCacheList(10, 10)
 	whiteBool := true
 	depthInt := 2
 	openingBoard := board.GetBoardFromString("onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO")
 	pawnBoard := board.GetBoardFromString("00000000ppp0000000000k000000000000000PPP00000000000000000K000000")
 	forkBoard := board.GetBoardFromString("onb0kb0opp000ppp00000n000N0qp0000000000000000Q00PPPP0PPPO0B0KB0O")
-	openMoves := ScoreSortMoveList(newMoveList(openingBoard.GetLegalMoves(whiteBool)), openingBoard, whiteBool, depthInt, ScoringDefaultPieceValue)
-	pawnMoves := ScoreSortMoveList(newMoveList(pawnBoard.GetLegalMoves(whiteBool)), pawnBoard, whiteBool, depthInt, ScoringDefaultPieceValue)
-	forkMoves := ScoreSortMoveList(newMoveList(forkBoard.GetLegalMoves(whiteBool)), forkBoard, whiteBool, depthInt, ScoringDefaultPieceValue)
+	openMoves := ScoreSortMoveList(newMoveList(openingBoard.GetLegalMoves(whiteBool)), openingBoard, whiteBool, depthInt, 0, ScoringDefaultPieceValue, cacheList, true)
+	pawnMoves := ScoreSortMoveList(newMoveList(pawnBoard.GetLegalMoves(whiteBool)), pawnBoard, whiteBool, depthInt, 0, ScoringDefaultPieceValue, cacheList, true)
+	forkMoves := ScoreSortMoveList(newMoveList(forkBoard.GetLegalMoves(whiteBool)), forkBoard, whiteBool, depthInt, 0, ScoringDefaultPieceValue, cacheList, true)
 	//fmt.Printf("Opening, pawn, fork moves lengths: %v, %v, %v\n", openMoves.size, pawnMoves.size, forkMoves.size)
 	addMoves := func(mList moveList, b board.Board, isWhite bool, depth int) {
 		for i, m := range mList.moves {
@@ -43,7 +44,6 @@ func TestLruCache(t *testing.T) {
 	verifyInCache(openMoves, openingBoard, whiteBool, depthInt)
 	verifyInCache(pawnMoves, pawnBoard, whiteBool, depthInt)
 	verifyInCache(forkMoves, forkBoard, whiteBool, depthInt)
-
 }
 
 func TestLruCache2(t *testing.T) {
@@ -106,4 +106,27 @@ func TestLruCache2(t *testing.T) {
 	// 	//}
 	// }
 
+}
+
+func testWithoutCache(b board.Board, isWhite bool, depth int, scoringFunctionName string) string {
+	mList1 := newMoveList(b.GetLegalMoves(isWhite))
+
+	cacheList := NewLruCacheList(depth+1, 20*20*20)
+	mList1 = ScoreSortMoveList(mList1, b, isWhite, depth, 0, scoringFunctionName, cacheList, false)
+	mList2 := newMoveList(b.GetLegalMoves(isWhite))
+	cacheList = NewLruCacheList(depth+1, 20*20*20)
+	mList2 = ScoreSortMoveList(mList2, b, isWhite, depth, 0, scoringFunctionName, cacheList, true)
+	//fmt.Println(cacheList)
+	if !mList1.Equals(mList2) {
+		return "Using cache changed score"
+	} else {
+		return ""
+	}
+}
+
+func TestPawns3(t *testing.T) {
+	startingBoard := board.GetBoardFromString("00000000ppp0000000000k000000000000000PPP00000000000000000K000000")
+	testWithoutCache(startingBoard, true, 6, ScoringPiecePositionValue)
+
+	//ChooseMove(startingBoard, true, 3, ScoringPiecePositionValue, true)
 }

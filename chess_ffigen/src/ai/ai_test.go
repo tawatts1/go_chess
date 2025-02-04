@@ -78,7 +78,7 @@ func testAiMoveFile(fname string) string {
 				special = r[0]
 			}
 			mExpected := board.NewMove(c1, c2, special)
-			mResult := ChooseMove(b, isWhite, N, ScoringDefaultPieceValue)
+			mResult := ChooseMove(b, isWhite, N, ScoringDefaultPieceValue, true, 0)
 			if args[0] == "move" && !mResult.Equals(mExpected) {
 				return fmt.Sprintf("line %v: Expected %v but got %v", lineIndex+1, mExpected, mResult)
 			} else if args[0] == "notmove" && mResult.Equals(mExpected) {
@@ -104,9 +104,10 @@ func ContainsMove(moveSlice []board.Move, m1 board.Move) bool {
 }
 
 func TestSortMoveList(t *testing.T) {
+	cacheList := NewLruCacheList(10, 10)
 	b := board.GetBoardFromString("000k00000np0p0000000000000n000000P000000000N0000000P0P000000K000")
 	mList := newMoveList(b.GetLegalMoves(true))
-	mList = ScoreSortMoveList(mList, b, true, 1, ScoringDefaultPieceValue)
+	mList = ScoreSortMoveList(mList, b, true, 1, 0, ScoringDefaultPieceValue, cacheList, true)
 	pawnAttack := board.NewMove(board.NewCoord(4, 1), board.NewCoord(3, 2), 0)
 	knightAttack := board.NewMove(board.NewCoord(5, 3), board.NewCoord(3, 2), 0)
 	if utility.IsClose(mList.scores[0], mList.scores[1]) &&
@@ -116,7 +117,7 @@ func TestSortMoveList(t *testing.T) {
 		t.Error("failed n=1")
 	}
 
-	mList = ScoreSortMoveList(mList, b, true, 2, ScoringDefaultPieceValue)
+	mList = ScoreSortMoveList(mList, b, true, 2, 0, ScoringDefaultPieceValue, cacheList, true)
 	if !utility.IsClose(mList.scores[0], mList.scores[1]) &&
 		mList.moves[0].Equals(pawnAttack) &&
 		mList.moves[1].Equals(knightAttack) {
@@ -125,7 +126,7 @@ func TestSortMoveList(t *testing.T) {
 	}
 	// after sorting with depth=3, either attack is fine, but the pawn attack
 	// should still be ordered first because it is better for depth=2.
-	mList = ScoreSortMoveList(mList, b, true, 3, ScoringDefaultPieceValue)
+	mList = ScoreSortMoveList(mList, b, true, 3, 0, ScoringDefaultPieceValue, cacheList, true)
 	if utility.IsClose(mList.scores[0], mList.scores[1]) &&
 		mList.moves[0].Equals(pawnAttack) &&
 		mList.moves[1].Equals(knightAttack) {
@@ -242,28 +243,35 @@ func TestGetPositionScore(t *testing.T) {
 func BenchmarkOpening3(b *testing.B) {
 	startingBoard := board.GetBoardFromString("onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(startingBoard, true, 3, ScoringPiecePositionValue)
+		ChooseMove(startingBoard, true, 3, ScoringPiecePositionValue, true, 0)
 	}
 }
 
 func BenchmarkOpening4(b *testing.B) {
 	startingBoard := board.GetBoardFromString("onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(startingBoard, true, 4, ScoringPiecePositionValue)
+		ChooseMove(startingBoard, true, 4, ScoringPiecePositionValue, true, 0)
 	}
 }
 
 func BenchmarkPawns5(b *testing.B) {
 	startingBoard := board.GetBoardFromString("00000000ppp0000000000k000000000000000PPP00000000000000000K000000")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(startingBoard, true, 5, ScoringPiecePositionValue)
+		ChooseMove(startingBoard, true, 5, ScoringPiecePositionValue, true, 0)
+	}
+}
+
+func BenchmarkPawns7(b *testing.B) {
+	startingBoard := board.GetBoardFromString("00000000ppp0000000000k000000000000000PPP00000000000000000K000000")
+	for n := 0; n < b.N; n++ {
+		ChooseMove(startingBoard, true, 7, ScoringPiecePositionValue, true, 0)
 	}
 }
 
 func BenchmarkFork4(b *testing.B) {
 	startingBoard := board.GetBoardFromString("onb0kb0opp000ppp00000n000N0qp0000000000000000Q00PPPP0PPPO0B0KB0O")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(startingBoard, true, 4, ScoringPiecePositionValue)
+		ChooseMove(startingBoard, true, 4, ScoringPiecePositionValue, true, 0)
 	}
 }
 
@@ -271,7 +279,7 @@ func BenchmarkCaptureChains4(b *testing.B) {
 	sb1 := board.GetBoardFromString("00b0k0000n00000000ppppr00P000000000PPP00000BNB00000000000000K000")
 	sb2 := board.GetBoardFromString("000nk00000npp00000b00p00R00p00000000P00000NP0000000PPP000000K000")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(sb1, true, 4, ScoringPiecePositionValue)
-		ChooseMove(sb2, true, 4, ScoringPiecePositionValue)
+		ChooseMove(sb1, true, 4, ScoringPiecePositionValue, true, 0)
+		ChooseMove(sb2, true, 4, ScoringPiecePositionValue, true, 0)
 	}
 }
