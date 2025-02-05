@@ -68,7 +68,7 @@ func ScoreSortMoveList(mList moveList, b board.Board, isWhite bool, depth int, s
 		return mList
 	} else if depth > 0 {
 		if depth > 1 {
-			mList = ScoreSortMoveList(mList, b, isWhite, depth-1, scoringFuncName)
+			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFuncName)
 		}
 		wcs := -utility.Infinity
 		for i := range mList.size {

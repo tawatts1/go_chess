@@ -253,25 +253,52 @@ func BenchmarkOpening4(b *testing.B) {
 	}
 }
 
-func BenchmarkPawns5(b *testing.B) {
+func BenchmarkPawns7(b *testing.B) {
 	startingBoard := board.GetBoardFromString("00000000ppp0000000000k000000000000000PPP00000000000000000K000000")
 	for n := 0; n < b.N; n++ {
+		ChooseMove(startingBoard, true, 7, ScoringPiecePositionValue)
+	}
+}
+
+func BenchmarkSimpleBoards6(b *testing.B) {
+	simpleBoards := []string{"00000000ppp0000000000k000000000000000PPP00000000000000000K000000",
+		"0k000000p00000000n00p000000pP000000P0P000000N00000000000000000K0",
+		"0k000000p000n00000000000000000000000000P00000000000N0000000000K0",
+		"0000000000p0000p00000k00p00000000000000P00K00000P0000P0000000000",
+		"0000k00000000000000ppp00000000000000000000PPP00000000000000K0000",
+	}
+	boards := make([]board.Board, 0)
+	for _, boardString := range simpleBoards {
+		boards = append(boards, board.GetBoardFromString(boardString))
+	}
+	for n := 0; n < b.N; n++ {
+		for _, startingBoard := range boards {
+			ChooseMove(startingBoard, true, 6, ScoringPiecePositionValue)
+		}
+
+	}
+}
+
+func BenchmarkFork4and5(b *testing.B) {
+	startingBoard := board.GetBoardFromString("onb0kb0opp000ppp00000n000N0qp0000000000000000Q00PPPP0PPPO0B0KB0O")
+	for n := 0; n < b.N; n++ {
+		ChooseMove(startingBoard, true, 4, ScoringPiecePositionValue)
 		ChooseMove(startingBoard, true, 5, ScoringPiecePositionValue)
 	}
 }
 
-func BenchmarkFork4(b *testing.B) {
-	startingBoard := board.GetBoardFromString("onb0kb0opp000ppp00000n000N0qp0000000000000000Q00PPPP0PPPO0B0KB0O")
-	for n := 0; n < b.N; n++ {
-		ChooseMove(startingBoard, true, 4, ScoringPiecePositionValue)
-	}
-}
-
-func BenchmarkCaptureChains4(b *testing.B) {
+func BenchmarkCaptureChains5(b *testing.B) {
 	sb1 := board.GetBoardFromString("00b0k0000n00000000ppppr00P000000000PPP00000BNB00000000000000K000")
 	sb2 := board.GetBoardFromString("000nk00000npp00000b00p00R00p00000000P00000NP0000000PPP000000K000")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(sb1, true, 4, ScoringPiecePositionValue)
-		ChooseMove(sb2, true, 4, ScoringPiecePositionValue)
+		ChooseMove(sb1, true, 5, ScoringPiecePositionValue)
+		ChooseMove(sb2, true, 5, ScoringPiecePositionValue)
+	}
+}
+
+func BenchmarkBishopsVsRook5(b *testing.B) {
+	sb := board.GetBoardFromString("0k00r0000000pppp00000000000000000000000000000000PPP00000000BB0K0")
+	for n := 0; n < b.N; n++ {
+		ChooseMove(sb, true, 5, ScoringPiecePositionValue)
 	}
 }
