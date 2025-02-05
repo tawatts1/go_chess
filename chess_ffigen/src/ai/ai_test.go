@@ -13,7 +13,7 @@ import (
 var verbosity int = 0 // 0 - nothing, 1 - just input lines, 2 - everything
 var testFolder = "testingMoves/"
 
-var testUseCache bool = false
+var testUseCache bool = true
 var benchmarkUseCache bool = testUseCache
 
 func check(e error) {
