@@ -13,6 +13,8 @@ import (
 var verbosity int = 0 // 0 - nothing, 1 - just input lines, 2 - everything
 var testFolder = "testingMoves/"
 
+var testUseMultiprocessing bool = true
+
 func check(e error) {
 	if e != nil {
 		panic(e)
@@ -78,7 +80,7 @@ func testAiMoveFile(fname string) string {
 				special = r[0]
 			}
 			mExpected := board.NewMove(c1, c2, special)
-			mResult := ChooseMove(b, isWhite, N, ScoringDefaultPieceValue)
+			mResult := ChooseMove(b, isWhite, N, ScoringDefaultPieceValue, testUseMultiprocessing)
 			if args[0] == "move" && !mResult.Equals(mExpected) {
 				return fmt.Sprintf("line %v: Expected %v but got %v", lineIndex+1, mExpected, mResult)
 			} else if args[0] == "notmove" && mResult.Equals(mExpected) {
@@ -239,24 +241,30 @@ func TestGetPositionScore(t *testing.T) {
 	testBothFunc(6, 4, false, 'n', 0.75, true, true)
 }
 
+func TestWithAndWithoutMultiprocessing
+
+// func testNumCpu(t *testing.T) {
+// 	fmt.Println(numCpu())
+// }
+
 func BenchmarkOpening3(b *testing.B) {
 	startingBoard := board.GetBoardFromString("onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(startingBoard, true, 3, ScoringPiecePositionValue)
+		ChooseMove(startingBoard, true, 3, ScoringPiecePositionValue, testUseMultiprocessing)
 	}
 }
 
 func BenchmarkOpening4(b *testing.B) {
 	startingBoard := board.GetBoardFromString("onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(startingBoard, true, 4, ScoringPiecePositionValue)
+		ChooseMove(startingBoard, true, 4, ScoringPiecePositionValue, testUseMultiprocessing)
 	}
 }
 
 func BenchmarkPawns7(b *testing.B) {
 	startingBoard := board.GetBoardFromString("00000000ppp0000000000k000000000000000PPP00000000000000000K000000")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(startingBoard, true, 7, ScoringPiecePositionValue)
+		ChooseMove(startingBoard, true, 7, ScoringPiecePositionValue, testUseMultiprocessing)
 	}
 }
 
@@ -273,7 +281,7 @@ func BenchmarkSimpleBoards6(b *testing.B) {
 	}
 	for n := 0; n < b.N; n++ {
 		for _, startingBoard := range boards {
-			ChooseMove(startingBoard, true, 6, ScoringPiecePositionValue)
+			ChooseMove(startingBoard, true, 6, ScoringPiecePositionValue, testUseMultiprocessing)
 		}
 
 	}
@@ -282,8 +290,8 @@ func BenchmarkSimpleBoards6(b *testing.B) {
 func BenchmarkFork4and5(b *testing.B) {
 	startingBoard := board.GetBoardFromString("onb0kb0opp000ppp00000n000N0qp0000000000000000Q00PPPP0PPPO0B0KB0O")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(startingBoard, true, 4, ScoringPiecePositionValue)
-		ChooseMove(startingBoard, true, 5, ScoringPiecePositionValue)
+		ChooseMove(startingBoard, true, 4, ScoringPiecePositionValue, testUseMultiprocessing)
+		ChooseMove(startingBoard, true, 5, ScoringPiecePositionValue, testUseMultiprocessing)
 	}
 }
 
@@ -291,14 +299,14 @@ func BenchmarkCaptureChains5(b *testing.B) {
 	sb1 := board.GetBoardFromString("00b0k0000n00000000ppppr00P000000000PPP00000BNB00000000000000K000")
 	sb2 := board.GetBoardFromString("000nk00000npp00000b00p00R00p00000000P00000NP0000000PPP000000K000")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(sb1, true, 5, ScoringPiecePositionValue)
-		ChooseMove(sb2, true, 5, ScoringPiecePositionValue)
+		ChooseMove(sb1, true, 5, ScoringPiecePositionValue, testUseMultiprocessing)
+		ChooseMove(sb2, true, 5, ScoringPiecePositionValue, testUseMultiprocessing)
 	}
 }
 
 func BenchmarkBishopsVsRook5(b *testing.B) {
 	sb := board.GetBoardFromString("0k00r0000000pppp00000000000000000000000000000000PPP00000000BB0K0")
 	for n := 0; n < b.N; n++ {
-		ChooseMove(sb, true, 5, ScoringPiecePositionValue)
+		ChooseMove(sb, true, 5, ScoringPiecePositionValue, testUseMultiprocessing)
 	}
 }

@@ -2,16 +2,53 @@ package ai
 
 import (
 	"fmt"
+	"runtime"
+	"sync"
 
 	"github.com/tawatts1/go_chess/board"
 	"github.com/tawatts1/go_chess/utility"
 )
 
 // Calculate moves and their scores and return one of the moves with the max score
-func ChooseMove(b board.Board, isWhite bool, depth int, scoringFunctionName string) board.Move {
+func ChooseMove(b board.Board, isWhite bool, depth int, scoringFunctionName string, useMultiprocessing bool) board.Move {
 	mList := newMoveList(b.GetLegalMoves(isWhite))
-	mList = ScoreSortMoveList(mList, b, isWhite, depth, scoringFunctionName)
-	return mList.GetMaxScoreMove()
+	numCores := (runtime.NumCPU() * 3) / 4 // don't use all the cores
+	if useMultiprocessing && numCores > 1 && mList.size > 4 {
+		slcMList := make([]moveList, numCores)
+		for i, m := range mList.moves {
+			index := i % numCores
+			slcMList[index] = slcMList[index].AddMoves(m)
+		}
+
+		scoredMLists := make(chan moveList, numCores)
+		var wg sync.WaitGroup
+		for _, coreMList := range slcMList {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				scoredMLists <- ScoreSortMoveList(coreMList, b, isWhite, depth, scoringFunctionName)
+			}()
+		}
+
+		resultMList := newMoveList(make([]board.Move, 0))
+
+		wg.Wait()           // wait for all cpus to finish the processes
+		close(scoredMLists) // close the channel to new input.
+
+		for ml := range scoredMLists {
+			resultMList = resultMList.Combine(ml)
+		}
+		resultMList = resultMList.InsertionSort()
+		if !resultMList.isSortedDesc() {
+			panic("list not sorted properly")
+		}
+		return resultMList.GetMaxScoreMove()
+
+	} else {
+		mList = ScoreSortMoveList(mList, b, isWhite, depth, scoringFunctionName)
+		return mList.GetMaxScoreMove()
+	}
+
 }
 
 // Score and sort the move list.
@@ -38,16 +75,8 @@ func ScoreSortMoveList(mList moveList, b board.Board, isWhite bool, depth int, s
 		}
 		// Now sort moves list based on scores, in descending order.
 		// Insertion sort
-		for i := 1; i < mList.size; i++ {
-			for j := i; j > 0; j-- {
-				if mList.scores[j] > mList.scores[j-1] && !utility.IsClose(mList.scores[j], mList.scores[j-1]) {
-					mList.scores[j], mList.scores[j-1] = mList.scores[j-1], mList.scores[j]
-					mList.moves[j], mList.moves[j-1] = mList.moves[j-1], mList.moves[j]
-				} else {
-					break
-				}
-			}
-		}
+		mList = mList.InsertionSort()
+
 		if !mList.isSortedDesc() {
 			panic("list not sorted properly")
 		}
