@@ -125,8 +125,22 @@ func testWithoutCache(b board.Board, isWhite bool, depth int, scoringFunctionNam
 }
 
 func TestPawns3(t *testing.T) {
-	startingBoard := board.GetBoardFromString("00000000ppp0000000000k000000000000000PPP00000000000000000K000000")
-	testWithoutCache(startingBoard, true, 6, ScoringPiecePositionValue)
-
-	//ChooseMove(startingBoard, true, 3, ScoringPiecePositionValue, true)
+	// series of boards with very few pieces
+	boards := []string{"00000000ppp0000000000k000000000000000PPP00000000000000000K000000",
+		"0k000000p00000000n00p000000pP000000P0P000000N00000000000000000K0",
+		"0k000000p000n00000000000000000000000000P00000000000N0000000000K0",
+		"0000000000p0000p00000k00p00000000000000P00K00000P0000P0000000000",
+	}
+	depths := []int{0, 3, 4}
+	for _, boardStr := range boards {
+		for _, d := range depths {
+			startingBoard := board.GetBoardFromString(boardStr)
+			testWithoutCache(startingBoard, true, d, ScoringPiecePositionValue)
+		}
+	}
+	for _, boardStr := range boards {
+		startingBoard := board.GetBoardFromString(boardStr)
+		testWithoutCache(startingBoard, true, 4, ScoringPiecePositionValue)
+		testWithoutCache(startingBoard, false, 4, ScoringPiecePositionValue)
+	}
 }

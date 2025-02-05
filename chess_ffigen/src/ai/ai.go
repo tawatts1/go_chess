@@ -77,7 +77,7 @@ func (mList moveList) GetMaxScoreMove() board.Move {
 // Calculate moves and their scores and return one of the moves with the max score
 func ChooseMove(b board.Board, isWhite bool, depth int, scoringFunctionName string, useCache bool, verbosity int) board.Move {
 	mList := newMoveList(b.GetLegalMoves(isWhite))
-	cache := NewLruCacheList(depth+1, 20*20*20)
+	cache := NewLruCacheList(depth+1, 800000)
 	mList = ScoreSortMoveList(mList, b, isWhite, depth, 0, scoringFunctionName, cache, useCache)
 	if verbosity > 0 {
 		fmt.Println(cache)
@@ -95,13 +95,12 @@ func ChooseMove(b board.Board, isWhite bool, depth int, scoringFunctionName stri
 func ScoreSortMoveList(mList moveList, b board.Board, isWhite bool,
 	depth int, movesAhead int, scoringFuncName string,
 	cache *lruCacheList, useCache bool) moveList {
-	// calculate score of moves for a certain depth, then return sorted moveList
+
 	if depth == 0 {
 		return mList
 	} else if depth > 0 {
-		if depth > 1 {
-			// !!! should the below be changed to depth-2?
-			mList = ScoreSortMoveList(mList, b, isWhite, depth-1, movesAhead, scoringFuncName, cache, useCache)
+		if depth > 2 {
+			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, movesAhead, scoringFuncName, cache, useCache)
 		}
 		wcs := -utility.Infinity
 		newDepth := depth - 1
@@ -168,14 +167,16 @@ func GetScore(b board.Board, isWhite bool, depth, movesAhead int, parent_wcs flo
 	var maxScore float64
 	current_args := newScoreArgs(b, depth, isWhite)
 	// check cache to see if this score has already been calculated.
-	current_cached, current_hit := cache.Get(movesAhead, current_args)
-	if current_hit {
-		return current_cached
+	if useCache && depth > MinCacheDepth {
+		current_cached, current_hit := cache.Get(movesAhead, current_args)
+		if current_hit {
+			return current_cached
+		}
 	}
 
 	if depth == 0 {
 		maxScore = getScoringFunction(scoringFuncName)(b, isWhite)
-		if useCache {
+		if useCache && depth > MinCacheDepth {
 			cache.SetNewKey(movesAhead, current_args, maxScore)
 		}
 		return maxScore
@@ -227,7 +228,7 @@ func GetScore(b board.Board, isWhite bool, depth, movesAhead int, parent_wcs flo
 			}
 
 		} // end for loop
-		if addScoreToCache && useCache {
+		if addScoreToCache && useCache && depth > MinCacheDepth {
 			cache.SetNewKey(movesAhead, current_args, maxScore)
 		}
 

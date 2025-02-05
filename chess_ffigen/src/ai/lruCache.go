@@ -7,6 +7,8 @@ import (
 	"github.com/tawatts1/go_chess/utility"
 )
 
+const MinCacheDepth int = 1
+
 type getScoreArgs struct {
 	board_  board.Board
 	depth   int
