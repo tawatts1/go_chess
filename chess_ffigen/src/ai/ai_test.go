@@ -241,7 +241,7 @@ func TestGetPositionScore(t *testing.T) {
 	testBothFunc(6, 4, false, 'n', 0.75, true, true)
 }
 
-func TestWithAndWithoutMultiprocessing
+//func TestWithAndWithoutMultiprocessing
 
 // func testNumCpu(t *testing.T) {
 // 	fmt.Println(numCpu())

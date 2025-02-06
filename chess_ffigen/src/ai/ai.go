@@ -9,39 +9,71 @@ import (
 	"github.com/tawatts1/go_chess/utility"
 )
 
+type MutexScoreManager struct {
+	lock  sync.RWMutex
+	score float64
+}
+
+func NewMutexScoreManager() *MutexScoreManager {
+	return &MutexScoreManager{score: -utility.Infinity}
+}
+
+func (mtx *MutexScoreManager) Read() float64 {
+	mtx.lock.RLock()
+	defer mtx.lock.RUnlock()
+	return mtx.score
+}
+
+func (mtx *MutexScoreManager) Update(newScore float64) {
+	currentScore := mtx.Read()
+	if newScore > currentScore {
+		mtx.lock.Lock()
+		defer mtx.lock.Unlock()
+		if newScore > mtx.score {
+			mtx.score = newScore
+		}
+	}
+}
+
+func GetMaxNumCores() int {
+	numCores := (runtime.NumCPU() * 3) / 4 // don't use all the cores
+
+	if numCores > 6 {
+		numCores = 6
+	}
+	return numCores
+}
+
 // Calculate moves and their scores and return one of the moves with the max score
 func ChooseMove(b board.Board, isWhite bool, depth int, scoringFunctionName string, useMultiprocessing bool) board.Move {
 	mList := newMoveList(b.GetLegalMoves(isWhite))
-	numCores := (runtime.NumCPU() * 3) / 4 // don't use all the cores
+	numCores := GetMaxNumCores()
 	if useMultiprocessing && numCores > 1 && mList.size > 4 {
+		if depth > 1 { //!!! should this be depth>2 ?
+			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFunctionName)
+		}
 		slcMList := make([]moveList, numCores)
 		for i, m := range mList.moves {
 			index := i % numCores
 			slcMList[index] = slcMList[index].AddMoves(m)
 		}
-
 		scoredMLists := make(chan moveList, numCores)
 		var wg sync.WaitGroup
+		scoreMutex := NewMutexScoreManager()
 		for _, coreMList := range slcMList {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				scoredMLists <- ScoreSortMoveList(coreMList, b, isWhite, depth, scoringFunctionName)
+				scoredMLists <- ScoreSortMoveListMutex(coreMList, b, isWhite, depth, scoringFunctionName, scoreMutex)
 			}()
 		}
-
 		resultMList := newMoveList(make([]board.Move, 0))
-
 		wg.Wait()           // wait for all cpus to finish the processes
 		close(scoredMLists) // close the channel to new input.
-
 		for ml := range scoredMLists {
 			resultMList = resultMList.Combine(ml)
 		}
 		resultMList = resultMList.InsertionSort()
-		if !resultMList.isSortedDesc() {
-			panic("list not sorted properly")
-		}
 		return resultMList.GetMaxScoreMove()
 
 	} else {
@@ -57,7 +89,7 @@ func ScoreSortMoveList(mList moveList, b board.Board, isWhite bool, depth int, s
 	if depth == 0 {
 		return mList
 	} else if depth > 0 {
-		if depth > 1 {
+		if depth > 1 { //!!! should this be depth>2 ?
 			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFuncName)
 		}
 		wcs := -utility.Infinity
@@ -76,10 +108,36 @@ func ScoreSortMoveList(mList moveList, b board.Board, isWhite bool, depth int, s
 		// Now sort moves list based on scores, in descending order.
 		// Insertion sort
 		mList = mList.InsertionSort()
+		return mList
+	} else {
+		panic(fmt.Sprintf("Invalid depth: %v", depth))
+	}
+}
 
-		if !mList.isSortedDesc() {
-			panic("list not sorted properly")
+// Score and sort the move list.
+func ScoreSortMoveListMutex(mList moveList, b board.Board, isWhite bool, depth int, scoringFuncName string, scoreMutex *MutexScoreManager) moveList {
+	// calculate score of moves for a certain depth, then return sorted moveList
+	if depth == 0 {
+		return mList
+	} else if depth > 0 {
+		// No presorting because that was already done outside this function.
+		var wcs float64
+		for i := range mList.size {
+			wcs = scoreMutex.Read()
+			score_i := -GetScore(
+				board.GetBoardAfterMove(b, mList.moves[i]),
+				!isWhite,
+				depth-1,
+				-wcs,
+				scoringFuncName)
+			mList.scores[i] = score_i
+			if score_i > wcs {
+				scoreMutex.Update(score_i)
+			}
 		}
+		// Now sort moves list based on scores, in descending order.
+		// Insertion sort
+		mList = mList.InsertionSort()
 		return mList
 	} else {
 		panic(fmt.Sprintf("Invalid depth: %v", depth))
@@ -103,7 +161,7 @@ func GetScore(b board.Board, isWhite bool, depth int, parent_wcs float64, scorin
 		wcs := -utility.Infinity
 		maxScore := wcs
 		mList := newMoveList(b.GetLegalMoves(isWhite))
-		if depth > 2 {
+		if depth > 2 { // should this be depth>2 or 1?
 			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFuncName)
 		}
 		for i := range mList.size {
