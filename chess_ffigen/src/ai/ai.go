@@ -146,15 +146,6 @@ func ScoreSortMoveListMutex(mList moveList, b board.Board, isWhite bool, depth i
 	}
 }
 
-func (mList moveList) isSortedDesc() bool {
-	for i := 1; i < mList.size; i++ {
-		if !utility.IsApproxGreaterThanOrEq(mList.scores[i-1], mList.scores[i]) {
-			return false
-		}
-	}
-	return true
-}
-
 // Get the score by looking 'depth' number of moves ahead.
 func GetScore(b board.Board, isWhite bool, depth int, parent_wcs float64, scoringFuncName string) float64 {
 	if depth == 0 {

@@ -83,3 +83,12 @@ func (mList moveList) InsertionSort() moveList {
 	}
 	return mList
 }
+
+func (mList moveList) isSortedDesc() bool {
+	for i := 1; i < mList.size; i++ {
+		if !utility.IsApproxGreaterThanOrEq(mList.scores[i-1], mList.scores[i]) {
+			return false
+		}
+	}
+	return true
+}
