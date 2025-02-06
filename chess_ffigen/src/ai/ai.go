@@ -35,11 +35,15 @@ func (mtx *MutexScoreManager) Update(newScore float64) {
 	}
 }
 
-func GetMaxNumCores() int {
+func GetMaxNumCores(lenMoves int) int {
 	numCores := (runtime.NumCPU() * 3) / 4 // don't use all the cores
-
-	if numCores > 6 {
-		numCores = 6
+	idealNumProcessesPerProcess := 2
+	var maxCores int = lenMoves / idealNumProcessesPerProcess
+	if numCores > maxCores {
+		numCores = maxCores
+	}
+	if numCores < 1 {
+		numCores = 1
 	}
 	return numCores
 }
@@ -47,7 +51,7 @@ func GetMaxNumCores() int {
 // Calculate moves and their scores and return one of the moves with the max score
 func CalculateScores(b board.Board, isWhite bool, depth int, scoringFunctionName string, useMultiprocessing bool) moveList {
 	mList := newMoveList(b.GetLegalMoves(isWhite))
-	numCores := GetMaxNumCores()
+	numCores := GetMaxNumCores(mList.size)
 	if useMultiprocessing && numCores > 1 && mList.size > 4 {
 		if depth > 1 { //!!! should this be depth>2 ?
 			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFunctionName)
