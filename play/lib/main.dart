@@ -287,13 +287,14 @@ class MyHomePage extends StatelessWidget {
             ),
           ),
           Text(appState.gameStatus, style: const TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
+          myBoard(appState)
           ] 
-          + myBoard(appState),
+          //+ myBoard(appState),
       ),
     );
   }
 
-  List<Widget> myBoard(MyAppState appState) {
+  Column myBoard(MyAppState appState) {
     // out is the list of row widgets that make up the board. 
     List<Widget> out = [];
     boardString = '';
@@ -314,11 +315,11 @@ class MyHomePage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children:rowView,));
     }
-    return out;
+    return Column(children: out,);
   }
 }
 
-class Square extends StatelessWidget {
+class Square extends StatefulWidget {
   const Square({
     super.key,
     required this.pieceCode,
@@ -333,7 +334,12 @@ class Square extends StatelessWidget {
   final double radius;
   final int i;
   final int j;
-  
+
+  @override
+  State<Square> createState() => _SquareState();
+}
+
+class _SquareState extends State<Square> {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
@@ -343,14 +349,14 @@ class Square extends StatelessWidget {
     double squareW = (screenWidth-20)/8;
 
     ButtonStyle style = ElevatedButton.styleFrom(
-      backgroundColor: color,
+      backgroundColor: widget.color,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(radius),
+        borderRadius: BorderRadius.circular(widget.radius),
       ),
       );
     String iconLoc = '';
-    if (pieceCode != Space) {
-      iconLoc = 'images/${imageMap[pieceCode] ?? ''}';
+    if (widget.pieceCode != Space) {
+      iconLoc = 'images/${imageMap[widget.pieceCode] ?? ''}';
     }
 
     if (iconLoc=='') {
@@ -360,7 +366,7 @@ class Square extends StatelessWidget {
           child: ElevatedButton(
             style:style,
             onPressed: () {
-              appState.humanSelectButton(i,j);
+              appState.humanSelectButton(widget.i,widget.j);
             }, 
             child: Text('')
           ),
@@ -373,7 +379,7 @@ class Square extends StatelessWidget {
           style:style,
           icon: Image.asset(iconLoc),
           onPressed: () {
-            appState.humanSelectButton(i,j);
+            appState.humanSelectButton(widget.i,widget.j);
           },
           
         )
