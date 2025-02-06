@@ -243,9 +243,41 @@ func TestGetPositionScore(t *testing.T) {
 
 //func TestWithAndWithoutMultiprocessing
 
-// func testNumCpu(t *testing.T) {
-// 	fmt.Println(numCpu())
-// }
+func testWithoutMultiprocessing(b board.Board, isWhite bool, depth int, scoringFunctionName string) string {
+	mList1 := CalculateScores(b, isWhite, depth, scoringFunctionName, false)
+	mList2 := CalculateScores(b, isWhite, depth, scoringFunctionName, true)
+	//fmt.Println(cacheList)
+	if !mList1.Equals(mList2) {
+		return "Using cache changed score"
+	} else {
+		return ""
+	}
+}
+
+func TestMultiprocessing(t *testing.T) {
+	boards := []string{"onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO",
+		"00000000ppp0000000000k000000000000000PPP00000000000000000K000000",
+		"0k000000p00000000n00p000000pP000000P0P000000N00000000000000000K0",
+		"0k000000p000n00000000000000000000000000P00000000000N0000000000K0",
+		"0000000000p0000p00000k00p00000000000000P00K00000P0000P0000000000",
+		"0000k00000000000000ppp00000000000000000000PPP00000000000000K0000",
+		"00b0k0000n00000000ppppr00P000000000PPP00000BNB00000000000000K000",
+	}
+	depth := 2
+	depthMap := make(map[int]int)
+	depthMap[0] = 1
+	depthMap[1] = 2
+	depthMap[2] = 4
+	depthMap[4] = 0
+	colors := []bool{false, true}
+	for _, b := range boards {
+		for _, c := range colors {
+			testWithoutMultiprocessing(board.GetBoardFromString(b),
+				c, depth, ScoringPiecePositionValue)
+			depth = depthMap[depth]
+		}
+	}
+}
 
 func BenchmarkOpening3(b *testing.B) {
 	startingBoard := board.GetBoardFromString("onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO")

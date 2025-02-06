@@ -45,7 +45,7 @@ func GetMaxNumCores() int {
 }
 
 // Calculate moves and their scores and return one of the moves with the max score
-func ChooseMove(b board.Board, isWhite bool, depth int, scoringFunctionName string, useMultiprocessing bool) board.Move {
+func CalculateScores(b board.Board, isWhite bool, depth int, scoringFunctionName string, useMultiprocessing bool) moveList {
 	mList := newMoveList(b.GetLegalMoves(isWhite))
 	numCores := GetMaxNumCores()
 	if useMultiprocessing && numCores > 1 && mList.size > 4 {
@@ -74,13 +74,15 @@ func ChooseMove(b board.Board, isWhite bool, depth int, scoringFunctionName stri
 			resultMList = resultMList.Combine(ml)
 		}
 		resultMList = resultMList.InsertionSort()
-		return resultMList.GetMaxScoreMove()
+		return resultMList
 
 	} else {
 		mList = ScoreSortMoveList(mList, b, isWhite, depth, scoringFunctionName)
-		return mList.GetMaxScoreMove()
+		return mList
 	}
-
+}
+func ChooseMove(b board.Board, isWhite bool, depth int, scoringFunctionName string, useMultiprocessing bool) board.Move {
+	return CalculateScores(b, isWhite, depth, scoringFunctionName, useMultiprocessing).GetMaxScoreMove()
 }
 
 // Score and sort the move list.
