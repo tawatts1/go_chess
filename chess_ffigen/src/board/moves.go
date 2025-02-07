@@ -56,7 +56,11 @@ func NewScoredMove(m Move) ScoredMove {
 }
 
 func (sm1 ScoredMove) Equals(sm2 ScoredMove) bool {
-	return utility.IsClose(sm1.score, sm2.score) && sm1.move.Equals(sm2.move)
+	return sm1.score == sm2.score && sm1.move.Equals(sm2.move)
+}
+
+func (sm1 ScoredMove) GreaterThan(sm2 ScoredMove) bool {
+	return sm1.score > sm2.score && !utility.IsClose(sm1.score, sm2.score)
 }
 
 func (sm ScoredMove) GetScore() float64 {

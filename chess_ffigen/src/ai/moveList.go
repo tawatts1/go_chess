@@ -66,7 +66,7 @@ func GetMaxScoreMove(mList []board.ScoredMove) board.Move {
 func InsertionSort(mList []board.ScoredMove) []board.ScoredMove {
 	for i := 1; i < len(mList); i++ {
 		for j := i; j > 0; j-- {
-			if mList[j].GetScore() > mList[j-1].GetScore() && !utility.IsClose(mList[j].GetScore(), mList[j-1].GetScore()) {
+			if mList[j].GreaterThan(mList[j-1]) { //.GetScore() > mList[j-1].GetScore() && !utility.IsClose(mList[j].GetScore(), mList[j-1].GetScore()) {
 				mList[j], mList[j-1] = mList[j-1], mList[j]
 			} else {
 				break

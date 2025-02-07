@@ -1,0 +1,42 @@
+goos: linux
+goarch: amd64
+pkg: github.com/tawatts1/go_chess/ai
+cpu: AMD Ryzen 7 5800X 8-Core Processor             
+                  │ beforeScoredMove.txt │          afterScoredMove.txt          │
+                  │        sec/op        │    sec/op      vs base                │
+Opening3-16                 9.954m ± ∞ ¹   10.059m ± ∞ ¹       ~ (p=1.000 n=1) ²
+Opening4-16                 125.4m ± ∞ ¹    125.0m ± ∞ ¹       ~ (p=1.000 n=1) ²
+Pawns7-16                    1.096 ± ∞ ¹     1.030 ± ∞ ¹       ~ (p=1.000 n=1) ²
+SimpleBoards6-16             1.451 ± ∞ ¹     1.462 ± ∞ ¹       ~ (p=1.000 n=1) ²
+Fork4and5-16                 4.359 ± ∞ ¹     4.360 ± ∞ ¹       ~ (p=1.000 n=1) ²
+CaptureChains5-16            1.171 ± ∞ ¹     1.174 ± ∞ ¹       ~ (p=1.000 n=1) ²
+BishopsVsRook5-16           416.7m ± ∞ ¹    411.7m ± ∞ ¹       ~ (p=1.000 n=1) ²
+geomean                     458.0m          454.2m        -0.83%
+¹ need >= 6 samples for confidence interval at level 0.95
+² need >= 4 samples to detect a difference at alpha level 0.05
+
+                  │ beforeScoredMove.txt │          afterScoredMove.txt          │
+                  │         B/op         │     B/op       vs base                │
+Opening3-16                24.94Mi ± ∞ ¹   25.16Mi ± ∞ ¹       ~ (p=1.000 n=1) ²
+Opening4-16                296.1Mi ± ∞ ¹   298.6Mi ± ∞ ¹       ~ (p=1.000 n=1) ²
+Pawns7-16                  733.0Mi ± ∞ ¹   757.9Mi ± ∞ ¹       ~ (p=1.000 n=1) ²
+SimpleBoards6-16           1.072Gi ± ∞ ¹   1.104Gi ± ∞ ¹       ~ (p=1.000 n=1) ²
+Fork4and5-16               10.28Gi ± ∞ ¹   10.35Gi ± ∞ ¹       ~ (p=1.000 n=1) ²
+CaptureChains5-16          2.285Gi ± ∞ ¹   2.312Gi ± ∞ ¹       ~ (p=1.000 n=1) ²
+BishopsVsRook5-16          664.6Mi ± ∞ ¹   679.9Mi ± ∞ ¹       ~ (p=1.000 n=1) ²
+geomean                    716.9Mi         729.4Mi        +1.75%
+¹ need >= 6 samples for confidence interval at level 0.95
+² need >= 4 samples to detect a difference at alpha level 0.05
+
+                  │ beforeScoredMove.txt │         afterScoredMove.txt          │
+                  │      allocs/op       │  allocs/op    vs base                │
+Opening3-16                 169.9k ± ∞ ¹   170.0k ± ∞ ¹       ~ (p=1.000 n=1) ²
+Opening4-16                 1.978M ± ∞ ¹   1.978M ± ∞ ¹       ~ (p=1.000 n=1) ²
+Pawns7-16                   8.112M ± ∞ ¹   8.112M ± ∞ ¹       ~ (p=1.000 n=1) ²
+SimpleBoards6-16            10.92M ± ∞ ¹   10.92M ± ∞ ¹       ~ (p=1.000 n=1) ²
+Fork4and5-16                58.40M ± ∞ ¹   58.39M ± ∞ ¹       ~ (p=1.000 n=1) ²
+CaptureChains5-16           18.72M ± ∞ ¹   18.58M ± ∞ ¹       ~ (p=1.000 n=1) ²
+BishopsVsRook5-16           5.322M ± ∞ ¹   5.333M ± ∞ ¹       ~ (p=1.000 n=1) ²
+geomean                     5.602M         5.598M        -0.08%
+¹ need >= 6 samples for confidence interval at level 0.95
+² need >= 4 samples to detect a difference at alpha level 0.05
