@@ -53,7 +53,7 @@ func CalculateScores(b board.Board, isWhite bool, depth int, scoringFunctionName
 	mList := newMoveList(b.GetLegalMoves(isWhite))
 	numCores := GetMaxNumCores(mList.size)
 	if useMultiprocessing && numCores > 1 && mList.size > 4 {
-		if depth > 1 { //!!! should this be depth>2 ?
+		if depth >= 2 {
 			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFunctionName)
 		}
 		slcMList := make([]moveList, numCores)
@@ -95,7 +95,7 @@ func ScoreSortMoveList(mList moveList, b board.Board, isWhite bool, depth int, s
 	if depth == 0 {
 		return mList
 	} else if depth > 0 {
-		if depth > 1 { //!!! should this be depth>2 ?
+		if depth >= 2 {
 			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFuncName)
 		}
 		wcs := -utility.Infinity
@@ -126,7 +126,6 @@ func ScoreSortMoveListMutex(mList moveList, b board.Board, isWhite bool, depth i
 	if depth == 0 {
 		return mList
 	} else if depth > 0 {
-		// No presorting because that was already done outside this function.
 		var wcs float64
 		for i := range mList.size {
 			wcs = scoreMutex.Read()
@@ -158,7 +157,7 @@ func GetScore(b board.Board, isWhite bool, depth int, parent_wcs float64, scorin
 		wcs := -utility.Infinity
 		maxScore := wcs
 		mList := newMoveList(b.GetLegalMoves(isWhite))
-		if depth > 2 { // should this be depth>2 or 1?
+		if depth >= 2 {
 			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFuncName)
 		}
 		for i := range mList.size {
@@ -188,7 +187,6 @@ func GetScore(b board.Board, isWhite bool, depth int, parent_wcs float64, scorin
 				}
 			}
 		}
-
 		return maxScore
 	} else {
 		panic("invalid depth")
