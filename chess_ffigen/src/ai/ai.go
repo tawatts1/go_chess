@@ -49,19 +49,19 @@ func GetMaxNumCores(lenMoves int) int {
 }
 
 // Calculate moves and their scores and return one of the moves with the max score
-func CalculateScores(b board.Board, isWhite bool, depth int, scoringFunctionName string, useMultiprocessing bool) moveList {
+func CalculateScores(b board.Board, isWhite bool, depth int, scoringFunctionName string, useMultiprocessing bool) []board.ScoredMove {
 	mList := newMoveList(b.GetLegalMoves(isWhite))
-	numCores := GetMaxNumCores(mList.size)
-	if useMultiprocessing && numCores > 1 && mList.size > 4 {
+	numCores := GetMaxNumCores(len(mList))
+	if useMultiprocessing && numCores > 1 && len(mList) > 4 {
 		if depth >= 2 {
 			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFunctionName)
 		}
-		slcMList := make([]moveList, numCores)
-		for i, m := range mList.moves {
+		slcMList := make([][]board.ScoredMove, numCores)
+		for i, m := range mList {
 			index := i % numCores
-			slcMList[index] = slcMList[index].AddMoves(m)
+			slcMList[index] = append(slcMList[index], m)
 		}
-		scoredMLists := make(chan moveList, numCores)
+		scoredMLists := make(chan []board.ScoredMove, numCores)
 		var wg sync.WaitGroup
 		scoreMutex := NewMutexScoreManager()
 		for _, coreMList := range slcMList {
@@ -75,9 +75,9 @@ func CalculateScores(b board.Board, isWhite bool, depth int, scoringFunctionName
 		wg.Wait()           // wait for all cpus to finish the processes
 		close(scoredMLists) // close the channel to new input.
 		for ml := range scoredMLists {
-			resultMList = resultMList.Combine(ml)
+			resultMList = append(resultMList, ml...)
 		}
-		resultMList = resultMList.InsertionSort()
+		resultMList = InsertionSort(resultMList)
 		return resultMList
 
 	} else {
@@ -86,12 +86,12 @@ func CalculateScores(b board.Board, isWhite bool, depth int, scoringFunctionName
 	}
 }
 func ChooseMove(b board.Board, isWhite bool, depth int, scoringFunctionName string, useMultiprocessing bool) board.Move {
-	return CalculateScores(b, isWhite, depth, scoringFunctionName, useMultiprocessing).GetMaxScoreMove()
+	return GetMaxScoreMove(CalculateScores(b, isWhite, depth, scoringFunctionName, useMultiprocessing))
 }
 
 // Score and sort the move list.
-func ScoreSortMoveList(mList moveList, b board.Board, isWhite bool, depth int, scoringFuncName string) moveList {
-	// calculate score of moves for a certain depth, then return sorted moveList
+func ScoreSortMoveList(mList []board.ScoredMove, b board.Board, isWhite bool, depth int, scoringFuncName string) []board.ScoredMove {
+	// calculate score of moves for a certain depth, then return sorted []board.ScoredMove
 	if depth == 0 {
 		return mList
 	} else if depth > 0 {
@@ -99,21 +99,21 @@ func ScoreSortMoveList(mList moveList, b board.Board, isWhite bool, depth int, s
 			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFuncName)
 		}
 		wcs := -utility.Infinity
-		for i := range mList.size {
+		for i := range len(mList) {
 			score_i := -GetScore(
-				board.GetBoardAfterMove(b, mList.moves[i]),
+				board.GetBoardAfterMove(b, mList[i].GetMove()),
 				!isWhite,
 				depth-1,
 				-wcs,
 				scoringFuncName)
-			mList.scores[i] = score_i
+			mList[i] = mList[i].SetScore(score_i)
 			if score_i > wcs {
 				wcs = score_i
 			}
 		}
 		// Now sort moves list based on scores, in descending order.
 		// Insertion sort
-		mList = mList.InsertionSort()
+		mList = InsertionSort(mList)
 		return mList
 	} else {
 		panic(fmt.Sprintf("Invalid depth: %v", depth))
@@ -121,28 +121,28 @@ func ScoreSortMoveList(mList moveList, b board.Board, isWhite bool, depth int, s
 }
 
 // Score and sort the move list.
-func ScoreSortMoveListMutex(mList moveList, b board.Board, isWhite bool, depth int, scoringFuncName string, scoreMutex *MutexScoreManager) moveList {
-	// calculate score of moves for a certain depth, then return sorted moveList
+func ScoreSortMoveListMutex(mList []board.ScoredMove, b board.Board, isWhite bool, depth int, scoringFuncName string, scoreMutex *MutexScoreManager) []board.ScoredMove {
+	// calculate score of moves for a certain depth, then return sorted []board.ScoredMove
 	if depth == 0 {
 		return mList
 	} else if depth > 0 {
 		var wcs float64
-		for i := range mList.size {
+		for i := range len(mList) {
 			wcs = scoreMutex.Read()
 			score_i := -GetScore(
-				board.GetBoardAfterMove(b, mList.moves[i]),
+				board.GetBoardAfterMove(b, mList[i].GetMove()),
 				!isWhite,
 				depth-1,
 				-wcs,
 				scoringFuncName)
-			mList.scores[i] = score_i
+			mList[i] = mList[i].SetScore(score_i)
 			if score_i > wcs {
 				scoreMutex.Update(score_i)
 			}
 		}
 		// Now sort moves list based on scores, in descending order.
 		// Insertion sort
-		mList = mList.InsertionSort()
+		mList = InsertionSort(mList)
 		return mList
 	} else {
 		panic(fmt.Sprintf("Invalid depth: %v", depth))
@@ -160,9 +160,9 @@ func GetScore(b board.Board, isWhite bool, depth int, parent_wcs float64, scorin
 		if depth >= 2 {
 			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFuncName)
 		}
-		for i := range mList.size {
+		for i := range len(mList) {
 			score := -GetScore(
-				board.GetBoardAfterMove(b, mList.moves[i]),
+				board.GetBoardAfterMove(b, mList[i].GetMove()),
 				!isWhite,
 				depth-1,
 				-wcs,

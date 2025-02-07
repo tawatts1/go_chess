@@ -6,18 +6,19 @@ import (
 	"golang.org/x/exp/rand"
 )
 
-type moveList struct {
-	scores []float64
-	moves  []board.Move
-	size   int
-}
+// type []board.ScoredMove struct {
+// 	scores []float64
+// 	moves  []board.Move
+// 	size   int
+// }
+// move list is just []board.ScoredMove
 
-func (mList1 moveList) Equals(mList2 moveList) bool {
-	if mList1.size == mList2.size {
-		for i := range mList1.size {
+func moveListsEqual(mList1 []board.ScoredMove, mList2 []board.ScoredMove) bool {
+	if len(mList1) == len(mList2) {
+		for i := range len(mList1) {
 			matchFound := false
-			for j := range mList1.size {
-				if mList1.moves[i].Equals(mList2.moves[j]) && mList1.scores[i] == mList2.scores[j] {
+			for j := range len(mList1) {
+				if mList1[i].Equals(mList2[j]) {
 					matchFound = true
 					break
 				}
@@ -32,36 +33,28 @@ func (mList1 moveList) Equals(mList2 moveList) bool {
 	}
 }
 
-func newMoveList(moves []board.Move) moveList {
-	return moveList{moves: moves, scores: make([]float64, len(moves), len(moves)), size: len(moves)}
-}
-
-func (mList moveList) AddMoves(m ...board.Move) moveList {
-	mList.moves = append(mList.moves, m...)
-	mList.scores = append(mList.scores, 0)
-	mList.size = len(mList.moves)
-	return mList
-}
-
-func (mList1 moveList) Combine(mList2 moveList) moveList {
-	return moveList{moves: append(mList1.moves, mList2.moves...),
-		scores: append(mList1.scores, mList2.scores...),
-		size:   mList1.size + mList2.size}
+func newMoveList(moves []board.Move) []board.ScoredMove {
+	l := len(moves)
+	out := make([]board.ScoredMove, l, l)
+	for i := range l {
+		out[i] = board.NewScoredMove(moves[i])
+	}
+	return out
 }
 
 // after the scores are calculated, choose the best move. No need for this function to be efficient as it is called only once.
-func (mList moveList) GetMaxScoreMove() board.Move {
-	if mList.size > 0 {
-		maxScore := mList.scores[0]
-		for i := 1; i < mList.size; i++ {
-			if mList.scores[i] > maxScore {
-				maxScore = mList.scores[i]
+func GetMaxScoreMove(mList []board.ScoredMove) board.Move {
+	if len(mList) > 0 {
+		maxScore := mList[0].GetScore()
+		for i := 1; i < len(mList); i++ {
+			if mList[i].GetScore() > maxScore {
+				maxScore = mList[i].GetScore()
 			}
 		}
 		bestMoves := make([]board.Move, 0)
-		for i := 0; i < mList.size; i++ {
-			if utility.IsClose(maxScore, mList.scores[i]) {
-				bestMoves = append(bestMoves, mList.moves[i])
+		for i := 0; i < len(mList); i++ {
+			if utility.IsClose(maxScore, mList[i].GetScore()) {
+				bestMoves = append(bestMoves, mList[i].GetMove())
 			}
 		}
 		return bestMoves[rand.Intn(len(bestMoves))]
@@ -70,12 +63,11 @@ func (mList moveList) GetMaxScoreMove() board.Move {
 	}
 }
 
-func (mList moveList) InsertionSort() moveList {
-	for i := 1; i < mList.size; i++ {
+func InsertionSort(mList []board.ScoredMove) []board.ScoredMove {
+	for i := 1; i < len(mList); i++ {
 		for j := i; j > 0; j-- {
-			if mList.scores[j] > mList.scores[j-1] && !utility.IsClose(mList.scores[j], mList.scores[j-1]) {
-				mList.scores[j], mList.scores[j-1] = mList.scores[j-1], mList.scores[j]
-				mList.moves[j], mList.moves[j-1] = mList.moves[j-1], mList.moves[j]
+			if mList[j].GetScore() > mList[j-1].GetScore() && !utility.IsClose(mList[j].GetScore(), mList[j-1].GetScore()) {
+				mList[j], mList[j-1] = mList[j-1], mList[j]
 			} else {
 				break
 			}
@@ -84,9 +76,9 @@ func (mList moveList) InsertionSort() moveList {
 	return mList
 }
 
-func (mList moveList) isSortedDesc() bool {
-	for i := 1; i < mList.size; i++ {
-		if !utility.IsApproxGreaterThanOrEq(mList.scores[i-1], mList.scores[i]) {
+func isSortedDesc(mList []board.ScoredMove) bool {
+	for i := 1; i < len(mList); i++ {
+		if !utility.IsApproxGreaterThanOrEq(mList[i-1].GetScore(), mList[i].GetScore()) {
 			return false
 		}
 	}

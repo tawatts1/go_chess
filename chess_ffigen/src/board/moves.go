@@ -1,6 +1,10 @@
 package board
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/tawatts1/go_chess/utility"
+)
 
 const StatusCheckMate = "Check Mate"
 const StatusStaleMate = "Stale Mate"
@@ -40,6 +44,32 @@ func (m Move) Encode() string {
 
 func (m Move) EncodeB() string {
 	return m.b.Encode()
+}
+
+type ScoredMove struct {
+	score float64
+	move  Move
+}
+
+func NewScoredMove(m Move) ScoredMove {
+	return ScoredMove{move: m}
+}
+
+func (sm1 ScoredMove) Equals(sm2 ScoredMove) bool {
+	return utility.IsClose(sm1.score, sm2.score) && sm1.move.Equals(sm2.move)
+}
+
+func (sm ScoredMove) GetScore() float64 {
+	return sm.score
+}
+
+func (sm ScoredMove) SetScore(s float64) ScoredMove {
+	sm.score = s
+	return sm
+}
+
+func (sm ScoredMove) GetMove() Move {
+	return sm.move
 }
 
 func GetFirstEqualMove(moves []Move, c1, c2 Coord) Move {

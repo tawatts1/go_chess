@@ -96,9 +96,9 @@ func testAiMoveFile(fname string) string {
 	return ""
 }
 
-func ContainsMove(moveSlice []board.Move, m1 board.Move) bool {
+func ContainsMove(moveSlice []board.ScoredMove, m1 board.Move) bool {
 	for _, m2 := range moveSlice {
-		if m1.Equals(m2) {
+		if m2.GetMove().Equals(m1) {
 			return true
 		}
 	}
@@ -111,32 +111,32 @@ func TestSortMoveList(t *testing.T) {
 	mList = ScoreSortMoveList(mList, b, true, 1, ScoringDefaultPieceValue)
 	pawnAttack := board.NewMove(board.NewCoord(4, 1), board.NewCoord(3, 2), 0)
 	knightAttack := board.NewMove(board.NewCoord(5, 3), board.NewCoord(3, 2), 0)
-	if utility.IsClose(mList.scores[0], mList.scores[1]) &&
-		ContainsMove(mList.moves[0:2], pawnAttack) &&
-		ContainsMove(mList.moves[0:2], knightAttack) {
+	if utility.IsClose(mList[0].GetScore(), mList[1].GetScore()) &&
+		ContainsMove(mList[0:2], pawnAttack) &&
+		ContainsMove(mList[0:2], knightAttack) {
 	} else {
 		t.Error("failed n=1")
 	}
 
 	mList = ScoreSortMoveList(mList, b, true, 2, ScoringDefaultPieceValue)
-	if !utility.IsClose(mList.scores[0], mList.scores[1]) &&
-		mList.moves[0].Equals(pawnAttack) &&
-		mList.moves[1].Equals(knightAttack) {
+	if !utility.IsClose(mList[0].GetScore(), mList[1].GetScore()) &&
+		mList[0].GetMove().Equals(pawnAttack) &&
+		mList[1].GetMove().Equals(knightAttack) {
 	} else {
 		t.Error("failed n=2")
 	}
 	// after sorting with depth=3, either attack is fine, but the pawn attack
 	// should still be ordered first because it is better for depth=2.
 	mList = ScoreSortMoveList(mList, b, true, 3, ScoringDefaultPieceValue)
-	if utility.IsClose(mList.scores[0], mList.scores[1]) &&
-		mList.moves[0].Equals(pawnAttack) &&
-		mList.moves[1].Equals(knightAttack) {
+	if utility.IsClose(mList[0].GetScore(), mList[1].GetScore()) &&
+		mList[0].GetMove().Equals(pawnAttack) &&
+		mList[1].GetMove().Equals(knightAttack) {
 	} else {
 		t.Error("failed n=3")
 	}
 }
 
-func TestSortMoveListPositionScoring(t *testing.T) {
+func TestSortScoredMoveListPositionScoring(t *testing.T) {
 	//opening board after white puts a random pawn forward:
 	b := board.GetBoardFromString("onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO")
 	if !utility.IsClose(getPositionScoreValue(b, false), 0) {
@@ -247,7 +247,7 @@ func testWithoutMultiprocessing(b board.Board, isWhite bool, depth int, scoringF
 	mList1 := CalculateScores(b, isWhite, depth, scoringFunctionName, false)
 	mList2 := CalculateScores(b, isWhite, depth, scoringFunctionName, true)
 	//fmt.Println(cacheList)
-	if !mList1.Equals(mList2) {
+	if !moveListsEqual(mList1, mList2) {
 		return "Using cache changed score"
 	} else {
 		return ""
