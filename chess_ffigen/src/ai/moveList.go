@@ -13,21 +13,47 @@ import (
 // }
 // move list is just []board.ScoredMove
 
-func moveListsEqual(mList1 []board.ScoredMove, mList2 []board.ScoredMove) bool {
+// Check if two move lists have the same highest scoring moves.
+// If moves are checked in differing orders, it may turn out that lower scoring
+// moves are not equal. This is because as soon as a move is known to be lower
+// than the highest-score-so-far, getScore moves on to a different move.
+func moveListsEffectivelyEqual(mList1 []board.ScoredMove, mList2 []board.ScoredMove) bool {
 	if len(mList1) == len(mList2) {
-		for i := range len(mList1) {
-			matchFound := false
-			for j := range len(mList1) {
-				if mList1[i].Equals(mList2[j]) {
-					matchFound = true
-					break
+		if len(mList1) == 0 {
+			return true
+		} else {
+			mList1 = InsertionSort(mList1)
+			highScore := mList1[0].GetScore()
+			topScoreList1 := make([]board.ScoredMove, 0)
+			topScoreList2 := make([]board.ScoredMove, 0)
+			for _, m1 := range mList1 {
+				if utility.IsClose(m1.GetScore(), highScore) {
+					topScoreList1 = append(topScoreList1, m1)
 				}
 			}
-			if !matchFound {
+			for _, m2 := range mList2 {
+				if utility.IsClose(m2.GetScore(), highScore) {
+					topScoreList2 = append(topScoreList2, m2)
+				}
+			}
+			if len(topScoreList1) == len(topScoreList2) {
+				for _, m1 := range topScoreList1 {
+					matchFound := false
+					for _, m2 := range topScoreList2 {
+						if m1.GetMove().Equals(m2.GetMove()) {
+							matchFound = true
+							break
+						}
+					}
+					if !matchFound {
+						return false
+					}
+				}
+				return true
+			} else {
 				return false
 			}
 		}
-		return true
 	} else {
 		return false
 	}

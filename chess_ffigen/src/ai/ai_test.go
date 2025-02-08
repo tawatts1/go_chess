@@ -244,8 +244,9 @@ func TestGetPositionScore(t *testing.T) {
 func testWithoutMultiprocessing(b board.Board, isWhite bool, depth int, scoringFunctionName string) string {
 	mList1 := CalculateScores(b, isWhite, depth, scoringFunctionName, false)
 	mList2 := CalculateScores(b, isWhite, depth, scoringFunctionName, true)
-	if !moveListsEqual(mList1, mList2) {
-		return "Using multiprocessing changed score"
+
+	if !moveListsEffectivelyEqual(mList1, mList2) {
+		return "Using Multiprocessing changed score"
 	} else {
 		return ""
 	}
@@ -268,8 +269,7 @@ func TestMultiprocessing(t *testing.T) {
 	depthMap[1] = 2
 	depthMap[2] = 4
 	depthMap[4] = 0
-	depthMap[5] = 0
-	colors := []bool{true}
+	colors := []bool{false, true}
 	for _, b := range boards {
 		for _, c := range colors {
 			err := testWithoutMultiprocessing(board.GetBoardFromString(b),
@@ -277,7 +277,7 @@ func TestMultiprocessing(t *testing.T) {
 			if err != "" {
 				t.Error(err)
 			}
-			//depth = depthMap[depth]
+			depth = depthMap[depth]
 		}
 	}
 }
