@@ -241,14 +241,12 @@ func TestGetPositionScore(t *testing.T) {
 	testBothFunc(6, 4, false, 'n', 0.75, true, true)
 }
 
-//func TestWithAndWithoutMultiprocessing
-
 func testWithoutMultiprocessing(b board.Board, isWhite bool, depth int, scoringFunctionName string) string {
 	mList1 := CalculateScores(b, isWhite, depth, scoringFunctionName, false)
 	mList2 := CalculateScores(b, isWhite, depth, scoringFunctionName, true)
-	//fmt.Println(cacheList)
-	if !moveListsEqual(mList1, mList2) {
-		return "Using cache changed score"
+
+	if !moveListsEffectivelyEqual(mList1, mList2) {
+		return "Using Multiprocessing changed score"
 	} else {
 		return ""
 	}
@@ -268,12 +266,15 @@ func TestMultiprocessing(t *testing.T) {
 	depthMap[0] = 1
 	depthMap[1] = 2
 	depthMap[2] = 4
-	depthMap[4] = 0
+	depthMap[4] = 1
 	colors := []bool{false, true}
 	for _, b := range boards {
 		for _, c := range colors {
-			testWithoutMultiprocessing(board.GetBoardFromString(b),
+			err := testWithoutMultiprocessing(board.GetBoardFromString(b),
 				c, depth, ScoringPiecePositionValue)
+			if err != "" {
+				t.Error(err)
+			}
 			depth = depthMap[depth]
 		}
 	}
