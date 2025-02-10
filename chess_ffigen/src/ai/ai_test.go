@@ -96,6 +96,13 @@ func testAiMoveFile(fname string) string {
 	return ""
 }
 
+func TestChooseMove(t *testing.T) {
+	err := testAiMoveFile(testFolder + "aiTests.txt")
+	if err != "" {
+		t.Error(err)
+	}
+}
+
 func ContainsMove(moveSlice []board.ScoredMove, m1 board.Move) bool {
 	for _, m2 := range moveSlice {
 		if m2.GetMove().Equals(m1) {
@@ -162,13 +169,6 @@ func TestSortScoredMoveListPositionScoring(t *testing.T) {
 	if !utility.IsClose(getPositionScoreValue(bAfterKnight, false),
 		getPositionScoreValue(bAfterPawn, false)) {
 		t.Error("error")
-	}
-}
-
-func TestChooseMove(t *testing.T) {
-	err := testAiMoveFile(testFolder + "aiTests.txt")
-	if err != "" {
-		t.Error(err)
 	}
 }
 
@@ -254,21 +254,21 @@ func testWithoutMultiprocessing(b board.Board, isWhite bool, depth int, scoringF
 
 func TestMultiprocessing(t *testing.T) {
 	boards := []string{
-		// "onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO",
-		// "00000000ppp0000000000k000000000000000PPP00000000000000000K000000",
-		// "0k000000p00000000n00p000000pP000000P0P000000N00000000000000000K0",
-		// "0k000000p000n00000000000000000000000000P00000000000N0000000000K0",
-		// "0000000000p0000p00000k00p00000000000000P00K00000P0000P0000000000",
-		// "0000k00000000000000ppp00000000000000000000PPP00000000000000K0000",
-		// "00b0k0000n00000000ppppr00P000000000PPP00000BNB00000000000000K000",
+		"onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO",
+		"00000000ppp0000000000k000000000000000PPP00000000000000000K000000",
+		"0k000000p00000000n00p000000pP000000P0P000000N00000000000000000K0",
+		"0k000000p000n00000000000000000000000000P00000000000N0000000000K0",
+		"0000000000p0000p00000k00p00000000000000P00K00000P0000P0000000000",
+		"0000k00000000000000ppp00000000000000000000PPP00000000000000K0000",
+		"00b0k0000n00000000ppppr00P000000000PPP00000BNB00000000000000K000",
 		"0000kn000000000000000000000000000000000000000000p00PPP000000K00O",
 	}
 	depth := 3
 	depthMap := make(map[int]int)
-	depthMap[0] = 1
-	depthMap[1] = 2
-	depthMap[2] = 4
-	depthMap[4] = 0
+	depthMap[0] = 3
+	depthMap[2] = 3
+	depthMap[3] = 4
+	depthMap[4] = 2
 	colors := []bool{false, true}
 	for _, b := range boards {
 		for _, c := range colors {

@@ -15,7 +15,7 @@ type MutexScoreManager struct {
 }
 
 func NewMutexScoreManager() *MutexScoreManager {
-	return &MutexScoreManager{score: -utility.Infinity}
+	return &MutexScoreManager{score: utility.Infinity}
 }
 
 func (mtx *MutexScoreManager) Read() float64 {
@@ -24,12 +24,13 @@ func (mtx *MutexScoreManager) Read() float64 {
 	return mtx.score
 }
 
+// Update the score if the newScore is smaller
 func (mtx *MutexScoreManager) Update(newScore float64) {
 	currentScore := mtx.Read()
-	if newScore > currentScore {
+	if newScore < currentScore {
 		mtx.lock.Lock()
 		defer mtx.lock.Unlock()
-		if newScore > mtx.score {
+		if newScore < mtx.score {
 			mtx.score = newScore
 		}
 	}
@@ -135,18 +136,19 @@ func GetScore(b board.Board, isWhite bool, depth int, parent_wcs float64, scorin
 	if depth == 0 {
 		return getScoringFunction(scoringFuncName)(b, isWhite)
 	} else if depth > 0 {
-		wcs := -utility.Infinity
-		maxScore := wcs
+
+		maxScore := -utility.Infinity
 		mList := newMoveList(b.GetLegalMoves(isWhite))
 		if depth >= 2 {
 			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFuncName)
 		}
+		var score_i float64
 		for i := range len(mList) {
-			score := -GetScore(
+			score_i = -GetScore(
 				board.GetBoardAfterMove(b, mList[i].GetMove()),
 				!isWhite,
 				depth-1,
-				-wcs,
+				-maxScore,
 				scoringFuncName)
 			// Let us say if white does move A, the worst that will happen
 			// after that is white gaining 5 points, so great for them!
@@ -158,13 +160,10 @@ func GetScore(b board.Board, isWhite bool, depth int, parent_wcs float64, scorin
 			// So white should not consider move B anymore after seeing that
 			// black could get a better deal.
 			// the key metric there is that -2 > -5, or score > parent_wcs
-			if score > maxScore {
-				maxScore = score
-				if score > parent_wcs && !utility.IsClose(score, parent_wcs) {
+			if score_i > maxScore {
+				maxScore = score_i
+				if score_i > parent_wcs && !utility.IsClose(score_i, parent_wcs) {
 					break
-				}
-				if score > wcs {
-					wcs = score
 				}
 			}
 		}
@@ -179,33 +178,29 @@ func GetScoreMutex(b board.Board, isWhite bool, depth int, mtx *MutexScoreManage
 	if depth == 0 {
 		return getScoringFunction(scoringFuncName)(b, isWhite)
 	} else if depth > 0 {
-		wcs := -utility.Infinity
-		maxScore := wcs
-		var parent_wcs, score_i float64
+		maxScore := -utility.Infinity
+		var parent_wcs float64
 		mList := newMoveList(b.GetLegalMoves(isWhite))
 		if depth >= 2 {
 			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFuncName)
 		}
+		var score_i float64
 		for i := range len(mList) {
 			score_i = -GetScore(
 				board.GetBoardAfterMove(b, mList[i].GetMove()),
 				!isWhite,
 				depth-1,
-				-wcs,
+				-maxScore,
 				scoringFuncName)
-			parent_wcs = -mtx.Read()
 			if score_i > maxScore {
 				maxScore = score_i
+				parent_wcs = mtx.Read()
 				if score_i > parent_wcs && !utility.IsClose(score_i, parent_wcs) {
-					mtx.Update(-score_i)
-					//fmt.Printf("break hit")
 					break
-				}
-				if score_i > wcs {
-					wcs = score_i
 				}
 			}
 		}
+		mtx.Update(maxScore)
 		return maxScore
 	} else {
 		panic("invalid depth")
