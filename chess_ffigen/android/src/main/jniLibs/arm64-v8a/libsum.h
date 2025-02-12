@@ -74,6 +74,9 @@ typedef struct { void *data; GoInt len; GoInt cap; } GoSlice;
 extern "C" {
 #endif
 
+extern char* GetAiChosenMove(char* boardStr, int isWhite, char* aiName, int N);
+extern char* GetBoardAfterMove(char* boardStr, int y1, int x1, int y2, int x2);
+extern char* GetNextMoves(char* boardStr, int y, int x);
 extern int sum(int a, int b);
 extern int longSum(int a, int b);
 extern void enforce_binding();
