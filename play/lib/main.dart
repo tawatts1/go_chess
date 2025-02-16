@@ -23,6 +23,10 @@ class Coord{
   final int i;
   final int j;
   const Coord(this.i, this.j);
+  @override 
+  String toString() {
+    return '$i,$j';
+  }
 }
 
 Future<Coord> returnAfterDelay(Coord out, Duration t) async {
@@ -70,18 +74,18 @@ Future<String> getAiChosenMove(String boardStr, bool isWhite, String aiName, int
   return moveString;
 }
 
-String getBoardAfterMove(String boardStr, int i1, int j1, int i2, int j2){
+String getBoardAfterMove(String boardStr, Coord c1, Coord c2){
   final ffi.Pointer<ffi.Char> cBoardStr1 = boardStr.toNativeUtf8().cast<ffi.Char>();
-  final ffi.Pointer<Utf8> boardPtr = go_chess.getBoardAfterMove(cBoardStr1, i1, j1, i2, j2).cast<Utf8>();
+  final ffi.Pointer<Utf8> boardPtr = go_chess.getBoardAfterMove(cBoardStr1, c1.i, c1.j, c2.i, c2.j).cast<Utf8>();
   final newBoardStr = boardPtr.toDartString();
   calloc.free(boardPtr);
   calloc.free(cBoardStr1);
   return newBoardStr;
 }
 
-String getMoves(String boardStr, int i, int j){
+String getMoves(String boardStr, Coord c){
   final cBoardStr = boardStr.toNativeUtf8().cast<ffi.Char>();
-  final ffi.Pointer<Utf8> movesPtr = go_chess.getNextMoves(cBoardStr, i, j).cast<Utf8>();
+  final ffi.Pointer<Utf8> movesPtr = go_chess.getNextMoves(cBoardStr, c.i, c.j).cast<Utf8>();
   final movesStr = movesPtr.toDartString();
   calloc.free(movesPtr);
   calloc.free(cBoardStr);
@@ -91,8 +95,7 @@ String getMoves(String boardStr, int i, int j){
 const colorChange = 30;
 
 class MyAppState extends ChangeNotifier {
-  int? selectedI;
-  int? selectedJ;
+  Coord? selectedCoord;
   String moveDestinations = '';
   bool isWhiteTurn = true;
   bool isBlackAi = true;
@@ -121,43 +124,40 @@ class MyAppState extends ChangeNotifier {
   }
   
   void clearSelection() {
-    selectedI = null;
-    selectedJ = null;
+    selectedCoord = null;
     moveDestinations = '';
   }
-  void humanSelectButton(int i, int j){
+  void humanSelectButton(Coord c){
     //functions that humans have to use to select the buttons
     if (isGameOver) {
       log('game is over');
     } else if ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi)){
       log('It is an AIs turn');
     } else {
-      selectButton(i,j);
+      selectButton(c);
     }
   }
-  void selectButton(int i, int j){
-    String piece = board[i][j];
+  void selectButton(Coord c){
+    String piece = board[c.i][c.j];
     bool isNotifyAi = false;
-    if (selectedI == null || selectedJ == null) {
+    if (selectedCoord == null) {
       // no selection has been made
       if (piece == Space) {
         log('try clicking on a piece!');
       } else if ((isWhiteTurn && (whiteMap[piece] ?? false)) ||
                  (!isWhiteTurn && !(whiteMap[piece] ?? true))) {
         //mark down the selection and populate the move destinations
-        selectedI = i;
-        selectedJ = j;
-        moveDestinations = getMoves(boardString, i, j);
+        selectedCoord = c;
+        moveDestinations = getMoves(boardString, c);
         log(moveDestinations);
       } else {
         log('not that colors turn');
       }
-    } else if (selectedI != null && selectedJ != null) {
+    } else if (selectedCoord != null) {
       // a move has already been selected. 
-      var moveStr = '$i,$j';
-      if (moveDestinations.contains(moveStr)){
+      if (moveDestinations.contains(c.toString())){
         log('legal move');
-        String boardResult = getBoardAfterMove(boardString, selectedI!, selectedJ!, i, j);
+        String boardResult = getBoardAfterMove(boardString, selectedCoord!, c);
         List<String> resultList = boardResult.split(',');
         if (resultList.length == 2) {
           String newBoardStr = resultList[0];
@@ -169,7 +169,7 @@ class MyAppState extends ChangeNotifier {
           board = parseBoardString(newBoardStr);
           isWhiteTurn = !isWhiteTurn;
           isNotifyAi = true;
-          indicatedCoords = '$selectedI,$selectedJ|$i,$j';
+          indicatedCoords = '$selectedCoord|$c';
         }
         
       } else {
@@ -183,16 +183,15 @@ class MyAppState extends ChangeNotifier {
       notifyAi();
     }
   }
-  void notifyAi() {
+  Future<void> notifyAi() async {
     if (!isGameOver && ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi))) {
       //it is the ai's turn
       setBoardString(); // todo: get rid of this function. either implement getBoardString or store it whenever it changes. 
-      Future<String> aiMove = getAiChosenMove(boardString, isWhiteTurn, 'simple', aiDropdownDepth);
-      aiMove.then((value) => parseAndDoAiMove(value))
-      .catchError((error) => log(error));
+      String aiMove = await getAiChosenMove(boardString, isWhiteTurn, 'simple', aiDropdownDepth);
+      parseAndDoAiMove(aiMove);
     }
   }
-  void parseAndDoAiMove(String moveStr) {
+  void parseAndDoAiMove(String moveStr) async {
     List<String> indexList = moveStr.split(',');
     if (indexList.length == 4) {
       try {
@@ -200,35 +199,39 @@ class MyAppState extends ChangeNotifier {
         int j1 = int.parse(indexList[1]);
         int i2 = int.parse(indexList[2]);
         int j2 = int.parse(indexList[3]);
-        simulateClickBoard(Coord(i1,j1), Coord(i2, j2));
+        //simulateClickBoard(Coord(i1,j1), Coord(i2, j2));
+        selectButton(Coord(i1, j1));
+
+        Coord click2 = await returnAfterDelay(Coord(i2,j2), const Duration(milliseconds: 700));
+        selectButton(click2);
       } catch(ex) {
         log("failed to parse ai move");
       }
     }
   }
-  void simulateClickBoard(Coord c1, Coord c2) async {
-    if (!isGameOver && ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi))) {
-      setBoardString();
-      //Coord click1 = await returnAfterDelay(c1, Duration(milliseconds: 50));
-      //click.then((value) => selectButton(value.i, value.j))
-      //.catchError((error) => log(error));
-      //secondClick.then((click) => )
-      //selectButton(click1.i, click1.j);
-      selectButton(c1.i, c1.j);
+  // void simulateClickBoard(Coord c1, Coord c2) async {
+  //   if (!isGameOver && ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi))) {
+  //     setBoardString();
+  //     //Coord click1 = await returnAfterDelay(c1, Duration(milliseconds: 50));
+  //     //click.then((value) => selectButton(value.i, value.j))
+  //     //.catchError((error) => log(error));
+  //     //secondClick.then((click) => )
+  //     //selectButton(click1.i, click1.j);
+  //     selectButton(c1);
       
-      Coord click2 = await returnAfterDelay(c2, Duration(milliseconds: 700));
-      selectButton(click2.i, click2.j);
+  //     Coord click2 = await returnAfterDelay(c2, Duration(milliseconds: 700));
+  //     selectButton(click2.i, click2.j);
       
-    }
-  }
+  //   }
+  // }
   void printBoard() {
     log(boardString);
   }
-  Color getColor(int i, int j){
-    bool isLightSquare = (i+j)%2==0;
-    if (i==selectedI && j==selectedJ) {
+  Color getColor(Coord c){
+    bool isLightSquare = (c.i+c.j)%2==0;
+    if (c==selectedCoord) {
       return selectedColor;
-    } else if (indicatedCoords.contains('$i,$j')){
+    } else if (indicatedCoords.contains(c.toString())){
       if (isLightSquare){
         return greyedWhite;
       } else {
@@ -240,10 +243,10 @@ class MyAppState extends ChangeNotifier {
       return black;
     }
   }
-  double getRadius(int i, int j){
-    if (moveDestinations.contains('$i,$j')) {
+  double getRadius(Coord c){
+    if (moveDestinations.contains(c.toString())) {
       return 15;
-    } else if (selectedI!= null && selectedJ != null && selectedI! == i && selectedJ! == j) {
+    } else if (selectedCoord != null && selectedCoord == c) {
       return 15;
     } else {
       return 1;
@@ -322,11 +325,12 @@ class MyHomePage extends StatelessWidget {
       var row = appState.board[i];
       List<Widget> rowView = [];
       for (int j=0; j<row.length; j++) {
-        Color color = appState.getColor(i, j);
-        var radius = appState.getRadius(i,j);      
+        var c = Coord(i,j);
+        Color color = appState.getColor(c);
+        var radius = appState.getRadius(c);      
         var pieceCode = row[j];
         rowView.add(
-          Square(pieceCode: pieceCode, color: color, radius: radius, i: i, j: j)
+          Square(pieceCode: pieceCode, color: color, radius: radius, c: c)
         );
         boardString += pieceCode;
       } 
@@ -344,15 +348,13 @@ class Square extends StatefulWidget {
     required this.pieceCode,
     required this.color,
     required this.radius,
-    required this.i,
-    required this.j
+    required this.c
   });
 
   final String pieceCode;
   final Color color;
   final double radius;
-  final int i;
-  final int j;
+  final Coord c;
 
   @override
   State<Square> createState() => _SquareState();
@@ -377,7 +379,7 @@ class _SquareState extends State<Square> {
     if (widget.pieceCode != Space) {
       iconLoc = 'images/${imageMap[widget.pieceCode] ?? ''}';
     }
-
+    log('building square ${widget.c}');
     if (iconLoc=='') {
       return SizedBox(
           width: squareW,
@@ -385,7 +387,7 @@ class _SquareState extends State<Square> {
           child: ElevatedButton(
             style:style,
             onPressed: () {
-              appState.humanSelectButton(widget.i,widget.j);
+              appState.humanSelectButton(widget.c);
             }, 
             child: Text('')
           ),
@@ -398,7 +400,7 @@ class _SquareState extends State<Square> {
           style:style,
           icon: Image.asset(iconLoc),
           onPressed: () {
-            appState.humanSelectButton(widget.i,widget.j);
+            appState.humanSelectButton(widget.c);
           },
           
         )
