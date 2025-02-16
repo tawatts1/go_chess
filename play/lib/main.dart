@@ -19,6 +19,20 @@ List<List<String>> parseBoardString(String boardStr) {
   return board;
 }
 
+class Coord{
+  final int i;
+  final int j;
+  const Coord(this.i, this.j);
+}
+
+Future<Coord> returnAfterDelay(Coord out, Duration t) async {
+    return Future<Coord>.delayed(t, () {
+      return out;
+    });
+    //sleep(t);
+    //return out;
+}
+
 
 void main() {
   runApp(MyApp());
@@ -172,13 +186,13 @@ class MyAppState extends ChangeNotifier {
   void notifyAi() {
     if (!isGameOver && ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi))) {
       //it is the ai's turn
-      setBoardString();
+      setBoardString(); // todo: get rid of this function. either implement getBoardString or store it whenever it changes. 
       Future<String> aiMove = getAiChosenMove(boardString, isWhiteTurn, 'simple', aiDropdownDepth);
-      aiMove.then((value) => simulateClickBoard(value))
+      aiMove.then((value) => parseAndDoAiMove(value))
       .catchError((error) => log(error));
     }
   }
-  void simulateClickBoard(String moveStr) {
+  void parseAndDoAiMove(String moveStr) {
     List<String> indexList = moveStr.split(',');
     if (indexList.length == 4) {
       try {
@@ -186,22 +200,27 @@ class MyAppState extends ChangeNotifier {
         int j1 = int.parse(indexList[1]);
         int i2 = int.parse(indexList[2]);
         int j2 = int.parse(indexList[3]);
-        selectButton(i1,j1);
-        selectButton(i2,j2);
-        // Future<String> endMoveStr = waitAndClickPiece(i2, j2);
-        // endMoveStr.then((value) => log(value))
-        // .catchError((error) => log(error));
-        // notifyListeners();
+        simulateClickBoard(Coord(i1,j1), Coord(i2, j2));
       } catch(ex) {
         log("failed to parse ai move");
       }
     }
   }
-  // Future<String> waitAndClickPiece(int i, int j) async {
-  //   Future.delayed(const Duration(milliseconds:500));
-  //   selectButton(i,j);
-  //   return "Ai finished move";
-  // }
+  void simulateClickBoard(Coord c1, Coord c2) async {
+    if (!isGameOver && ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi))) {
+      setBoardString();
+      //Coord click1 = await returnAfterDelay(c1, Duration(milliseconds: 50));
+      //click.then((value) => selectButton(value.i, value.j))
+      //.catchError((error) => log(error));
+      //secondClick.then((click) => )
+      //selectButton(click1.i, click1.j);
+      selectButton(c1.i, c1.j);
+      
+      Coord click2 = await returnAfterDelay(c2, Duration(milliseconds: 700));
+      selectButton(click2.i, click2.j);
+      
+    }
+  }
   void printBoard() {
     log(boardString);
   }
