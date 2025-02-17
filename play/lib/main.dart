@@ -17,17 +17,6 @@ List<List<String>> parseBoardString(String boardStr) {
   return board;
 }
 
-
-
-Future<Coord> returnAfterDelay(Coord out, Duration t) async {
-    return Future<Coord>.delayed(t, () {
-      return out;
-    });
-    //sleep(t);
-    //return out;
-}
-
-
 void main() {
   runApp(MyApp());
 }
@@ -50,9 +39,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
-const colorChange = 30;
 
 class MyAppState extends ChangeNotifier {
   Coord? selectedCoord;
@@ -155,10 +141,8 @@ class MyAppState extends ChangeNotifier {
         int j1 = int.parse(indexList[1]);
         int i2 = int.parse(indexList[2]);
         int j2 = int.parse(indexList[3]);
-        //simulateClickBoard(Coord(i1,j1), Coord(i2, j2));
         selectButton(Coord(i1, j1));
-
-        Coord click2 = await returnAfterDelay(Coord(i2,j2), const Duration(milliseconds: 700));
+        Coord click2 = await Future.delayed(const Duration(milliseconds: 700),  () => Coord(i2,j2));
         selectButton(click2);
       } catch(ex) {
         log("failed to parse ai move");
@@ -207,7 +191,6 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
 }
-
 
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
