@@ -6,7 +6,6 @@ import 'constants.dart';
 import 'coord.dart';
 import 'ffi_funcs.dart';
 
-var boardString = '';
 List<List<String>> parseBoardString(String boardStr) {
   List<List<String>> board = [[],[],[],[],[],[],[],[],];
   if (boardStr.length == BoardHeight * BoardWidth) {
@@ -15,6 +14,20 @@ List<List<String>> parseBoardString(String boardStr) {
     }
   }
   return board;
+}
+
+class SquareModel {
+  final String pieceCode;
+  final Color color;
+  final double radius;
+  SquareModel(this.pieceCode, this.color, this.radius);
+  @override
+  bool operator ==(Object other) =>
+    other is SquareModel &&
+    other.runtimeType == runtimeType &&
+    other.pieceCode == pieceCode && other.color == color && other.radius == radius;
+  @override
+  int get hashCode => Object.hash(pieceCode, color, radius);
 }
 
 void main() {
@@ -82,6 +95,7 @@ class MyAppState extends ChangeNotifier {
   void selectButton(Coord c){
     String piece = board[c.i][c.j];
     bool isNotifyAi = false;
+    String boardString = getBoardString();
     if (selectedCoord == null) {
       // no selection has been made
       if (piece == Space) {
@@ -128,8 +142,8 @@ class MyAppState extends ChangeNotifier {
   Future<void> notifyAi() async {
     if (!isGameOver && ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi))) {
       //it is the ai's turn
-      setBoardString(); // todo: get rid of this function. either implement getBoardString or store it whenever it changes. 
-      String aiMove = await getAiChosenMove(boardString, isWhiteTurn, 'simple', aiDropdownDepth);
+      //setBoardString(); // todo: get rid of this function. either implement getBoardString or store it whenever it changes. 
+      String aiMove = await getAiChosenMove(getBoardString(), isWhiteTurn, 'simple', aiDropdownDepth);
       parseAndDoAiMove(aiMove);
     }
   }
@@ -151,7 +165,7 @@ class MyAppState extends ChangeNotifier {
   }
  
   void printBoard() {
-    log(boardString);
+    log(getBoardString());
   }
   Color getColor(Coord c){
     bool isLightSquare = (c.i+c.j)%2==0;
@@ -178,13 +192,14 @@ class MyAppState extends ChangeNotifier {
       return 1;
     }
   }
-  void setBoardString() {
-    boardString = '';
+  String getBoardString() {
+    String boardString = '';
     for (int i=0; i<board.length; i++) {
       for (int j=0; j<board[i].length; j++) {
         boardString += board[i][j];
       }
     }
+    return boardString;
   }
   void setAiDepth(int d) {
     aiDropdownDepth = d;
@@ -198,6 +213,25 @@ class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
+    List<Widget> boardRows = [];
+    for (int i=0; i<appState.board.length; i++){
+      // row is a list of strings
+      var row = appState.board[i];
+      List<Widget> rowView = [];
+      for (int j=0; j<row.length; j++) {
+        var c = Coord(i,j);
+        Color color = appState.getColor(c);
+        var radius = appState.getRadius(c);      
+        var pieceCode = row[j];
+        rowView.add(
+          Square(c: c, sq: SquareModel(pieceCode, color, radius),)
+        );
+      } 
+      boardRows.add(Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children:rowView,));
+    }
+
     return Scaffold(
       body: Column( 
         //mainAxisAlignment: MainAxisAlignment.center,  
@@ -234,75 +268,40 @@ class MyHomePage extends StatelessWidget {
             ),
           ),
           Text(appState.gameStatus, style: const TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-          myBoard(appState)
+          Column(children: boardRows,)
           ] 
           //+ myBoard(appState),
       ),
     );
   }
-
-  Column myBoard(MyAppState appState) {
-    // out is the list of row widgets that make up the board. 
-    List<Widget> out = [];
-    boardString = '';
-    for (int i=0; i<appState.board.length; i++){
-      // row is a list of strings
-      var row = appState.board[i];
-      List<Widget> rowView = [];
-      for (int j=0; j<row.length; j++) {
-        var c = Coord(i,j);
-        Color color = appState.getColor(c);
-        var radius = appState.getRadius(c);      
-        var pieceCode = row[j];
-        rowView.add(
-          Square(pieceCode: pieceCode, color: color, radius: radius, c: c)
-        );
-        boardString += pieceCode;
-      } 
-      out.add(Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children:rowView,));
-    }
-    return Column(children: out,);
-  }
 }
 
-class Square extends StatefulWidget {
+class Square extends StatelessWidget {
   const Square({
     super.key,
-    required this.pieceCode,
-    required this.color,
-    required this.radius,
-    required this.c
+    required this.c,
+    required this.sq
   });
-
-  final String pieceCode;
-  final Color color;
-  final double radius;
   final Coord c;
+  final SquareModel sq;
 
-  @override
-  State<Square> createState() => _SquareState();
-}
-
-class _SquareState extends State<Square> {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     Size screenSize = MediaQuery.of(context).size;
     double screenWidth = screenSize.width;
-    double screenHeight = screenSize.height;
+    //double screenHeight = screenSize.height;
     double squareW = (screenWidth-20)/8;
 
     ButtonStyle style = ElevatedButton.styleFrom(
-      backgroundColor: widget.color,
+      backgroundColor: sq.color,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(widget.radius),
+        borderRadius: BorderRadius.circular(sq.radius),
       ),
       );
     String iconLoc = '';
-    if (widget.pieceCode != Space) {
-      iconLoc = 'images/${imageMap[widget.pieceCode] ?? ''}';
+    if (sq.pieceCode != Space) {
+      iconLoc = 'images/${imageMap[sq.pieceCode] ?? ''}';
     }
     if (iconLoc=='') {
       return SizedBox(
@@ -311,9 +310,9 @@ class _SquareState extends State<Square> {
           child: ElevatedButton(
             style:style,
             onPressed: () {
-              appState.humanSelectButton(widget.c);
+              appState.humanSelectButton(c);
             }, 
-            child: Text('')
+            child: const Text('')
           ),
         );
     }
@@ -324,7 +323,7 @@ class _SquareState extends State<Square> {
           style:style,
           icon: Image.asset(iconLoc),
           onPressed: () {
-            appState.humanSelectButton(widget.c);
+            appState.humanSelectButton(c);
           },
           
         )
