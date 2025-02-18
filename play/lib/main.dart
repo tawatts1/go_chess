@@ -7,13 +7,28 @@ import 'coord.dart';
 import 'ffi_funcs.dart';
 
 List<List<String>> parseBoardString(String boardStr) {
-  List<List<String>> board = [[],[],[],[],[],[],[],[],];
+  final List<List<String>> board = [[],[],[],[],[],[],[],[],];
   if (boardStr.length == BoardHeight * BoardWidth) {
     for (int k=0; k<boardStr.length; k++){
       board[k ~/BoardWidth].add(boardStr[k]);
     }
   }
   return board;
+}
+
+List<List<Square>> getInitialBoardView(List<List<String>> boardModel) {
+  final List<List<Square>> out = [[],[],[],[],[],[],[],[],];
+  for (int i=0; i<boardModel.length; i++) {
+    for (int j=0; j<boardModel[i].length; j++) {
+      Color color = black;
+      if ((i+j)%2==0) {
+        color = white;
+      }
+      final Square newSq = Square(c: Coord(i,j), sq: SquareModel(boardModel[i][j], color, 1));
+      out[i].add(newSq);
+    }
+  }
+  return out;
 }
 
 class SquareModel {
@@ -64,9 +79,10 @@ class MyAppState extends ChangeNotifier {
   String indicatedCoords = '';
   
   int aiDropdownDepth = 4;
-  List<List<String>> board = parseBoardString(startingBoard);
+  List<List<String>> boardModel = parseBoardString(startingBoard);
+  List<List<Square>> boardView = getInitialBoardView(parseBoardString(startingBoard));
   void resetGame() {
-    board = parseBoardString(startingBoard);
+    boardModel = parseBoardString(startingBoard);
     moveDestinations = '';
     isWhiteTurn = true;
     isBlackAi = true;
@@ -93,7 +109,7 @@ class MyAppState extends ChangeNotifier {
     }
   }
   void selectButton(Coord c){
-    String piece = board[c.i][c.j];
+    String piece = boardModel[c.i][c.j];
     bool isNotifyAi = false;
     String boardString = getBoardString();
     if (selectedCoord == null) {
@@ -122,7 +138,7 @@ class MyAppState extends ChangeNotifier {
             isGameOver = true;
           }
 
-          board = parseBoardString(newBoardStr);
+          boardModel = parseBoardString(newBoardStr);
           isWhiteTurn = !isWhiteTurn;
           isNotifyAi = true;
           indicatedCoords = '$selectedCoord|$c';
@@ -194,9 +210,9 @@ class MyAppState extends ChangeNotifier {
   }
   String getBoardString() {
     String boardString = '';
-    for (int i=0; i<board.length; i++) {
-      for (int j=0; j<board[i].length; j++) {
-        boardString += board[i][j];
+    for (int i=0; i<boardModel.length; i++) {
+      for (int j=0; j<boardModel[i].length; j++) {
+        boardString += boardModel[i][j];
       }
     }
     return boardString;
@@ -214,18 +230,22 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     List<Widget> boardRows = [];
-    for (int i=0; i<appState.board.length; i++){
+    for (int i=0; i<appState.boardModel.length; i++){
       // row is a list of strings
-      var row = appState.board[i];
+      var row = appState.boardModel[i];
       List<Widget> rowView = [];
       for (int j=0; j<row.length; j++) {
         var c = Coord(i,j);
         Color color = appState.getColor(c);
         var radius = appState.getRadius(c);      
         var pieceCode = row[j];
-        rowView.add(
-          Square(c: c, sq: SquareModel(pieceCode, color, radius),)
-        );
+        SquareModel sq = SquareModel(pieceCode, color, radius);
+        if (sq == appState.boardView[i][j].sq) {
+          rowView.add(appState.boardView[i][j]);
+        } else {
+          final Square newSq = Square(c: c, sq: SquareModel(pieceCode, color, radius),);
+          rowView.add(newSq);
+        }
       } 
       boardRows.add(Row(
         mainAxisAlignment: MainAxisAlignment.center,
