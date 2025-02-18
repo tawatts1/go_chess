@@ -16,16 +16,18 @@ List<List<String>> parseBoardString(String boardStr) {
   return board;
 }
 
-List<List<Square>> getInitialBoardView(List<List<String>> boardModel) {
-  final List<List<Square>> out = [[],[],[],[],[],[],[],[],];
+List<Square> getInitialBoardView(List<List<String>> boardModel) {
+  final List<Square> out = [];
   for (int i=0; i<boardModel.length; i++) {
     for (int j=0; j<boardModel[i].length; j++) {
       Color color = black;
       if ((i+j)%2==0) {
         color = white;
       }
-      final Square newSq = Square(c: Coord(i,j), sq: SquareModel(boardModel[i][j], color, 1));
-      out[i].add(newSq);
+      final Coord c = Coord(i,j);
+      final SquareModel sq = SquareModel(boardModel[i][j], color, 1);
+      final Square newSq = Square(c: c, sq: sq, key: ValueKey(Object.hash(c, sq)),);
+      out.add(newSq);
     }
   }
   return out;
@@ -46,7 +48,7 @@ class SquareModel {
 }
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -62,7 +64,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
         ),
-        home: MyHomePage(),
+        home: const MyHomePage(),
       ),
     );
   }
@@ -80,7 +82,7 @@ class MyAppState extends ChangeNotifier {
   
   int aiDropdownDepth = 4;
   List<List<String>> boardModel = parseBoardString(startingBoard);
-  List<List<Square>> boardView = getInitialBoardView(parseBoardString(startingBoard));
+  List<Square> boardView = getInitialBoardView(parseBoardString(startingBoard));
   void resetGame() {
     boardModel = parseBoardString(startingBoard);
     moveDestinations = '';
@@ -229,29 +231,20 @@ class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    List<Widget> boardRows = [];
     for (int i=0; i<appState.boardModel.length; i++){
-      // row is a list of strings
-      var row = appState.boardModel[i];
-      List<Widget> rowView = [];
-      for (int j=0; j<row.length; j++) {
+      for (int j=0; j<appState.boardModel[i].length; j++) {
         var c = Coord(i,j);
+        var k = i*BoardWidth + j;
         Color color = appState.getColor(c);
         var radius = appState.getRadius(c);      
-        var pieceCode = row[j];
-        SquareModel sq = SquareModel(pieceCode, color, radius);
-        if (sq == appState.boardView[i][j].sq) {
-          rowView.add(appState.boardView[i][j]);
-        } else {
-          final Square newSq = Square(c: c, sq: SquareModel(pieceCode, color, radius),);
-          rowView.add(newSq);
+        var pieceCode = appState.boardModel[i][j];
+        final SquareModel sq = SquareModel(pieceCode, color, radius);
+        if (sq != appState.boardView[k].sq) {
+          final Square newSq = Square(c: c, sq: sq, key: ValueKey(Object.hash(c, sq)),);
+          appState.boardView[k] = newSq;
         }
       } 
-      boardRows.add(Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children:rowView,));
     }
-
     return Scaffold(
       body: Column( 
         //mainAxisAlignment: MainAxisAlignment.center,  
@@ -263,7 +256,7 @@ class MyHomePage extends StatelessWidget {
                 onPressed: () {
                   appState.printBoard();
                 },
-                child: Text('Print'),
+                child: const Text('Print'),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -288,9 +281,11 @@ class MyHomePage extends StatelessWidget {
             ),
           ),
           Text(appState.gameStatus, style: const TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-          Column(children: boardRows,)
+          GridView.count(
+            shrinkWrap: true,
+            crossAxisCount: BoardWidth,
+            children: [...appState.boardView],),
           ] 
-          //+ myBoard(appState),
       ),
     );
   }
@@ -310,7 +305,6 @@ class Square extends StatelessWidget {
     var appState = context.watch<MyAppState>();
     Size screenSize = MediaQuery.of(context).size;
     double screenWidth = screenSize.width;
-    //double screenHeight = screenSize.height;
     double squareW = (screenWidth-20)/8;
 
     ButtonStyle style = ElevatedButton.styleFrom(
@@ -344,8 +338,7 @@ class Square extends StatelessWidget {
           icon: Image.asset(iconLoc),
           onPressed: () {
             appState.humanSelectButton(c);
-          },
-          
+          },  
         )
       );
   }
