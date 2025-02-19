@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'coord.dart';
 import 'ffi_funcs.dart';
@@ -47,6 +48,54 @@ class SquareModel {
   int get hashCode => Object.hash(pieceCode, color, radius);
 }
 
+class PreferencesManager {
+  late final SharedPreferencesAsync prefs;
+  late List<String> boardStrings;
+  late bool isUndoPossible;
+  bool isLoaded = false;
+  final int maxBoards = 2;
+  PreferencesManager() {
+    prefs = SharedPreferencesAsync();
+  }
+  loadBoards() async {
+    List<String>? loaded = await prefs.getStringList('b');
+    boardStrings = loaded ?? [];
+    if (boardStrings.isNotEmpty) {
+      isUndoPossible = true;
+    } else {
+      isUndoPossible = false;
+    }
+    isLoaded = true;
+  }
+  saveBoards() async {
+    prefs.setStringList('b',boardStrings);
+  }
+  addBoard(String boardStr) async {
+    boardStrings.add(boardStr);
+    if (boardStrings.length > maxBoards) {
+      boardStrings = boardStrings.sublist(1);
+    }
+    saveBoards();
+  }
+  String popBoard() {
+    if (boardStrings.isNotEmpty){
+      String out = boardStrings.removeLast();
+      saveBoards();
+      return out;
+    } else {
+      log('tried to pop board history when there was none. ');
+      return '';
+    }
+  }
+  Future<String> getLastBoard() async {
+    if (!isLoaded) {
+      await loadBoards();
+    }
+    return boardStrings.last;
+  }
+  
+}
+
 void main() {
   runApp(const MyApp());
 }
@@ -83,6 +132,7 @@ class MyAppState extends ChangeNotifier {
   int aiDropdownDepth = 4;
   List<List<String>> boardModel = parseBoardString(startingBoard);
   List<Square> boardView = getInitialBoardView(parseBoardString(startingBoard));
+  PreferencesManager savedData = PreferencesManager();
   void resetGame() {
     boardModel = parseBoardString(startingBoard);
     moveDestinations = '';
@@ -230,7 +280,11 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
+     var appState = context.watch<MyAppState>();
+    if (!appState.savedData.isLoaded){
+      appState.savedData.loadBoards();
+    }
+   
     for (int i=0; i<appState.boardModel.length; i++){
       for (int j=0; j<appState.boardModel[i].length; j++) {
         var c = Coord(i,j);
