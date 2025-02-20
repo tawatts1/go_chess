@@ -54,6 +54,7 @@ class PreferencesManager {
   bool isUndoPossible = false;
   bool isLoaded = false;
   final int maxBoards = 2;
+
   PreferencesManager() {
     prefs = SharedPreferencesAsync();
   }
@@ -64,24 +65,25 @@ class PreferencesManager {
   loadBoards() async {
     List<String>? loaded = await prefs.getStringList('b');
     boardStrings = loaded ?? [];
-    isUndoPossible = boardStrings.isNotEmpty;
+    isUndoPossible = boardStrings.length > 1;
     isLoaded = true;
   }
   saveBoards() async {
     prefs.setStringList('b',boardStrings);
   }
   addBoard(String boardStr) async {
-    isUndoPossible = true;
     boardStrings.add(boardStr);
     if (boardStrings.length > maxBoards) {
       boardStrings = boardStrings.sublist(1);
     }
+    isUndoPossible = boardStrings.length > 1;
     saveBoards();
   }
   String popBoard() {
-    if (boardStrings.isNotEmpty){
-      String out = boardStrings.removeLast();
-      isUndoPossible = boardStrings.isNotEmpty;
+    if (isUndoPossible){
+      boardStrings.removeLast();
+      String out = boardStrings.last;
+      isUndoPossible = boardStrings.length > 1;
       saveBoards();
       return out;
     } else {
@@ -89,19 +91,23 @@ class PreferencesManager {
       return '';
     }
   }
-  Future<String?> getLastBoard() async {
+  Future<String?> getLastSavedBoard() async {
+    String? out;
     if (!isLoaded) {
       await loadBoards();
     }
     if (boardStrings.isNotEmpty){
-      return boardStrings.last;
+      out =  boardStrings.last;
     } else {
-      return null;
+      out =  null;
     }
+    return out;
   }
-  void clearBoards() {
+  Future<void> clearBoards() async {
     boardStrings.clear();
-    saveBoards();
+    boardStrings = [];
+    isUndoPossible = false;
+    await saveBoards();
   }
 }
 
@@ -142,7 +148,8 @@ class MyAppState extends ChangeNotifier {
   List<List<String>> boardModel = parseBoardString(startingBoard);
   List<Square> boardView = getInitialBoardView(parseBoardString(startingBoard));
   PreferencesManager savedData = PreferencesManager();
-  void resetGame() {
+  Future<void> resetGame() async {
+    await savedData.clearBoards();
     boardModel = parseBoardString(startingBoard);
     moveDestinations = '';
     isWhiteTurn = true;
@@ -152,7 +159,6 @@ class MyAppState extends ChangeNotifier {
     isGameOver = false;
     indicatedCoords = '';
     clearSelection();
-    savedData.clearBoards();
     notifyListeners();
   }
   
@@ -167,9 +173,7 @@ class MyAppState extends ChangeNotifier {
     } else if ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi)){
       log('It is an AIs turn');
     } else {
-      // Save the board whenever a human makes a move, and the undo button is visible
-      bool saveBoard = isUndoVisible();
-      selectButton(c, saveBoard);
+      selectButton(c, false);
     }
   } 
   void selectButton(Coord c, bool saveBoardOnMove){
@@ -201,14 +205,14 @@ class MyAppState extends ChangeNotifier {
           if (gameStatus == statusCheckMate || gameStatus == statusStaleMate){
             isGameOver = true;
           }
-          if (saveBoardOnMove && boardString != startingBoard){
-            // do not save the starting board. The user can reset the board if they want. 
-            savedData.addBoard(boardString);
-          }
           boardModel = parseBoardString(newBoardStr);
           isWhiteTurn = !isWhiteTurn;
           isNotifyAi = true;
           indicatedCoords = '$selectedCoord|$c';
+          if (saveBoardOnMove && boardString != startingBoard){
+            // do not save the starting board. The user can reset the board if they want. 
+            savedData.addBoard(newBoardStr);
+          }
         }
         
       } else {
@@ -240,7 +244,9 @@ class MyAppState extends ChangeNotifier {
         int j2 = int.parse(indexList[3]);
         selectButton(Coord(i1, j1), false);
         Coord click2 = await Future.delayed(const Duration(milliseconds: 700),  () => Coord(i2,j2));
-        selectButton(click2, false);
+        // Save the board after the ai makes a move, and the undo button is visible
+        bool saveNewBoard = isUndoVisible();
+        selectButton(click2, saveNewBoard);
       } catch(ex) {
         log("failed to parse ai move");
       }
@@ -317,8 +323,11 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     //check if saved data is initialized, ana initialize it if not. 
-    Future<String?> lastBoard = appState.savedData.getLastBoard();
-  
+    Future<String?>? lastSavedBoard;
+    String currentBoardString = appState.getBoardString();
+    if (currentBoardString == startingBoard) {
+      lastSavedBoard = appState.savedData.getLastSavedBoard();
+    }
     return Scaffold(
       body: Column( 
         //mainAxisAlignment: MainAxisAlignment.center,  
@@ -377,11 +386,11 @@ class MyHomePage extends StatelessWidget {
               ],),
           Text(appState.gameStatus, style: const TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
           FutureBuilder<String?>(
-            future: lastBoard,
-            builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
-              if (snapshot.hasData && snapshot.data != null){
+            future: lastSavedBoard,
+            builder: (BuildContext context, AsyncSnapshot<String?>? snapshot) {
+              if (snapshot != null && snapshot.hasData && snapshot.data != null){
                 String lastBoardString = snapshot.data!;
-                String currentBoardString = appState.getBoardString();
+                
                 if (lastBoardString != currentBoardString && currentBoardString == startingBoard){
                   // The user is currently on the starting board, but there was a history that hasn't been deleted. 
                   // This means the user was just playing a game and the app may have gotten closed, but the 
