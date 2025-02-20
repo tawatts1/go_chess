@@ -51,26 +51,27 @@ class SquareModel {
 class PreferencesManager {
   late final SharedPreferencesAsync prefs;
   late List<String> boardStrings;
-  late bool isUndoPossible;
+  bool isUndoPossible = false;
   bool isLoaded = false;
   final int maxBoards = 2;
   PreferencesManager() {
     prefs = SharedPreferencesAsync();
   }
+  @override 
+  String toString() {
+    return 'PreferencesManager: $boardStrings, $isUndoPossible, $isLoaded, $maxBoards';
+  }
   loadBoards() async {
     List<String>? loaded = await prefs.getStringList('b');
     boardStrings = loaded ?? [];
-    if (boardStrings.isNotEmpty) {
-      isUndoPossible = true;
-    } else {
-      isUndoPossible = false;
-    }
+    isUndoPossible = boardStrings.isNotEmpty;
     isLoaded = true;
   }
   saveBoards() async {
     prefs.setStringList('b',boardStrings);
   }
   addBoard(String boardStr) async {
+    isUndoPossible = true;
     boardStrings.add(boardStr);
     if (boardStrings.length > maxBoards) {
       boardStrings = boardStrings.sublist(1);
@@ -80,6 +81,7 @@ class PreferencesManager {
   String popBoard() {
     if (boardStrings.isNotEmpty){
       String out = boardStrings.removeLast();
+      isUndoPossible = boardStrings.isNotEmpty;
       saveBoards();
       return out;
     } else {
@@ -87,13 +89,20 @@ class PreferencesManager {
       return '';
     }
   }
-  Future<String> getLastBoard() async {
+  Future<String?> getLastBoard() async {
     if (!isLoaded) {
       await loadBoards();
     }
-    return boardStrings.last;
+    if (boardStrings.isNotEmpty){
+      return boardStrings.last;
+    } else {
+      return null;
+    }
   }
-  
+  void clearBoards() {
+    boardStrings.clear();
+    saveBoards();
+  }
 }
 
 void main() {
@@ -143,6 +152,7 @@ class MyAppState extends ChangeNotifier {
     isGameOver = false;
     indicatedCoords = '';
     clearSelection();
+    savedData.clearBoards();
     notifyListeners();
   }
   
@@ -157,10 +167,12 @@ class MyAppState extends ChangeNotifier {
     } else if ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi)){
       log('It is an AIs turn');
     } else {
-      selectButton(c);
+      // Save the board whenever a human makes a move, and the undo button is visible
+      bool saveBoard = isUndoVisible();
+      selectButton(c, saveBoard);
     }
-  }
-  void selectButton(Coord c){
+  } 
+  void selectButton(Coord c, bool saveBoardOnMove){
     String piece = boardModel[c.i][c.j];
     bool isNotifyAi = false;
     String boardString = getBoardString();
@@ -189,7 +201,10 @@ class MyAppState extends ChangeNotifier {
           if (gameStatus == statusCheckMate || gameStatus == statusStaleMate){
             isGameOver = true;
           }
-
+          if (saveBoardOnMove && boardString != startingBoard){
+            // do not save the starting board. The user can reset the board if they want. 
+            savedData.addBoard(boardString);
+          }
           boardModel = parseBoardString(newBoardStr);
           isWhiteTurn = !isWhiteTurn;
           isNotifyAi = true;
@@ -223,9 +238,9 @@ class MyAppState extends ChangeNotifier {
         int j1 = int.parse(indexList[1]);
         int i2 = int.parse(indexList[2]);
         int j2 = int.parse(indexList[3]);
-        selectButton(Coord(i1, j1));
+        selectButton(Coord(i1, j1), false);
         Coord click2 = await Future.delayed(const Duration(milliseconds: 700),  () => Coord(i2,j2));
-        selectButton(click2);
+        selectButton(click2, false);
       } catch(ex) {
         log("failed to parse ai move");
       }
@@ -234,6 +249,26 @@ class MyAppState extends ChangeNotifier {
  
   void printBoard() {
     log(getBoardString());
+  }
+  void printSavedData() {
+    log(savedData.toString());
+  }
+  void saveBoard() {
+    String boardStr = getBoardString();
+    savedData.addBoard(boardStr);
+  }
+  bool isUndoVisible() {
+    // do not show undo if two humans are playing or two ai's are playing
+    return (isWhiteAi || isBlackAi) && (!isWhiteAi || !isBlackAi);
+  }
+  bool isUndoEnabled() {
+    return savedData.isUndoPossible && 
+      ((isWhiteTurn && !isWhiteAi) || (!isWhiteTurn && !isBlackAi));
+  }
+  void undo() {
+    String lastBoard = savedData.popBoard();
+    boardModel = parseBoardString(lastBoard);
+    notifyListeners();
   }
   Color getColor(Coord c){
     bool isLightSquare = (c.i+c.j)%2==0;
@@ -280,25 +315,10 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-     var appState = context.watch<MyAppState>();
-    if (!appState.savedData.isLoaded){
-      appState.savedData.loadBoards();
-    }
-   
-    for (int i=0; i<appState.boardModel.length; i++){
-      for (int j=0; j<appState.boardModel[i].length; j++) {
-        var c = Coord(i,j);
-        var k = i*BoardWidth + j;
-        Color color = appState.getColor(c);
-        var radius = appState.getRadius(c);      
-        var pieceCode = appState.boardModel[i][j];
-        final SquareModel sq = SquareModel(pieceCode, color, radius);
-        if (sq != appState.boardView[k].sq) {
-          final Square newSq = Square(c: c, sq: sq, key: ValueKey(Object.hash(c, sq)),);
-          appState.boardView[k] = newSq;
-        }
-      } 
-    }
+    var appState = context.watch<MyAppState>();
+    //check if saved data is initialized, ana initialize it if not. 
+    Future<String?> lastBoard = appState.savedData.getLastBoard();
+  
     return Scaffold(
       body: Column( 
         //mainAxisAlignment: MainAxisAlignment.center,  
@@ -310,14 +330,15 @@ class MyHomePage extends StatelessWidget {
                 onPressed: () {
                   appState.printBoard();
                 },
-                child: const Text('Print'),
+                child: const Text('Print Board'),
               ),
               ElevatedButton(
                 onPressed: () {
-                  appState.resetGame();
+                  appState.printSavedData();
                 },
-                child: const Text('Reset\nGame'),
+                child: const Text('Print\nSaved Data'),
               ),
+              
               DropdownButton<int>(
                 value: appState.aiDropdownDepth,
                 icon: const Icon(Icons.arrow_downward),
@@ -333,13 +354,62 @@ class MyHomePage extends StatelessWidget {
               )
             ]
             ),
+            
           ),
+          Row(
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    appState.resetGame();
+                  },
+                  child: const Text('Reset\nGame'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    appState.saveBoard();
+                  },
+                  child: const Text('Save board'),
+                ),
+                if (appState.isUndoVisible()) IconButton(
+                  icon: const Icon(Icons.undo),
+                  onPressed: appState.isUndoEnabled() ? () => appState.undo() : null
+                )
+              ],),
           Text(appState.gameStatus, style: const TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-          GridView.count(
-            shrinkWrap: true,
-            crossAxisCount: BoardWidth,
-            children: [...appState.boardView],),
-          ] 
+          FutureBuilder<String?>(
+            future: lastBoard,
+            builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
+              if (snapshot.hasData && snapshot.data != null){
+                String lastBoardString = snapshot.data!;
+                String currentBoardString = appState.getBoardString();
+                if (lastBoardString != currentBoardString && currentBoardString == startingBoard){
+                  // The user is currently on the starting board, but there was a history that hasn't been deleted. 
+                  // This means the user was just playing a game and the app may have gotten closed, but the 
+                  // history wasn't deleted by a user action, such as resetting the board. 
+                  appState.boardModel = parseBoardString(snapshot.data!);
+                }
+              }
+              for (int i=0; i<appState.boardModel.length; i++){
+                for (int j=0; j<appState.boardModel[i].length; j++) {
+                  var c = Coord(i,j);
+                  var k = i*BoardWidth + j;
+                  Color color = appState.getColor(c);
+                  var radius = appState.getRadius(c);      
+                  var pieceCode = appState.boardModel[i][j];
+                  final SquareModel sq = SquareModel(pieceCode, color, radius);
+                  if (sq != appState.boardView[k].sq) {
+                    final Square newSq = Square(c: c, sq: sq, key: ValueKey(Object.hash(c, sq)),);
+                    appState.boardView[k] = newSq;
+                  }
+                } 
+              }
+              return GridView.count(
+                shrinkWrap: true,
+                crossAxisCount: BoardWidth,
+                children: [...appState.boardView],);
+            },
+          ),
+        ]  
       ),
     );
   }
