@@ -21,31 +21,64 @@ class ButtonState {
   int get hashCode => Object.hash(isVisible, isEnabled);
 }
 
+class BoardState {
+  // Objects and information related to the board positions and colors, but  
+  // not including whether a piece is selected. 
+  // not including theme data. 
+  List<List<String>> boardModel = parseBoardString(startingBoard);
+  List<Square> boardView = getInitialBoardView(parseBoardString(startingBoard));
+  String indicatedCoords = '';
+  String gameStatus = statusWhiteMove;
+
+  String getBoardString() {
+    String boardString = '';
+    for (int i=0; i<boardModel.length; i++) {
+      for (int j=0; j<boardModel[i].length; j++) {
+        boardString += boardModel[i][j];
+      }
+    }
+    return boardString;
+  }
+  String toString() {
+    return "${getBoardString()}-$indicatedCoords-$gameStatus";
+  }
+  void loadFromString(String stateStr) {
+    List<String> boardState = stateStr.split("-");
+    if (boardState.length != 3) {
+      log("Attempted to load board state from a bad string: $stateStr");
+    } else {
+      boardModel = parseBoardString(boardState[0]);
+      boardView = getInitialBoardView(parseBoardString(boardState[0]));
+      indicatedCoords = boardState[1];
+      gameStatus = boardState[2];
+    }
+  }
+  void resetGame() {
+    boardModel = parseBoardString(startingBoard);
+    indicatedCoords = '';
+    gameStatus = statusWhiteMove;
+  }
+}
+
 class MyAppState extends ChangeNotifier {
   Coord? selectedCoord;
   String moveDestinations = '';
   bool isWhiteTurn = true;
   bool isBlackAi = true;
   bool isWhiteAi = false;
-  String gameStatus = statusWhiteMove;
   bool isGameOver = false;
-  String indicatedCoords = '';
   ButtonState undoButtonModel = ButtonState(false, false);
-  
+  BoardState board = BoardState();
   int aiDropdownDepth = 4;
-  List<List<String>> boardModel = parseBoardString(startingBoard);
-  List<Square> boardView = getInitialBoardView(parseBoardString(startingBoard));
   PreferencesManager savedData = PreferencesManager();
   Future<void> resetGame() async {
     await savedData.clearBoards();
-    boardModel = parseBoardString(startingBoard);
     moveDestinations = '';
     isWhiteTurn = true;
     isBlackAi = true;
     isWhiteAi = false;
-    gameStatus = statusWhiteMove;
     isGameOver = false;
-    indicatedCoords = '';
+    board.resetGame();
     setIsUndoEnabled();
     clearSelection();
     notifyListeners();
@@ -66,9 +99,9 @@ class MyAppState extends ChangeNotifier {
     }
   } 
   void selectButton(Coord c, bool saveBoardOnMove){
-    String piece = boardModel[c.i][c.j];
+    String piece = board.boardModel[c.i][c.j];
     bool isNotifyAi = false;
-    String boardString = getBoardString();
+    String boardString = board.getBoardString();
     if (selectedCoord == null) {
       // no selection has been made
       if (piece == Space) {
@@ -90,14 +123,14 @@ class MyAppState extends ChangeNotifier {
         List<String> resultList = boardResult.split(',');
         if (resultList.length == 2) {
           String newBoardStr = resultList[0];
-          gameStatus = resultList[1];
-          if (gameStatus == statusCheckMate || gameStatus == statusStaleMate){
+          board.gameStatus = resultList[1];
+          if (board.gameStatus == statusCheckMate || board.gameStatus == statusStaleMate){
             isGameOver = true;
           }
-          boardModel = parseBoardString(newBoardStr);
+          board.boardModel = parseBoardString(newBoardStr);
           isWhiteTurn = !isWhiteTurn;
           isNotifyAi = true;
-          indicatedCoords = '$selectedCoord|$c';
+          board.indicatedCoords = '$selectedCoord|$c';
           if (saveBoardOnMove && boardString != startingBoard){
             // do not save the starting board. The user can reset the board if they want. 
             savedData.addBoard(newBoardStr);
@@ -120,7 +153,7 @@ class MyAppState extends ChangeNotifier {
     if (!isGameOver && ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi))) {
       //it is the ai's turn
       //setBoardString(); // todo: get rid of this function. either implement getBoardString or store it whenever it changes. 
-      String aiMove = await getAiChosenMove(getBoardString(), isWhiteTurn, 'simple', aiDropdownDepth);
+      String aiMove = await getAiChosenMove(board.getBoardString(), isWhiteTurn, 'simple', aiDropdownDepth);
       parseAndDoAiMove(aiMove);
     }
   }
@@ -144,13 +177,13 @@ class MyAppState extends ChangeNotifier {
   }
  
   void printBoard() {
-    log(getBoardString());
+    log(board.getBoardString());
   }
   void printSavedData() {
     log(savedData.toString());
   }
   void saveBoard() {
-    String boardStr = getBoardString();
+    String boardStr = board.getBoardString();
     savedData.addBoard(boardStr);
   }
   void setIsUndoVisible() {
@@ -170,7 +203,7 @@ class MyAppState extends ChangeNotifier {
   }
   void undo() {
     String lastBoard = savedData.popBoard();
-    boardModel = parseBoardString(lastBoard);
+    board.boardModel = parseBoardString(lastBoard);
     setIsUndoEnabled();
     notifyListeners();
   }
@@ -178,7 +211,7 @@ class MyAppState extends ChangeNotifier {
     bool isLightSquare = (c.i+c.j)%2==0;
     if (c==selectedCoord) {
       return selectedColor;
-    } else if (indicatedCoords.contains(c.toString())){
+    } else if (board.indicatedCoords.contains(c.toString())){
       if (isLightSquare){
         return greyedWhite;
       } else {
@@ -199,15 +232,7 @@ class MyAppState extends ChangeNotifier {
       return 1;
     }
   }
-  String getBoardString() {
-    String boardString = '';
-    for (int i=0; i<boardModel.length; i++) {
-      for (int j=0; j<boardModel[i].length; j++) {
-        boardString += boardModel[i][j];
-      }
-    }
-    return boardString;
-  }
+  
   void setAiDepth(int d) {
     aiDropdownDepth = d;
     notifyListeners();

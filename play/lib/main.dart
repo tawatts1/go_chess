@@ -38,7 +38,7 @@ class MyHomePage extends StatelessWidget {
     var appState = context.watch<MyAppState>();
     //check if saved data is initialized, ana initialize it if not. 
     Future<String?>? lastSavedBoard;
-    String currentBoardString = appState.getBoardString();
+    String currentBoardString = appState.board.getBoardString();
     if (currentBoardString == startingBoard) {
       lastSavedBoard = appState.savedData.getLastSavedBoard();
     }
@@ -54,20 +54,20 @@ class MyHomePage extends StatelessWidget {
               // The user is currently on the starting board, but there was a history that hasn't been deleted. 
               // This means the user was just playing a game and the app may have gotten closed, but the 
               // history wasn't deleted by a user action, such as resetting the board. 
-              appState.boardModel = parseBoardString(snapshot.data!);
+              appState.board.boardModel = parseBoardString(snapshot.data!);
             }
           }
-          for (int i=0; i<appState.boardModel.length; i++){
-            for (int j=0; j<appState.boardModel[i].length; j++) {
+          for (int i=0; i<appState.board.boardModel.length; i++){
+            for (int j=0; j<appState.board.boardModel[i].length; j++) {
               var c = Coord(i,j);
               var k = i*BoardWidth + j;
               Color color = appState.getColor(c);
               var radius = appState.getRadius(c);      
-              var pieceCode = appState.boardModel[i][j];
+              var pieceCode = appState.board.boardModel[i][j];
               final SquareModel sq = SquareModel(pieceCode, color, radius);
-              if (sq != appState.boardView[k].sq) {
+              if (sq != appState.board.boardView[k].sq) {
                 final Square newSq = Square(c: c, sq: sq, key: ValueKey(Object.hash(c, sq)),);
-                appState.boardView[k] = newSq;
+                appState.board.boardView[k] = newSq;
               }
             } 
           }
@@ -127,11 +127,11 @@ class MyHomePage extends StatelessWidget {
                       onPressed: appState.undoButtonModel.isEnabled ? () => appState.undo() : null
                     )
                   ],),
-              Text(appState.gameStatus, style: const TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
+              Text(appState.board.gameStatus, style: const TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
               GridView.count(
                     shrinkWrap: true,
                     crossAxisCount: BoardWidth,
-                    children: [...appState.boardView],),
+                    children: [...appState.board.boardView],),
             ]  
           );
         }
