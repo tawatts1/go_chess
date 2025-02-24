@@ -91,7 +91,7 @@ class MyHomePage extends StatelessWidget {
                   ),
                   
                   DropdownButton<int>(
-                    value: appState.aiDropdownDepth,
+                    value: appState.players.aiDropdownDepth,
                     icon: const Icon(Icons.arrow_downward),
                     elevation: 16,
                     underline: Container(height: 2, color:Colors.grey,),

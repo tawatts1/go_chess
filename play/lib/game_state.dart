@@ -76,16 +76,39 @@ class BoardState {
   }
 }
 
+class PlayerState {
+  // Info about who the players are. 
+  bool isBlackAi = true;
+  bool isWhiteAi = false;
+  int aiDropdownDepth = 4;
+  @override
+  String toString() {
+    return "$isBlackAi,$isWhiteAi,$aiDropdownDepth";
+  }
+  void loadFromString(String stateStr){
+    List<String> playerState = stateStr.split(",");
+    if (playerState.length != 3){
+      log("Tried to load player state from a bad string: $stateStr");
+    } else {
+      try {
+        isBlackAi = playerState[0].toLowerCase() == "true";
+        isWhiteAi = playerState[1].toLowerCase() == "true";
+        aiDropdownDepth = int.parse(playerState[2]);
+      } catch (e) {
+        log("Failed to parse player state: $stateStr");
+      }
+    }
+  }
+}
+
 class MyAppState extends ChangeNotifier {
   Coord? selectedCoord;
   String moveDestinations = '';
   bool isWhiteTurn = true;
-  bool isBlackAi = true;
-  bool isWhiteAi = false;
+  PlayerState players = PlayerState();
   bool isGameOver = false;
   ButtonState undoButtonModel = ButtonState(false, false);
   BoardState board = BoardState();
-  int aiDropdownDepth = 4;
   PreferencesManager savedData = PreferencesManager();
   @override 
   String toString() {
@@ -104,8 +127,6 @@ class MyAppState extends ChangeNotifier {
     await savedData.clearBoardStates();
     moveDestinations = '';
     isWhiteTurn = true;
-    isBlackAi = true;
-    isWhiteAi = false;
     isGameOver = false;
     board.resetGame();
     setIsUndoEnabled();
@@ -121,7 +142,7 @@ class MyAppState extends ChangeNotifier {
     //functions that humans have to use to select the buttons
     if (isGameOver) {
       log('game is over');
-    } else if ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi)){
+    } else if ((isWhiteTurn && players.isWhiteAi) || (!isWhiteTurn && players.isBlackAi)){
       log('It is an AIs turn');
     } else {
       selectButton(c, false);
@@ -178,9 +199,9 @@ class MyAppState extends ChangeNotifier {
     }
   }
   Future<void> notifyAi() async {
-    if (!isGameOver && ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi))) {
+    if (!isGameOver && ((isWhiteTurn && players.isWhiteAi) || (!isWhiteTurn && players.isBlackAi))) {
       //it is the ai's turn
-      String aiMove = await getAiChosenMove(board.getBoardString(), isWhiteTurn, 'simple', aiDropdownDepth);
+      String aiMove = await getAiChosenMove(board.getBoardString(), isWhiteTurn, 'simple', players.aiDropdownDepth);
       parseAndDoAiMove(aiMove);
     }
   }
@@ -214,14 +235,14 @@ class MyAppState extends ChangeNotifier {
   }
   void setIsUndoVisible() {
     // do not show undo if two humans are playing or two ai's are playing
-    bool newVal = (isWhiteAi || isBlackAi) && (!isWhiteAi || !isBlackAi);
+    bool newVal = (players.isWhiteAi || players.isBlackAi) && (!players.isWhiteAi || !players.isBlackAi);
     if (newVal != undoButtonModel.isVisible){
       undoButtonModel.isVisible = newVal;
       //notifyListeners();
     }
   }
   void setIsUndoEnabled() {
-    bool newEnableUndo = ((isWhiteTurn && !isWhiteAi) || (!isWhiteTurn && !isBlackAi)) && savedData.isUndoPossible;
+    bool newEnableUndo = ((isWhiteTurn && !players.isWhiteAi) || (!isWhiteTurn && !players.isBlackAi)) && savedData.isUndoPossible;
     if (newEnableUndo != undoButtonModel.isEnabled){
       undoButtonModel.isEnabled = newEnableUndo;
       //notifyListeners();
@@ -260,7 +281,7 @@ class MyAppState extends ChangeNotifier {
   }
   
   void setAiDepth(int d) {
-    aiDropdownDepth = d;
+    players.aiDropdownDepth = d;
     notifyListeners();
   }
 }
