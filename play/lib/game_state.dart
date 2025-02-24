@@ -19,6 +19,19 @@ class ButtonState {
     other.isVisible == isVisible && other.isEnabled == isEnabled;
   @override
   int get hashCode => Object.hash(isVisible, isEnabled);
+  // @override
+  // String toString() {
+  //   return "$isVisible,$isEnabled";
+  // }
+  // void loadFromString(String stateStr) {
+  //   List<String> buttonState = stateStr.split(",");
+  //   if (buttonState.length != 2){
+  //     log("Attempted to load button state from a bad string: $stateStr");
+  //   } else {
+  //     isVisible = buttonState[0].toLowerCase() == "true";
+  //     isEnabled = buttonState[1].toLowerCase() == "true";
+  //   }
+  // }
 }
 
 class BoardState {
@@ -39,6 +52,7 @@ class BoardState {
     }
     return boardString;
   }
+  @override
   String toString() {
     return "${getBoardString()}-$indicatedCoords-$gameStatus";
   }
@@ -55,7 +69,9 @@ class BoardState {
   }
   void resetGame() {
     boardModel = parseBoardString(startingBoard);
+    //boardView = getInitialBoardView(parseBoardString(startingBoard));
     indicatedCoords = '';
+    log("Reseting game: ${getBoardString()}");
     gameStatus = statusWhiteMove;
   }
 }
@@ -71,8 +87,21 @@ class MyAppState extends ChangeNotifier {
   BoardState board = BoardState();
   int aiDropdownDepth = 4;
   PreferencesManager savedData = PreferencesManager();
+  @override 
+  String toString() {
+    return "$board#placeholder";
+  }
+  void loadFromString(String stateStr) {
+    List<String> appState = stateStr.split("#");
+    if (appState.length != 2) {
+      log("Tried to parse bad board state: $stateStr");
+    } else {
+      board.loadFromString(appState[0]);
+      //undoButtonModel.loadFromString(appState[1]);
+    }
+  }
   Future<void> resetGame() async {
-    await savedData.clearBoards();
+    await savedData.clearBoardStates();
     moveDestinations = '';
     isWhiteTurn = true;
     isBlackAi = true;
@@ -132,17 +161,16 @@ class MyAppState extends ChangeNotifier {
           isNotifyAi = true;
           board.indicatedCoords = '$selectedCoord|$c';
           if (saveBoardOnMove && boardString != startingBoard){
-            // do not save the starting board. The user can reset the board if they want. 
-            savedData.addBoard(newBoardStr);
+            // do not save the starting board. The user can reset the board if they want.
+            savedData.addBoardSnapshot(toString());
           }
-        }
-        
+        } 
       } else {
         log('not one of the legal moves. Clearing selection');
       }
       clearSelection();
     }
-    setIsUndoEnabled();
+    setIsUndoEnabled(); 
     setIsUndoVisible();
     notifyListeners();
     if (isNotifyAi) {
@@ -152,7 +180,6 @@ class MyAppState extends ChangeNotifier {
   Future<void> notifyAi() async {
     if (!isGameOver && ((isWhiteTurn && isWhiteAi) || (!isWhiteTurn && isBlackAi))) {
       //it is the ai's turn
-      //setBoardString(); // todo: get rid of this function. either implement getBoardString or store it whenever it changes. 
       String aiMove = await getAiChosenMove(board.getBoardString(), isWhiteTurn, 'simple', aiDropdownDepth);
       parseAndDoAiMove(aiMove);
     }
@@ -183,8 +210,7 @@ class MyAppState extends ChangeNotifier {
     log(savedData.toString());
   }
   void saveBoard() {
-    String boardStr = board.getBoardString();
-    savedData.addBoard(boardStr);
+    savedData.addBoardSnapshot(toString());
   }
   void setIsUndoVisible() {
     // do not show undo if two humans are playing or two ai's are playing
@@ -202,8 +228,8 @@ class MyAppState extends ChangeNotifier {
     }
   }
   void undo() {
-    String lastBoard = savedData.popBoard();
-    board.boardModel = parseBoardString(lastBoard);
+    String lastAppState = savedData.popBoard();
+    loadFromString(lastAppState);
     setIsUndoEnabled();
     notifyListeners();
   }

@@ -1,9 +1,11 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:developer';
 
+final String boardSnapshotsKey = "b";
+
 class PreferencesManager {
   late final SharedPreferencesAsync prefs;
-  late List<String> boardStrings;
+  late List<String> boardSnapshots;
   bool isUndoPossible = false;
   bool isLoaded = false;
   final int maxBoards = 3;
@@ -14,30 +16,30 @@ class PreferencesManager {
   }
   @override 
   String toString() {
-    return 'PreferencesManager: $boardStrings, $isUndoPossible, $isLoaded, $maxBoards';
+    return 'PreferencesManager: $boardSnapshots, $isUndoPossible, $isLoaded, $maxBoards';
   }
   loadBoards() async {
     isLoaded = true;
-    List<String>? loaded = await prefs.getStringList('b');
-    boardStrings = loaded ?? [];
-    isUndoPossible = boardStrings.length > 1;
+    List<String>? loaded = await prefs.getStringList(boardSnapshotsKey);
+    boardSnapshots = loaded ?? [];
+    isUndoPossible = boardSnapshots.length > 1;
   }
   saveBoards() async {
-    prefs.setStringList('b',boardStrings);
+    prefs.setStringList(boardSnapshotsKey, boardSnapshots);
   }
-  addBoard(String boardStr) async {
-    boardStrings.add(boardStr);
-    if (boardStrings.length > maxBoards) {
-      boardStrings = boardStrings.sublist(1);
+  addBoardSnapshot(String boardStr) async {
+    boardSnapshots.add(boardStr);
+    if (boardSnapshots.length > maxBoards) {
+      boardSnapshots = boardSnapshots.sublist(1);
     }
-    isUndoPossible = boardStrings.length > 1;
+    isUndoPossible = boardSnapshots.length > 1;
     saveBoards();
   }
   String popBoard() {
     if (isUndoPossible){
-      boardStrings.removeLast();
-      String out = boardStrings.last;
-      isUndoPossible = boardStrings.length > 1;
+      boardSnapshots.removeLast();
+      String out = boardSnapshots.last;
+      isUndoPossible = boardSnapshots.length > 1;
       saveBoards();
       return out;
     } else {
@@ -45,21 +47,22 @@ class PreferencesManager {
       return '';
     }
   }
-  Future<String?> getLastSavedBoard() async {
+  Future<String?> getLastSavedState() async {
     String? out;
     if (!isLoaded) {
       await loadBoards();
     }
-    if (boardStrings.isNotEmpty){
-      out =  boardStrings.last;
+    if (boardSnapshots.isNotEmpty){
+      out =  boardSnapshots.last;
     } else {
       out =  null;
+      log("No saved board states found");
     }
     return out;
   }
-  Future<void> clearBoards() async {
-    boardStrings.clear();
-    boardStrings = [];
+  Future<void> clearBoardStates() async {
+    boardSnapshots.clear();
+    boardSnapshots = [];
     isUndoPossible = false;
     await saveBoards();
   }

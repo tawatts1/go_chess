@@ -37,24 +37,24 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     //check if saved data is initialized, ana initialize it if not. 
-    Future<String?>? lastSavedBoard;
+    Future<String?>? lastSavedState;
     String currentBoardString = appState.board.getBoardString();
+    String currentBoardStateString = appState.toString();
     if (currentBoardString == startingBoard) {
-      lastSavedBoard = appState.savedData.getLastSavedBoard();
+      lastSavedState = appState.savedData.getLastSavedState();
     }
     return Scaffold(
       body: FutureBuilder<String?>(
-        future: lastSavedBoard,
+        future: lastSavedState,
         builder: (BuildContext context, AsyncSnapshot<String?>? snapshot) {
           if (snapshot != null && snapshot.hasData && snapshot.data != null){
-            String lastBoardString = snapshot.data!;
-            appState.setIsUndoEnabled();
-            appState.setIsUndoVisible();
-            if (lastBoardString != currentBoardString && currentBoardString == startingBoard){
+            String lastSavedStateVal = snapshot.data!;
+            if (lastSavedStateVal != currentBoardStateString && currentBoardString == startingBoard){
               // The user is currently on the starting board, but there was a history that hasn't been deleted. 
               // This means the user was just playing a game and the app may have gotten closed, but the 
               // history wasn't deleted by a user action, such as resetting the board. 
-              appState.board.boardModel = parseBoardString(snapshot.data!);
+              appState.loadFromString(lastSavedStateVal);
+              appState.setIsUndoEnabled();
             }
           }
           for (int i=0; i<appState.board.boardModel.length; i++){
