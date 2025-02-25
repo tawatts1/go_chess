@@ -318,4 +318,22 @@ class MyAppState extends ChangeNotifier {
     notifyListeners(); // necessary because the undo button may change visibility. 
     notifyAi();
   }
+  bool shouldBoardBeFlipped() {
+    //Determines if board should show black at the bottom or white. 
+    if (players.isWhiteAi && players.isBlackAi){
+      //two ai playing
+      return false;
+    } else if (!players.isWhiteAi && !players.isBlackAi){
+      //two humans playing
+      if (isWhiteTurn){
+        return false;
+      } else {
+        return true;
+      }
+    } else if (players.isWhiteAi) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }

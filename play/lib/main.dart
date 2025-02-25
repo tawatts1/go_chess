@@ -182,7 +182,10 @@ class MyHomePage extends StatelessWidget {
               GridView.count(
                     shrinkWrap: true,
                     crossAxisCount: BoardWidth,
-                    children: [...appState.board.boardView],),
+                    children: List.from(
+                      appState.shouldBoardBeFlipped() ? appState.board.boardView.reversed : appState.board.boardView
+                          ),
+              ),
             ]  
           );
         }
