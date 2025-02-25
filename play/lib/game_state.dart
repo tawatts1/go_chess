@@ -76,11 +76,13 @@ class BoardState {
   }
 }
 
+const humanName = "Human";
+const aiName = "Ai";
 class PlayerState {
   // Info about who the players are. 
   bool isBlackAi = true;
   bool isWhiteAi = false;
-  int aiDropdownDepth = 4;
+  int aiDropdownDepth = 1;
   @override
   String toString() {
     return "$isBlackAi,$isWhiteAi,$aiDropdownDepth";
@@ -99,6 +101,13 @@ class PlayerState {
       }
     }
   }
+  String getPlayerName(bool isWhite) {
+    if (isWhite){
+      return isWhiteAi ? aiName : humanName;
+    } else {
+      return isBlackAi ? aiName : humanName;
+    }
+  }
 }
 
 class MyAppState extends ChangeNotifier {
@@ -114,7 +123,7 @@ class MyAppState extends ChangeNotifier {
   String toString() {
     return "$board#placeholder";
   }
-  void loadFromString(String stateStr) {
+  void loadBoardStateFromString(String stateStr) {
     List<String> appState = stateStr.split("#");
     if (appState.length != 2) {
       log("Tried to parse bad board state: $stateStr");
@@ -122,6 +131,9 @@ class MyAppState extends ChangeNotifier {
       board.loadFromString(appState[0]);
       //undoButtonModel.loadFromString(appState[1]);
     }
+  }
+  void loadPlayerStateFromString(String stateStr) {
+    players.loadFromString(stateStr);
   }
   Future<void> resetGame() async {
     await savedData.clearBoardStates();
@@ -248,9 +260,9 @@ class MyAppState extends ChangeNotifier {
       //notifyListeners();
     }
   }
-  void undo() {
-    String lastAppState = savedData.popBoard();
-    loadFromString(lastAppState);
+  void undo() async {
+    String lastAppState = await savedData.popBoard();
+    loadBoardStateFromString(lastAppState);
     setIsUndoEnabled();
     notifyListeners();
   }
@@ -279,9 +291,31 @@ class MyAppState extends ChangeNotifier {
       return 1;
     }
   }
-  
   void setAiDepth(int d) {
     players.aiDropdownDepth = d;
+    savedData.players = players.toString();
+    savedData.savePlayers();
     notifyListeners();
+  }
+  void setPlayer(String playerName, bool isWhite) {
+    if (playerName == "Human") {
+      if (isWhite) {
+        players.isWhiteAi = false;
+      } else {
+        players.isBlackAi = false;
+      }
+    } else {
+      if (isWhite) {
+        players.isWhiteAi = true;
+      } else {
+        players.isBlackAi = true;
+      }
+    }
+    savedData.players = players.toString();
+    savedData.savePlayers();
+    setIsUndoEnabled();
+    setIsUndoVisible();
+    notifyListeners(); // necessary because the undo button may change visibility. 
+    notifyAi();
   }
 }

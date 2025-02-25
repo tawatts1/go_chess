@@ -1,69 +1,141 @@
+import 'package:mutex/mutex.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:developer';
 
-final String boardSnapshotsKey = "b";
+const String boardSnapshotsKey = "b";
+const String playersKey = "p";
 
 class PreferencesManager {
   late final SharedPreferencesAsync prefs;
-  late List<String> boardSnapshots;
+  List<String> boardSnapshots = [];
   bool isUndoPossible = false;
   bool isLoaded = false;
   final int maxBoards = 3;
-
+  String players = "";
+  final mtx = ReadWriteMutex(); // Used to access/modify the following: isLoaded, prefs.get* and prefs.set*
 
   PreferencesManager() {
     prefs = SharedPreferencesAsync();
   }
   @override 
   String toString() {
-    return 'PreferencesManager: $boardSnapshots, $isUndoPossible, $isLoaded, $maxBoards';
+    return 'PreferencesManager: $boardSnapshots, $isUndoPossible, $isLoaded, $maxBoards\n$players';
   }
-  loadBoards() async {
-    isLoaded = true;
-    List<String>? loaded = await prefs.getStringList(boardSnapshotsKey);
-    boardSnapshots = loaded ?? [];
-    isUndoPossible = boardSnapshots.length > 1;
-  }
-  saveBoards() async {
-    prefs.setStringList(boardSnapshotsKey, boardSnapshots);
-  }
-  addBoardSnapshot(String boardStr) async {
-    boardSnapshots.add(boardStr);
-    if (boardSnapshots.length > maxBoards) {
-      boardSnapshots = boardSnapshots.sublist(1);
-    }
-    isUndoPossible = boardSnapshots.length > 1;
-    saveBoards();
-  }
-  String popBoard() {
-    if (isUndoPossible){
-      boardSnapshots.removeLast();
-      String out = boardSnapshots.last;
-      isUndoPossible = boardSnapshots.length > 1;
-      saveBoards();
-      return out;
-    } else {
-      log('tried to pop board history when there was none. ');
-      return '';
+  load() async {
+    await mtx.acquireWrite(); // accessing isLoaded and doing the load operation. 
+    try {
+      if (!isLoaded) {
+        isLoaded = true;
+        Future<List<String>?> boardSnapshotsFuture = prefs.getStringList(boardSnapshotsKey);
+        Future<String?> playersFuture = prefs.getString(playersKey);
+        List<String>? loadedBoardSnapshots = await boardSnapshotsFuture;
+        String? loadedPlayers = await playersFuture;
+        boardSnapshots = loadedBoardSnapshots ?? [];
+        players = loadedPlayers ?? "";
+        isUndoPossible = boardSnapshots.length > 1;
+      }
+    } finally {
+      mtx.release();
     }
   }
-  Future<String?> getLastSavedState() async {
-    String? out;
-    if (!isLoaded) {
-      await loadBoards();
+  savePlayers() async {
+    await mtx.acquireWrite();
+    if (!isLoaded){
+      log("Trying to save players when preferences aren't even loaded. ");
     }
-    if (boardSnapshots.isNotEmpty){
-      out =  boardSnapshots.last;
-    } else {
-      out =  null;
-      log("No saved board states found");
+    try {
+      prefs.setString(playersKey, players);
+    } finally {
+      mtx.release();
+    } 
+  }
+  Future<String> getPlayers() async {
+    await mtx.acquireRead();
+    String out = "";
+    try {
+      if (!isLoaded){
+        log("Trying to get players when preferences aren't even loaded.");
+      }
+      out = players;
+    } finally {
+      mtx.release();
     }
     return out;
   }
-  Future<void> clearBoardStates() async {
-    boardSnapshots.clear();
-    boardSnapshots = [];
-    isUndoPossible = false;
-    await saveBoards();
+  addBoardSnapshot(String boardStr) async {
+    await mtx.acquireWrite();
+    try {
+      if (!isLoaded){
+        log("Trying to add a board snapshot when preferences aren't even loaded.");
+      }
+      boardSnapshots.add(boardStr);
+      if (boardSnapshots.length > maxBoards) {
+        boardSnapshots = boardSnapshots.sublist(1);
+      }
+      isUndoPossible = boardSnapshots.length > 1;
+      await prefs.setStringList(boardSnapshotsKey, boardSnapshots);
+    } finally {
+      mtx.release();
+    }
+  }
+  Future<String> popBoard() async {
+    String out = "";
+    await mtx.acquireWrite();
+    try{
+      if (isUndoPossible){
+        boardSnapshots.removeLast();
+        out = boardSnapshots.last;
+        isUndoPossible = boardSnapshots.length > 1;
+        await prefs.setStringList(boardSnapshotsKey, boardSnapshots);
+      } else {
+        log('tried to pop board history when there was none. ');
+      }
+    } finally {
+      mtx.release();
+    }
+    return out;
+  }
+  Future<String> getLastSavedState() async {
+    String out = "";
+    await mtx.acquireRead();
+    try {
+      if (!isLoaded){
+        log("Trying to get last board state when preferences aren't even loaded.");
+      }
+      if (boardSnapshots.isNotEmpty){
+        out =  boardSnapshots.last;
+      } else {
+        log("No saved board states found");
+      }
+    } finally {
+      mtx.release();
+    }
+    return out;
+  }
+  clearBoardStates() async {
+    await mtx.acquireWrite();
+    try {
+      if (!isLoaded){
+        log("Trying to clear board state when preferences aren't even loaded.");
+      }
+      boardSnapshots.clear();
+      boardSnapshots = [];
+      isUndoPossible = false;
+      await prefs.setStringList(boardSnapshotsKey, boardSnapshots);
+    } finally {
+      mtx.release();
+    }
+  }
+  Future<List<String>?> getInfoForStartup() async {
+    List<String>? out = [];
+    if (!isLoaded) {
+      await load();
+    } else {
+      log("Getting startup info after the preferences have already been loaded.");
+    }
+    out.add(await getLastSavedState());
+    out.add(await getPlayers());
+    return out;
   }
 }

@@ -10,6 +10,7 @@ const aiDropdownList = <int>[0,1,2,3,4,5,6];
 
 const startingBoard = "onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO";
 const boardBeforeWhiteCheckmate = "o00qkb0op0pp0pppnp000p000000000Q00BP000000000000PPP00PbPONB0K0NO";
+const defaultPlayers = "true,false,1";//black is ai, white is not ai, ai depth 4. 
 
 var white = const Color.fromARGB(255, 223, 150, 82);
 var greyedWhite = const Color.fromARGB(255, 180,170,170);

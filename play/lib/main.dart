@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'constants.dart';
@@ -36,25 +38,47 @@ class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    //check if saved data is initialized, ana initialize it if not. 
-    Future<String?>? lastSavedState;
+    //check if saved data is initialized, and initialize it if not. 
+    Future<List<String>?>? loadedStartupInfo;
+    bool skipStartup = false;
     String currentBoardString = appState.board.getBoardString();
     String currentBoardStateString = appState.toString();
-    if (currentBoardString == startingBoard) {
-      lastSavedState = appState.savedData.getLastSavedState();
+    String currentPlayersString = appState.players.toString();
+    if (currentBoardString == startingBoard && currentPlayersString == defaultPlayers) {
+      log("Starting to load startup info...");
+      loadedStartupInfo = appState.savedData.getInfoForStartup();
+    } else {
+      loadedStartupInfo = null;
+      skipStartup = true;
     }
+    
     return Scaffold(
-      body: FutureBuilder<String?>(
-        future: lastSavedState,
-        builder: (BuildContext context, AsyncSnapshot<String?>? snapshot) {
+      body: FutureBuilder<List<String>?>(
+        future: loadedStartupInfo,
+        builder: (BuildContext context, AsyncSnapshot<List<String>?>? snapshot) {
           if (snapshot != null && snapshot.hasData && snapshot.data != null){
-            String lastSavedStateVal = snapshot.data!;
-            if (lastSavedStateVal != currentBoardStateString && currentBoardString == startingBoard){
-              // The user is currently on the starting board, but there was a history that hasn't been deleted. 
-              // This means the user was just playing a game and the app may have gotten closed, but the 
-              // history wasn't deleted by a user action, such as resetting the board. 
-              appState.loadFromString(lastSavedStateVal);
+            if (!skipStartup) {
+              if (currentBoardString == startingBoard){
+                // The user is currently on the starting board, but there was a history that hasn't been deleted. 
+                // This means the user was just playing a game and the app may have gotten closed, but the 
+                // history wasn't deleted by a user action, such as resetting the board. 
+                String lastSavedStateVal = snapshot.data![0];
+                if (lastSavedStateVal != currentBoardStateString && lastSavedStateVal != "") {
+                  appState.loadBoardStateFromString(lastSavedStateVal);
+                }
+              } else {
+                log("warning: detected starting board that was later not starting board...");
+              }
+              if (currentPlayersString == defaultPlayers){
+                String savedPlayerString = snapshot.data![1];
+                if (savedPlayerString != currentPlayersString){
+                  appState.loadPlayerStateFromString(savedPlayerString);
+                }
+              } else {
+                log("warning: detected default player state that later changed...");
+              }
               appState.setIsUndoEnabled();
+              appState.setIsUndoVisible();
             }
           }
           for (int i=0; i<appState.board.boardModel.length; i++){
@@ -89,44 +113,71 @@ class MyHomePage extends StatelessWidget {
                     },
                     child: const Text('Print\nSaved Data'),
                   ),
-                  
-                  DropdownButton<int>(
-                    value: appState.players.aiDropdownDepth,
-                    icon: const Icon(Icons.arrow_downward),
-                    elevation: 16,
-                    underline: Container(height: 2, color:Colors.grey,),
-                    onChanged: (int? value) {
-                      appState.setAiDepth(value!); 
-                    },
-                    items: aiDropdownList.map<DropdownMenuItem<int>>((int value) {
-                      return DropdownMenuItem<int>(value:value, child:Text('$value'),
-                      );
-                    }).toList(),
-                  )
                 ]
                 ),
                 
               ),
               Row(
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        appState.resetGame();
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      appState.resetGame();
+                    },
+                    child: const Text('Reset\nGame'),
+                  ),
+                  if (appState.undoButtonModel.isVisible) 
+                  IconButton(
+                    icon: const Icon(Icons.undo),
+                    onPressed: appState.undoButtonModel.isEnabled ? () => appState.undo() : null
+                  )
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownMenu<String>(
+                      initialSelection: appState.players.getPlayerName(true), //appState.players.aiDropdownDepth,
+                      label: const Text("White Player"),
+                      requestFocusOnTap: true,
+                      onSelected: (String? value) {
+                        appState.setPlayer(value!, true); 
                       },
-                      child: const Text('Reset\nGame'),
+                      dropdownMenuEntries: ["Human", "Ai"].map<DropdownMenuEntry<String>>((String value) {
+                        return DropdownMenuEntry<String>(value:value, label:value,
+                        );
+                      }).toList(),
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        appState.saveBoard();
+                  ),
+                  Expanded(
+                    child: DropdownMenu<String>(
+                      initialSelection: appState.players.getPlayerName(false), //appState.players.aiDropdownDepth,
+                      label: const Text("Black Player"),
+                      requestFocusOnTap: true,
+                      onSelected: (String? value) {
+                        appState.setPlayer(value!, false); 
                       },
-                      child: const Text('Save board'),
+                      dropdownMenuEntries: ["Human", "Ai"].map<DropdownMenuEntry<String>>((String value) {
+                        return DropdownMenuEntry<String>(value:value, label:value,
+                        );
+                      }).toList(),
                     ),
-                    if (appState.undoButtonModel.isVisible) 
-                    IconButton(
-                      icon: const Icon(Icons.undo),
-                      onPressed: appState.undoButtonModel.isEnabled ? () => appState.undo() : null
-                    )
-                  ],),
+                  ),
+                  Expanded(
+                    child: DropdownMenu<int>(
+                      initialSelection: appState.players.aiDropdownDepth,
+                      label: const Text("Ai depth"),
+                      requestFocusOnTap: true,
+                      onSelected: (int? value) {
+                        appState.setAiDepth(value!); 
+                      },
+                      dropdownMenuEntries: aiDropdownList.map<DropdownMenuEntry<int>>((int value) {
+                        return DropdownMenuEntry<int>(value:value, label:'$value',
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ]
+              ),
               Text(appState.board.gameStatus, style: const TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
               GridView.count(
                     shrinkWrap: true,
