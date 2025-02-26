@@ -157,10 +157,10 @@ class MyAppState extends ChangeNotifier {
     } else if ((isWhiteTurn && players.isWhiteAi) || (!isWhiteTurn && players.isBlackAi)){
       log('It is an AIs turn');
     } else {
-      selectButton(c, false);
+      selectButton(c);
     }
   } 
-  void selectButton(Coord c, bool saveBoardOnMove) async {
+  void selectButton(Coord c) async {
     String piece = board.boardModel[c.i][c.j];
     bool isNotifyAi = false;
     String boardString = board.getBoardString();
@@ -194,7 +194,7 @@ class MyAppState extends ChangeNotifier {
           isWhiteTurn = !isWhiteTurn;
           isNotifyAi = true;
           board.indicatedCoords = '$selectedCoord|$c';
-          if (saveBoardOnMove && boardString != startingBoard){
+          if (boardString != startingBoard){
             // do not save the starting board. The user can reset the board if they want.
             dataSaved = savedData.addBoardSnapshot(toString());
           }
@@ -228,11 +228,9 @@ class MyAppState extends ChangeNotifier {
         int j1 = int.parse(indexList[1]);
         int i2 = int.parse(indexList[2]);
         int j2 = int.parse(indexList[3]);
-        selectButton(Coord(i1, j1), false);
+        selectButton(Coord(i1, j1));
         Coord click2 = await Future.delayed(const Duration(milliseconds: 700),  () => Coord(i2,j2));
-        // Save the board after the ai makes a move, and the undo button is visible
-        bool saveNewBoard = undoButtonModel.isVisible;
-        selectButton(click2, saveNewBoard);
+        selectButton(click2);
       } catch(ex) {
         log("failed to parse ai move");
       }
@@ -260,7 +258,7 @@ class MyAppState extends ChangeNotifier {
     }
   }
   void undo() async {
-    String lastAppState = await savedData.popBoard();
+    String lastAppState = await savedData.popBoard(2);
     loadBoardStateFromString(lastAppState);
     setUndoState();
     notifyListeners();

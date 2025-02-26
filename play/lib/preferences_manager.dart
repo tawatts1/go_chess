@@ -6,12 +6,13 @@ import 'dart:developer';
 const String boardSnapshotsKey = "b";
 const String playersKey = "p";
 
+const maxStatesSaved = 5;
 class PreferencesManager {
   late final SharedPreferencesAsync prefs;
   List<String> boardSnapshots = [];
   bool isUndoPossible = false;
   bool isLoaded = false;
-  final int maxBoards = 3;
+  final int maxBoardStates = maxStatesSaved;
   String players = "";
   final mtx = ReadWriteMutex(); // Used to access/modify the following: isLoaded, prefs.get* and prefs.set*
 
@@ -20,7 +21,7 @@ class PreferencesManager {
   }
   @override 
   String toString() {
-    return 'PreferencesManager: $boardSnapshots, $isUndoPossible, $isLoaded, $maxBoards\n$players';
+    return 'PreferencesManager: $boardSnapshots, $isUndoPossible, $isLoaded, $maxBoardStates\n$players';
   }
   load() async {
     await mtx.acquireWrite(); // accessing isLoaded and doing the load operation. 
@@ -33,7 +34,7 @@ class PreferencesManager {
         String? loadedPlayers = await playersFuture;
         boardSnapshots = loadedBoardSnapshots ?? [];
         players = loadedPlayers ?? "";
-        isUndoPossible = boardSnapshots.length > 1;
+        isUndoPossible = boardSnapshots.length > 2;
       }
     } finally {
       mtx.release();
@@ -70,23 +71,24 @@ class PreferencesManager {
         log("Trying to add a board snapshot when preferences aren't even loaded.");
       }
       boardSnapshots.add(boardStr);
-      if (boardSnapshots.length > maxBoards) {
+      if (boardSnapshots.length > maxBoardStates) {
         boardSnapshots = boardSnapshots.sublist(1);
       }
-      isUndoPossible = boardSnapshots.length > 1;
+      isUndoPossible = boardSnapshots.length > 2;
       await prefs.setStringList(boardSnapshotsKey, boardSnapshots);
     } finally {
       mtx.release();
     }
   }
-  Future<String> popBoard() async {
+  Future<String> popBoard(int N) async {
     String out = "";
     await mtx.acquireWrite();
     try{
       if (isUndoPossible){
         boardSnapshots.removeLast();
+        boardSnapshots.removeLast();
         out = boardSnapshots.last;
-        isUndoPossible = boardSnapshots.length > 1;
+        isUndoPossible = boardSnapshots.length > 2;
         await prefs.setStringList(boardSnapshotsKey, boardSnapshots);
       } else {
         log('tried to pop board history when there was none. ');
