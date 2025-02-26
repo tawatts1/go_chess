@@ -141,7 +141,7 @@ class MyAppState extends ChangeNotifier {
     isWhiteTurn = true;
     isGameOver = false;
     board.resetGame();
-    setIsUndoEnabled();
+    setUndoState();
     clearSelection();
     notifyListeners();
   }
@@ -160,10 +160,11 @@ class MyAppState extends ChangeNotifier {
       selectButton(c, false);
     }
   } 
-  void selectButton(Coord c, bool saveBoardOnMove){
+  void selectButton(Coord c, bool saveBoardOnMove) async {
     String piece = board.boardModel[c.i][c.j];
     bool isNotifyAi = false;
     String boardString = board.getBoardString();
+    Future<void>? dataSaved;
     if (selectedCoord == null) {
       // no selection has been made
       if (piece == Space) {
@@ -195,7 +196,7 @@ class MyAppState extends ChangeNotifier {
           board.indicatedCoords = '$selectedCoord|$c';
           if (saveBoardOnMove && boardString != startingBoard){
             // do not save the starting board. The user can reset the board if they want.
-            savedData.addBoardSnapshot(toString());
+            dataSaved = savedData.addBoardSnapshot(toString());
           }
         } 
       } else {
@@ -203,8 +204,10 @@ class MyAppState extends ChangeNotifier {
       }
       clearSelection();
     }
-    setIsUndoEnabled(); 
-    setIsUndoVisible();
+    if (dataSaved != null) {
+      await dataSaved;
+    }
+    setUndoState(); 
     notifyListeners();
     if (isNotifyAi) {
       notifyAi();
@@ -245,25 +248,21 @@ class MyAppState extends ChangeNotifier {
   void saveBoard() {
     savedData.addBoardSnapshot(toString());
   }
-  void setIsUndoVisible() {
+  void setUndoState() {
     // do not show undo if two humans are playing or two ai's are playing
-    bool newVal = (players.isWhiteAi || players.isBlackAi) && (!players.isWhiteAi || !players.isBlackAi);
-    if (newVal != undoButtonModel.isVisible){
-      undoButtonModel.isVisible = newVal;
-      //notifyListeners();
+    bool newVisibleUndo = (players.isWhiteAi || players.isBlackAi) && (!players.isWhiteAi || !players.isBlackAi);
+    if (newVisibleUndo != undoButtonModel.isVisible){
+      undoButtonModel.isVisible = newVisibleUndo;
     }
-  }
-  void setIsUndoEnabled() {
     bool newEnableUndo = ((isWhiteTurn && !players.isWhiteAi) || (!isWhiteTurn && !players.isBlackAi)) && savedData.isUndoPossible;
     if (newEnableUndo != undoButtonModel.isEnabled){
       undoButtonModel.isEnabled = newEnableUndo;
-      //notifyListeners();
     }
   }
   void undo() async {
     String lastAppState = await savedData.popBoard();
     loadBoardStateFromString(lastAppState);
-    setIsUndoEnabled();
+    setUndoState();
     notifyListeners();
   }
   Color getColor(Coord c){
@@ -313,8 +312,7 @@ class MyAppState extends ChangeNotifier {
     }
     savedData.players = players.toString();
     savedData.savePlayers();
-    setIsUndoEnabled();
-    setIsUndoVisible();
+    setUndoState();
     notifyListeners(); // necessary because the undo button may change visibility. 
     notifyAi();
   }

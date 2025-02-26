@@ -77,8 +77,7 @@ class MyHomePage extends StatelessWidget {
               } else {
                 log("warning: detected default player state that later changed...");
               }
-              appState.setIsUndoEnabled();
-              appState.setIsUndoVisible();
+              appState.setUndoState();
             }
           }
           for (int i=0; i<appState.board.boardModel.length; i++){
