@@ -42,6 +42,7 @@ class BoardState {
   List<Square> boardView = getInitialBoardView(parseBoardString(startingBoard));
   String indicatedCoords = '';
   String gameStatus = statusWhiteMove;
+  bool isWhiteTurn = true;
 
   String getBoardString() {
     String boardString = '';
@@ -65,6 +66,13 @@ class BoardState {
       boardView = getInitialBoardView(parseBoardString(boardState[0]));
       indicatedCoords = boardState[1];
       gameStatus = boardState[2];
+      if (gameStatus == statusWhiteMove){
+        isWhiteTurn = true;
+      } else if (gameStatus == statusBlackMove) {
+        isWhiteTurn = false;
+      } else {
+        log("Loading end of previous game.");
+      }
     }
   }
   void resetGame() {
@@ -73,6 +81,7 @@ class BoardState {
     indicatedCoords = '';
     log("Reseting game: ${getBoardString()}");
     gameStatus = statusWhiteMove;
+    isWhiteTurn = true;
   }
 }
 
@@ -116,7 +125,6 @@ enum PlayStatus {play, pause, undefined}
 class MyAppState extends ChangeNotifier {
   Coord? selectedCoord;
   String moveDestinations = '';
-  bool isWhiteTurn = true;
   PlayerState players = PlayerState();
   bool isGameOver = false;
   ButtonState undoButtonModel = ButtonState(false, false);
@@ -143,12 +151,14 @@ class MyAppState extends ChangeNotifier {
   Future<void> resetGame() async {
     await savedData.clearBoardStates();
     moveDestinations = '';
-    isWhiteTurn = true;
     isGameOver = false;
     board.resetGame();
     setUndoState();
     clearSelection();
     notifyListeners();
+    if (players.isWhiteAi && !players.isBlackAi){
+      notifyAi();
+    }
   }
   
   void clearSelection() {
@@ -159,7 +169,7 @@ class MyAppState extends ChangeNotifier {
     //functions that humans have to use to select the buttons
     if (isGameOver) {
       log('game is over');
-    } else if ((isWhiteTurn && players.isWhiteAi) || (!isWhiteTurn && players.isBlackAi)){
+    } else if ((board.isWhiteTurn && players.isWhiteAi) || (!board.isWhiteTurn && players.isBlackAi)){
       log('It is an AIs turn');
     } else {
       selectButton(c);
@@ -174,8 +184,8 @@ class MyAppState extends ChangeNotifier {
       // no selection has been made
       if (piece == Space) {
         log('try clicking on a piece!');
-      } else if ((isWhiteTurn && (whiteMap[piece] ?? false)) ||
-                 (!isWhiteTurn && !(whiteMap[piece] ?? true))) {
+      } else if ((board.isWhiteTurn && (whiteMap[piece] ?? false)) ||
+                 (!board.isWhiteTurn && !(whiteMap[piece] ?? true))) {
         //mark down the selection and populate the move destinations
         selectedCoord = c;
         moveDestinations = getMoves(boardString, c);
@@ -196,7 +206,7 @@ class MyAppState extends ChangeNotifier {
             isGameOver = true;
           }
           board.boardModel = parseBoardString(newBoardStr);
-          isWhiteTurn = !isWhiteTurn;
+          board.isWhiteTurn = !board.isWhiteTurn;
           isNotifyAi = true;
           board.indicatedCoords = '$selectedCoord|$c';
           if (boardString != startingBoard){
@@ -220,10 +230,10 @@ class MyAppState extends ChangeNotifier {
   }
   Future<void> notifyAi() async {
     if (!isGameOver && 
-        ((isWhiteTurn && players.isWhiteAi) || (!isWhiteTurn && players.isBlackAi)) &&
+        ((board.isWhiteTurn && players.isWhiteAi) || (!board.isWhiteTurn && players.isBlackAi)) &&
         playPauseStatus != PlayStatus.pause) {
       //it is the ai's turn
-      String aiMove = await getAiChosenMove(board.getBoardString(), isWhiteTurn, 'simple', players.aiDropdownDepth);
+      String aiMove = await getAiChosenMove(board.getBoardString(), board.isWhiteTurn, 'simple', players.aiDropdownDepth);
       parseAndDoAiMove(aiMove);
     }
   }
@@ -259,7 +269,7 @@ class MyAppState extends ChangeNotifier {
     if (newVisibleUndo != undoButtonModel.isVisible){
       undoButtonModel.isVisible = newVisibleUndo;
     }
-    bool newEnableUndo = ((isWhiteTurn && !players.isWhiteAi) || (!isWhiteTurn && !players.isBlackAi)) && savedData.isUndoPossible;
+    bool newEnableUndo = ((board.isWhiteTurn && !players.isWhiteAi) || (!board.isWhiteTurn && !players.isBlackAi)) && savedData.isUndoPossible;
     if (newEnableUndo != undoButtonModel.isEnabled){
       undoButtonModel.isEnabled = newEnableUndo;
     }
@@ -363,7 +373,7 @@ class MyAppState extends ChangeNotifier {
       return false;
     } else if (!players.isWhiteAi && !players.isBlackAi){
       //two humans playing
-      if (isWhiteTurn){
+      if (board.isWhiteTurn){
         return false;
       } else {
         return true;
@@ -373,5 +383,15 @@ class MyAppState extends ChangeNotifier {
     } else {
       return false;
     }
+  }
+  doDuringStartup() {
+    setUndoState();
+    setPlayPauseButtonState();
+    if (!(players.isWhiteAi && players.isBlackAi)){
+      if ((board.isWhiteTurn && players.isWhiteAi) || (!board.isWhiteTurn && players.isBlackAi)){
+        notifyAi();
+      }
+    }
+    
   }
 }
