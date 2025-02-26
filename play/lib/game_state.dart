@@ -78,6 +78,7 @@ class BoardState {
 
 const humanName = "Human";
 const aiName = "Ai";
+
 class PlayerState {
   // Info about who the players are. 
   bool isBlackAi = true;
@@ -110,6 +111,8 @@ class PlayerState {
   }
 }
 
+enum PlayStatus {play, pause, undefined}
+
 class MyAppState extends ChangeNotifier {
   Coord? selectedCoord;
   String moveDestinations = '';
@@ -117,6 +120,9 @@ class MyAppState extends ChangeNotifier {
   PlayerState players = PlayerState();
   bool isGameOver = false;
   ButtonState undoButtonModel = ButtonState(false, false);
+  ButtonState playButtonModel = ButtonState(false, true);
+  ButtonState pauseButtonModel = ButtonState(false, true);
+  PlayStatus playPauseStatus = PlayStatus.undefined;
   BoardState board = BoardState();
   PreferencesManager savedData = PreferencesManager();
   @override 
@@ -129,7 +135,6 @@ class MyAppState extends ChangeNotifier {
       log("Tried to parse bad board state: $stateStr");
     } else {
       board.loadFromString(appState[0]);
-      //undoButtonModel.loadFromString(appState[1]);
     }
   }
   void loadPlayerStateFromString(String stateStr) {
@@ -214,7 +219,9 @@ class MyAppState extends ChangeNotifier {
     }
   }
   Future<void> notifyAi() async {
-    if (!isGameOver && ((isWhiteTurn && players.isWhiteAi) || (!isWhiteTurn && players.isBlackAi))) {
+    if (!isGameOver && 
+        ((isWhiteTurn && players.isWhiteAi) || (!isWhiteTurn && players.isBlackAi)) &&
+        playPauseStatus != PlayStatus.pause) {
       //it is the ai's turn
       String aiMove = await getAiChosenMove(board.getBoardString(), isWhiteTurn, 'simple', players.aiDropdownDepth);
       parseAndDoAiMove(aiMove);
@@ -262,6 +269,40 @@ class MyAppState extends ChangeNotifier {
     loadBoardStateFromString(lastAppState);
     setUndoState();
     notifyListeners();
+  }
+  void setPlayPauseButtonState(){
+    if (players.isWhiteAi && players.isBlackAi) {
+      if (playPauseStatus == PlayStatus.play){
+        playButtonModel.isVisible = false;
+        pauseButtonModel.isVisible = true;
+      } else {
+        if (playPauseStatus == PlayStatus.undefined){
+          playPauseStatus = PlayStatus.pause;
+        }
+        playButtonModel.isVisible = true;
+        pauseButtonModel.isVisible = false;
+      }
+    } else {
+      playButtonModel.isVisible = false;
+      pauseButtonModel.isVisible = false;
+      playPauseStatus = PlayStatus.undefined;
+    }
+  }
+  void playPause() {
+    if (playPauseStatus == PlayStatus.play){
+      playPauseStatus = PlayStatus.pause;
+      setPlayPauseButtonState();
+      notifyListeners();
+      log("Pause was just pushed. ");
+    } else if (playPauseStatus == PlayStatus.pause){
+      playPauseStatus = PlayStatus.play;
+      setPlayPauseButtonState();
+      notifyAi();
+      notifyListeners();
+      log("Play was just pushed");
+    } else {
+      log("Error: Play/Pause was pushed when play pause status was not defined. ");
+    }
   }
   Color getColor(Coord c){
     bool isLightSquare = (c.i+c.j)%2==0;
@@ -311,8 +352,9 @@ class MyAppState extends ChangeNotifier {
     savedData.players = players.toString();
     savedData.savePlayers();
     setUndoState();
+    setPlayPauseButtonState();
     notifyListeners(); // necessary because the undo button may change visibility. 
-    notifyAi();
+    //notifyAi();
   }
   bool shouldBoardBeFlipped() {
     //Determines if board should show black at the bottom or white. 

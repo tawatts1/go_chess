@@ -78,6 +78,7 @@ class MyHomePage extends StatelessWidget {
                 log("warning: detected default player state that later changed...");
               }
               appState.setUndoState();
+              appState.setPlayPauseButtonState();
             }
           }
           for (int i=0; i<appState.board.boardModel.length; i++){
@@ -128,7 +129,17 @@ class MyHomePage extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.undo),
                     onPressed: appState.undoButtonModel.isEnabled ? () => appState.undo() : null
-                  )
+                  ),
+                  if (appState.playButtonModel.isVisible)
+                  IconButton(
+                    icon: const Icon(Icons.play_arrow),
+                    onPressed: appState.playButtonModel.isEnabled ? () => appState.playPause() : null
+                  ),
+                  if (appState.pauseButtonModel.isVisible)
+                  IconButton(
+                    icon: const Icon(Icons.pause),
+                    onPressed: appState.pauseButtonModel.isEnabled ? () => appState.playPause() : null
+                  ),
                 ],
               ),
               Row(
