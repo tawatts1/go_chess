@@ -19,19 +19,6 @@ class ButtonState {
     other.isVisible == isVisible && other.isEnabled == isEnabled;
   @override
   int get hashCode => Object.hash(isVisible, isEnabled);
-  // @override
-  // String toString() {
-  //   return "$isVisible,$isEnabled";
-  // }
-  // void loadFromString(String stateStr) {
-  //   List<String> buttonState = stateStr.split(",");
-  //   if (buttonState.length != 2){
-  //     log("Attempted to load button state from a bad string: $stateStr");
-  //   } else {
-  //     isVisible = buttonState[0].toLowerCase() == "true";
-  //     isEnabled = buttonState[1].toLowerCase() == "true";
-  //   }
-  // }
 }
 
 class BoardState {
@@ -120,6 +107,34 @@ class PlayerState {
   }
 }
 
+class ThemeState {
+  bool isDarkTheme = true;
+
+  @override
+  String toString() {
+    log("Theme toString is $isDarkTheme");
+    return "$isDarkTheme";
+  }
+  void loadFromString(String stateStr) {
+    isDarkTheme = stateStr.toLowerCase() == "true";
+  }
+  Color getSquareColor(bool isLightSquare){
+    if (isDarkTheme){
+      if (isLightSquare){
+        return Color.fromARGB(255, 130, 50, 6);
+      } else {
+        return Color.fromARGB(255, 80, 30, 10);
+      }
+    } else {
+      if (isLightSquare) {
+        return white;
+      } else {
+        return black;
+      }
+    }
+  }
+}
+
 enum PlayStatus {play, pause, undefined}
 
 class MyAppState extends ChangeNotifier {
@@ -132,21 +147,20 @@ class MyAppState extends ChangeNotifier {
   ButtonState pauseButtonModel = ButtonState(false, true);
   PlayStatus playPauseStatus = PlayStatus.undefined;
   BoardState board = BoardState();
+  ThemeState theme = ThemeState();
   PreferencesManager savedData = PreferencesManager();
   @override 
   String toString() {
-    return "$board#placeholder";
+    return "$board";
   }
   void loadBoardStateFromString(String stateStr) {
-    List<String> appState = stateStr.split("#");
-    if (appState.length != 2) {
-      log("Tried to parse bad board state: $stateStr");
-    } else {
-      board.loadFromString(appState[0]);
-    }
+    board.loadFromString(stateStr);
   }
   void loadPlayerStateFromString(String stateStr) {
     players.loadFromString(stateStr);
+  }
+  void loadThemeStateFromString(String stateStr) {
+    theme.loadFromString(stateStr);
   }
   Future<void> resetGame() async {
     await savedData.clearBoardStates();
@@ -325,9 +339,9 @@ class MyAppState extends ChangeNotifier {
         return greyedBlack;
       }
     } else if (isLightSquare){
-      return white;
+      return theme.getSquareColor(true);
     } else {
-      return black;
+      return theme.getSquareColor(false);
     }
   }
   double getRadius(Coord c){
@@ -392,6 +406,16 @@ class MyAppState extends ChangeNotifier {
         notifyAi();
       }
     }
-    
+  }
+  void setTheme(bool newVal){
+    if (theme.isDarkTheme != newVal){
+      log("Setting theme...");
+      theme.isDarkTheme = newVal;
+      savedData.theme = theme.toString();
+      savedData.saveTheme();
+      notifyListeners();
+    } else {
+      log("Error: changing theme to the same theme");
+    }
   }
 }

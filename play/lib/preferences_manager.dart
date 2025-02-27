@@ -5,6 +5,7 @@ import 'dart:developer';
 
 const String boardSnapshotsKey = "b";
 const String playersKey = "p";
+const String themeKey = "t";
 
 const maxStatesSaved = 5;
 class PreferencesManager {
@@ -14,6 +15,7 @@ class PreferencesManager {
   bool isLoaded = false;
   final int maxBoardStates = maxStatesSaved;
   String players = "";
+  String theme = "";
   final mtx = ReadWriteMutex(); // Used to access/modify the following: isLoaded, prefs.get* and prefs.set*
 
   PreferencesManager() {
@@ -21,7 +23,7 @@ class PreferencesManager {
   }
   @override 
   String toString() {
-    return 'PreferencesManager: $boardSnapshots, $isUndoPossible, $isLoaded, $maxBoardStates\n$players';
+    return 'PreferencesManager: $boardSnapshots, $isUndoPossible, $isLoaded, $maxBoardStates\n$players\n$theme';
   }
   load() async {
     await mtx.acquireWrite(); // accessing isLoaded and doing the load operation. 
@@ -30,11 +32,14 @@ class PreferencesManager {
         isLoaded = true;
         Future<List<String>?> boardSnapshotsFuture = prefs.getStringList(boardSnapshotsKey);
         Future<String?> playersFuture = prefs.getString(playersKey);
+        Future<String?> themeFuture = prefs.getString(themeKey);
         List<String>? loadedBoardSnapshots = await boardSnapshotsFuture;
         String? loadedPlayers = await playersFuture;
+        String? loadedTheme = await themeFuture;
         boardSnapshots = loadedBoardSnapshots ?? [];
         players = loadedPlayers ?? "";
         isUndoPossible = boardSnapshots.length > 2;
+        theme = loadedTheme ?? "";
       }
     } finally {
       mtx.release();
@@ -138,6 +143,31 @@ class PreferencesManager {
     }
     out.add(await getLastSavedState());
     out.add(await getPlayers());
+    out.add(await getTheme());
+    return out;
+  }
+  saveTheme() async {
+    await mtx.acquireWrite();
+    if (!isLoaded){
+      log("Trying to save theme when preferences aren't even loaded. ");
+    }
+    try {
+      prefs.setString(themeKey, theme);
+    } finally {
+      mtx.release();
+    } 
+  }
+  Future<String> getTheme() async {
+    await mtx.acquireRead();
+    String out = "";
+    try {
+      if (!isLoaded){
+        log("Trying to get theme when preferences aren't even loaded.");
+      }
+      out = theme;
+    } finally {
+      mtx.release();
+    }
     return out;
   }
 }

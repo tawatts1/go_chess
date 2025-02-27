@@ -20,13 +20,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
-      child: MaterialApp(
+      child: const MaterialApp(
         title: 'Namer App',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
-        ),
-        home: const MyHomePage(),
+        home: MyHomePage(),
       ),
     );
   }
@@ -52,8 +48,7 @@ class MyHomePage extends StatelessWidget {
       skipStartup = true;
     }
     
-    return Scaffold(
-      body: FutureBuilder<List<String>?>(
+    return FutureBuilder<List<String>?>(
         future: loadedStartupInfo,
         builder: (BuildContext context, AsyncSnapshot<List<String>?>? snapshot) {
           if (snapshot != null && snapshot.hasData && snapshot.data != null){
@@ -77,6 +72,8 @@ class MyHomePage extends StatelessWidget {
               } else {
                 log("warning: detected default player state that later changed...");
               }
+              String savedThemeString = snapshot.data![2];
+              appState.loadThemeStateFromString(savedThemeString);
               appState.doDuringStartup();
             }
           }
@@ -94,112 +91,120 @@ class MyHomePage extends StatelessWidget {
               }
             } 
           }
-          return Column( 
-            //mainAxisAlignment: MainAxisAlignment.center,  
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top:20.0),
-                child: Row(children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      appState.printBoard();
-                    },
-                    child: const Text('Print Board'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      appState.printSavedData();
-                    },
-                    child: const Text('Print\nSaved Data'),
-                  ),
-                ]
-                ),
-                
-              ),
-              Row(
+          return Theme(
+            data: appState.theme.isDarkTheme ? ThemeData.dark() : ThemeData.light(),
+            child: Scaffold(
+              body: Column( 
+                //mainAxisAlignment: MainAxisAlignment.center,  
                 children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      appState.resetGame();
-                    },
-                    child: const Text('Reset\nGame'),
-                  ),
-                  if (appState.undoButtonModel.isVisible) 
-                  IconButton(
-                    icon: const Icon(Icons.undo),
-                    onPressed: appState.undoButtonModel.isEnabled ? () => appState.undo() : null
-                  ),
-                  if (appState.playButtonModel.isVisible)
-                  IconButton(
-                    icon: const Icon(Icons.play_arrow),
-                    onPressed: appState.playButtonModel.isEnabled ? () => appState.playPause() : null
-                  ),
-                  if (appState.pauseButtonModel.isVisible)
-                  IconButton(
-                    icon: const Icon(Icons.pause),
-                    onPressed: appState.pauseButtonModel.isEnabled ? () => appState.playPause() : null
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: DropdownMenu<String>(
-                      initialSelection: appState.players.getPlayerName(true), //appState.players.aiDropdownDepth,
-                      label: const Text("White Player"),
-                      requestFocusOnTap: true,
-                      onSelected: (String? value) {
-                        appState.setPlayer(value!, true); 
-                      },
-                      dropdownMenuEntries: ["Human", "Ai"].map<DropdownMenuEntry<String>>((String value) {
-                        return DropdownMenuEntry<String>(value:value, label:value,
-                        );
-                      }).toList(),
+                  Padding(
+                    padding: const EdgeInsets.only(top:20.0),
+                    child: Row(children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          appState.printBoard();
+                        },
+                        child: const Text('Print Board'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          appState.printSavedData();
+                        },
+                        child: const Text('Print\nSaved Data'),
+                      ),
+                      Switch(
+                        value: appState.theme.isDarkTheme,
+                        onChanged: (bool val) {appState.setTheme(val);}
+                      )
+                    ]
                     ),
+                    
                   ),
-                  Expanded(
-                    child: DropdownMenu<String>(
-                      initialSelection: appState.players.getPlayerName(false), //appState.players.aiDropdownDepth,
-                      label: const Text("Black Player"),
-                      requestFocusOnTap: true,
-                      onSelected: (String? value) {
-                        appState.setPlayer(value!, false); 
-                      },
-                      dropdownMenuEntries: ["Human", "Ai"].map<DropdownMenuEntry<String>>((String value) {
-                        return DropdownMenuEntry<String>(value:value, label:value,
-                        );
-                      }).toList(),
-                    ),
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          appState.resetGame();
+                        },
+                        child: const Text('Reset\nGame'),
+                      ),
+                      if (appState.undoButtonModel.isVisible) 
+                      IconButton(
+                        icon: const Icon(Icons.undo),
+                        onPressed: appState.undoButtonModel.isEnabled ? () => appState.undo() : null
+                      ),
+                      if (appState.playButtonModel.isVisible)
+                      IconButton(
+                        icon: const Icon(Icons.play_arrow),
+                        onPressed: appState.playButtonModel.isEnabled ? () => appState.playPause() : null
+                      ),
+                      if (appState.pauseButtonModel.isVisible)
+                      IconButton(
+                        icon: const Icon(Icons.pause),
+                        onPressed: appState.pauseButtonModel.isEnabled ? () => appState.playPause() : null
+                      ),
+                    ],
                   ),
-                  Expanded(
-                    child: DropdownMenu<int>(
-                      initialSelection: appState.players.aiDropdownDepth,
-                      label: const Text("Ai depth"),
-                      requestFocusOnTap: true,
-                      onSelected: (int? value) {
-                        appState.setAiDepth(value!); 
-                      },
-                      dropdownMenuEntries: aiDropdownList.map<DropdownMenuEntry<int>>((int value) {
-                        return DropdownMenuEntry<int>(value:value, label:'$value',
-                        );
-                      }).toList(),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownMenu<String>(
+                          initialSelection: appState.players.getPlayerName(true), //appState.players.aiDropdownDepth,
+                          label: const Text("White Player"),
+                          requestFocusOnTap: true,
+                          onSelected: (String? value) {
+                            appState.setPlayer(value!, true); 
+                          },
+                          dropdownMenuEntries: ["Human", "Ai"].map<DropdownMenuEntry<String>>((String value) {
+                            return DropdownMenuEntry<String>(value:value, label:value,
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      Expanded(
+                        child: DropdownMenu<String>(
+                          initialSelection: appState.players.getPlayerName(false), //appState.players.aiDropdownDepth,
+                          label: const Text("Black Player"),
+                          requestFocusOnTap: true,
+                          onSelected: (String? value) {
+                            appState.setPlayer(value!, false); 
+                          },
+                          dropdownMenuEntries: ["Human", "Ai"].map<DropdownMenuEntry<String>>((String value) {
+                            return DropdownMenuEntry<String>(value:value, label:value,
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      Expanded(
+                        child: DropdownMenu<int>(
+                          initialSelection: appState.players.aiDropdownDepth,
+                          label: const Text("Ai depth"),
+                          requestFocusOnTap: true,
+                          onSelected: (int? value) {
+                            appState.setAiDepth(value!); 
+                          },
+                          dropdownMenuEntries: aiDropdownList.map<DropdownMenuEntry<int>>((int value) {
+                            return DropdownMenuEntry<int>(value:value, label:'$value',
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ]
                   ),
-                ]
+                  Text(appState.board.gameStatus, style: const TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
+                  GridView.count(
+                        shrinkWrap: true,
+                        crossAxisCount: BoardWidth,
+                        children: List.from(
+                          appState.shouldBoardBeFlipped() ? appState.board.boardView.reversed : appState.board.boardView
+                              ),
+                  ),
+                ]  
               ),
-              Text(appState.board.gameStatus, style: const TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-              GridView.count(
-                    shrinkWrap: true,
-                    crossAxisCount: BoardWidth,
-                    children: List.from(
-                      appState.shouldBoardBeFlipped() ? appState.board.boardView.reversed : appState.board.boardView
-                          ),
-              ),
-            ]  
+            ),
           );
         }
-      ),
-    );
+      );
   }
 }
 
