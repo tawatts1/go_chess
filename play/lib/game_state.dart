@@ -99,11 +99,14 @@ class PlayerState {
     }
   }
   String getPlayerName(bool isWhite) {
+    String out = "";
     if (isWhite){
-      return isWhiteAi ? aiName : humanName;
+      out = isWhiteAi ? aiName : humanName;
     } else {
-      return isBlackAi ? aiName : humanName;
+      out = isBlackAi ? aiName : humanName;
     }
+    log("Player name: $out");
+    return out;
   }
 }
 
@@ -121,15 +124,15 @@ class ThemeState {
   Color getSquareColor(bool isLightSquare){
     if (isDarkTheme){
       if (isLightSquare){
-        return Color.fromARGB(255, 130, 50, 6);
+        return darkWhite;
       } else {
-        return Color.fromARGB(255, 80, 30, 10);
+        return darkBlack;
       }
     } else {
       if (isLightSquare) {
-        return white;
+        return lightWhite;
       } else {
-        return black;
+        return lightBlack;
       }
     }
   }

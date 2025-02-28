@@ -20,9 +20,9 @@ List<Square> getInitialBoardView(List<List<String>> boardModel) {
   final List<Square> out = [];
   for (int i=0; i<boardModel.length; i++) {
     for (int j=0; j<boardModel[i].length; j++) {
-      Color color = black;
+      Color color = lightBlack;
       if ((i+j)%2==0) {
-        color = white;
+        color = lightWhite;
       }
       final Coord c = Coord(i,j);
       final SquareModel sq = SquareModel(boardModel[i][j], color, 1);
