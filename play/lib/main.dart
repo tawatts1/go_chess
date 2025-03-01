@@ -98,28 +98,33 @@ class MyHomePage extends StatelessWidget {
             );
           Color primaryColor = calculatedTheme.colorScheme.primary;
           Color secondaryColor = calculatedTheme.colorScheme.secondary;
+          double buttonBorderWidth = 4;
           return Theme(
             data: calculatedTheme,
             child: Scaffold(
               body: Column( 
                 //mainAxisAlignment: MainAxisAlignment.center,  
+                //mainAxisSize: MainAxisSize.min,
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(top:20.0),
                     child: Row(
                       children: [
-                        ElevatedButton(
+                        OutlinedButton(
                           onPressed: () {
                             appState.printBoard();
                           },
+                          style: OutlinedButton.styleFrom(side: BorderSide(color: primaryColor, width: buttonBorderWidth),),
                           child: Text('Print Board',
-                          style: TextStyle(color: primaryColor),),
+                            style: TextStyle(color: primaryColor),
+                          ),
                         ),
                         ElevatedButton(
                           onPressed: () {
                             appState.printSavedData();
                           },
-                          child: const Text('Print\nSaved Data'),
+                          style: OutlinedButton.styleFrom(side: BorderSide(color: primaryColor, width: buttonBorderWidth),),
+                          child: const Text('Print Saved Data'),
                         ),
                         Switch(
                           value: appState.theme.isDarkTheme,
@@ -134,14 +139,21 @@ class MyHomePage extends StatelessWidget {
                         onPressed: () {
                           appState.resetGame();
                         },
-                        child: const Text('Reset\nGame'),
+                        style: OutlinedButton.styleFrom(side: BorderSide(color: primaryColor, width: buttonBorderWidth),),
+                        child: const Text('Reset Game'),
                       ),
                       if (appState.undoButtonModel.isVisible) 
-                      IconButton(
-                        icon: Icon(Icons.undo, 
-                          color: appState.undoButtonModel.isEnabled ? primaryColor : secondaryColor,
-                        ),
-                        onPressed: appState.undoButtonModel.isEnabled ? () => appState.undo() : null
+                      OutlinedButton(
+                        onPressed: appState.undoButtonModel.isEnabled ? () => appState.undo() : null,
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: appState.undoButtonModel.isEnabled ? primaryColor : secondaryColor, 
+                          width: appState.undoButtonModel.isEnabled ? buttonBorderWidth : buttonBorderWidth/2),
+                          backgroundColor: appState.undoButtonModel.isEnabled ? calculatedTheme.colorScheme.onPrimary : calculatedTheme.colorScheme.onSecondary
+                          ),
+                        child: 
+                          Icon(Icons.undo, 
+                            color: appState.undoButtonModel.isEnabled ? primaryColor : secondaryColor,
+                          ),
                       ),
                       if (appState.playButtonModel.isVisible)
                       IconButton(
@@ -194,13 +206,32 @@ class MyHomePage extends StatelessWidget {
                       ),
                     ]
                   ),
-                  Text(appState.board.gameStatus, style: TextStyle(fontSize:24, fontWeight: FontWeight.bold, color: primaryColor)),
-                  GridView.count(
-                        shrinkWrap: true,
-                        crossAxisCount: BoardWidth,
-                        children: List.from(
-                          appState.shouldBoardBeFlipped() ? appState.board.boardView.reversed : appState.board.boardView
-                              ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(appState.board.gameStatus, style: TextStyle(fontSize:24, fontWeight: FontWeight.bold, color: primaryColor)),
+                  ),
+                  Card(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+                    color: appState.theme.isDarkTheme ? calculatedTheme.colorScheme.primaryContainer : primaryColor,
+                    child: Padding(
+                      padding: const EdgeInsets.all(2), 
+                      child: 
+                      Card(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+                        color: appState.theme.isDarkTheme ? primaryColor : calculatedTheme.colorScheme.primaryContainer,
+                        child: Padding(
+                          padding: const EdgeInsets.all(3),
+                          child: GridView.count(
+                                shrinkWrap: true,
+                                crossAxisCount: BoardWidth,
+                                padding: EdgeInsets.zero,
+                                children: List.from(
+                                  appState.shouldBoardBeFlipped() ? appState.board.boardView.reversed : appState.board.boardView
+                                      ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ]  
               ),
@@ -231,33 +262,37 @@ class CustomDropdownMenu<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownMenu<T>(
-      initialSelection: getter(), //appState.players.aiDropdownDepth,
-      textStyle: TextStyle(color: textColor),
-      trailingIcon: Icon(Icons.arrow_drop_down, 
-        color:textColor,
-      ),
-      selectedTrailingIcon: Icon(Icons.arrow_drop_up, 
-        color: textColor,
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(
-            color: textColor
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: DropdownMenu<T>(
+        initialSelection: getter(), //appState.players.aiDropdownDepth,
+        textStyle: TextStyle(color: textColor),
+        trailingIcon: Icon(Icons.arrow_drop_down, 
+          color:textColor,
+        ),
+        selectedTrailingIcon: Icon(Icons.arrow_drop_up, 
+          color: textColor,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: textColor,
+              width: 3.0
+            )
           )
-        )
+        ),
+        label: Text(dropdownLabelText, style: TextStyle(color: textColor)),
+        requestFocusOnTap: true,
+        onSelected: (T? value) {
+          setter(value!); 
+        },
+        dropdownMenuEntries: entries.map<DropdownMenuEntry<T>>((T value) {
+          return DropdownMenuEntry<T>(value:value, 
+          label:"$value",
+          labelWidget: Text("$value", style: TextStyle(color: textColor)),
+          );
+        }).toList(),
       ),
-      label: Text(dropdownLabelText, style: TextStyle(color: textColor)),
-      requestFocusOnTap: true,
-      onSelected: (T? value) {
-        setter(value!); 
-      },
-      dropdownMenuEntries: entries.map<DropdownMenuEntry<T>>((T value) {
-        return DropdownMenuEntry<T>(value:value, 
-        label:"$value",
-        labelWidget: Text("$value", style: TextStyle(color: textColor)),
-        );
-      }).toList(),
     );
   }
 }
