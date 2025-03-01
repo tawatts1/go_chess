@@ -353,7 +353,7 @@ class MyAppState extends ChangeNotifier {
     } else if (selectedCoord != null && selectedCoord == c) {
       return 15;
     } else {
-      return 1;
+      return 0;
     }
   }
   void setAiDepth(int d) {
