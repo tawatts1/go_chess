@@ -107,6 +107,15 @@ class PlayerState {
     }
     return out;
   }
+  bool isBothAi() {
+    return isWhiteAi && isBlackAi;
+  }
+  bool isAtLeastOneAi() {
+    return isWhiteAi || isBlackAi;
+  }
+  bool isNeitherAi() {
+    return !isWhiteAi && !isBlackAi;
+  }
 }
 
 class ThemeState {
@@ -281,7 +290,7 @@ class MyAppState extends ChangeNotifier {
   }
   void setUndoState() {
     // do not show undo if two humans are playing or two ai's are playing
-    bool newVisibleUndo = (players.isWhiteAi || players.isBlackAi) && (!players.isWhiteAi || !players.isBlackAi);
+    bool newVisibleUndo = !players.isBothAi() && !players.isNeitherAi();
     if (newVisibleUndo != undoButtonModel.isVisible){
       undoButtonModel.isVisible = newVisibleUndo;
     }
@@ -297,7 +306,7 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
   void setPlayPauseButtonState(){
-    if (players.isWhiteAi && players.isBlackAi) {
+    if (players.isBothAi()) {
       if (playPauseStatus == PlayStatus.play){
         playButtonModel.isVisible = false;
         pauseButtonModel.isVisible = true;
@@ -380,14 +389,17 @@ class MyAppState extends ChangeNotifier {
     setUndoState();
     setPlayPauseButtonState();
     notifyListeners(); // necessary because the undo button may change visibility. 
-    //notifyAi();
+    if (players.isAtLeastOneAi() && !players.isBothAi()){
+      notifyAi();
+    }
+    
   }
   bool shouldBoardBeFlipped() {
     //Determines if board should show black at the bottom or white. 
-    if (players.isWhiteAi && players.isBlackAi){
+    if (players.isBothAi()){
       //two ai playing
       return false;
-    } else if (!players.isWhiteAi && !players.isBlackAi){
+    } else if (players.isNeitherAi()){
       //two humans playing
       if (board.isWhiteTurn){
         return false;
@@ -403,7 +415,7 @@ class MyAppState extends ChangeNotifier {
   doDuringStartup() {
     setUndoState();
     setPlayPauseButtonState();
-    if (!(players.isWhiteAi && players.isBlackAi)){
+    if (!players.isBothAi()){
       if ((board.isWhiteTurn && players.isWhiteAi) || (!board.isWhiteTurn && players.isBlackAi)){
         notifyAi();
       }
