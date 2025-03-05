@@ -8,9 +8,10 @@ const statusWhiteMove = "White's Move";
 
 const aiDropdownList = <int>[0,1,2,3,4,5,6];
 
+const testingBoard = "0000k00000Qp000000B000000P0000PP000000000000000000P00P000N00K00O";
 const startingBoard = "onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO";
 const boardBeforeWhiteCheckmate = "o00qkb0op0pp0pppnp000p000000000Q00BP000000000000PPP00PbPONB0K0NO";
-const defaultPlayers = "true,false,1";//black is ai, white is not ai, ai depth 4. 
+const defaultPlayers = "true,false,1";//black is ai, white is not ai, ai depth 1. 
 
 var lightWhite = const Color.fromARGB(255, 223, 150, 82);
 var lightBlack = const Color.fromARGB(255, 116, 59, 6);

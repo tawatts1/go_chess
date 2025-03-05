@@ -15,7 +15,6 @@ class MyAppState extends ChangeNotifier {
   Coord? selectedCoord;
   String moveDestinations = '';
   PlayerState players = PlayerState();
-  bool isGameOver = false;
   ButtonState undoButtonModel = ButtonState(false, false);
   ButtonState playButtonModel = ButtonState(false, true);
   ButtonState pauseButtonModel = ButtonState(false, true);
@@ -39,7 +38,6 @@ class MyAppState extends ChangeNotifier {
   Future<void> resetGame() async {
     await savedData.clearBoardStates();
     moveDestinations = '';
-    isGameOver = false;
     board.resetGame();
     setUndoState();
     clearSelection();
@@ -55,7 +53,7 @@ class MyAppState extends ChangeNotifier {
   }
   void humanSelectButton(Coord c){
     //functions that humans have to use to select the buttons
-    if (isGameOver) {
+    if (board.isGameOver()) {
       log('game is over');
     } else if ((board.isWhiteTurn && players.isWhiteAi) || (!board.isWhiteTurn && players.isBlackAi)){
       log('It is an AIs turn');
@@ -90,9 +88,6 @@ class MyAppState extends ChangeNotifier {
         if (resultList.length == 2) {
           String newBoardStr = resultList[0];
           board.gameStatus = resultList[1];
-          if (board.gameStatus == statusCheckMate || board.gameStatus == statusStaleMate){
-            isGameOver = true;
-          }
           board.boardModel = parseBoardString(newBoardStr);
           board.isWhiteTurn = !board.isWhiteTurn;
           isNotifyAi = true;
@@ -117,7 +112,7 @@ class MyAppState extends ChangeNotifier {
     }
   }
   Future<void> notifyAi() async {
-    if (!isGameOver && 
+    if (!board.isGameOver() && 
         ((board.isWhiteTurn && players.isWhiteAi) || (!board.isWhiteTurn && players.isBlackAi)) &&
         players.playPauseStatus != PlayStatus.pause) {
       //it is the ai's turn
@@ -153,17 +148,26 @@ class MyAppState extends ChangeNotifier {
   }
   void setUndoState() {
     // do not show undo if two humans are playing or two ai's are playing
-    bool newVisibleUndo = !players.isBothAi() && !players.isNeitherAi();
+    bool newVisibleUndo   = !players.isBothAi() && !players.isNeitherAi();
     if (newVisibleUndo != undoButtonModel.isVisible){
       undoButtonModel.isVisible = newVisibleUndo;
     }
-    bool newEnableUndo = ((board.isWhiteTurn && !players.isWhiteAi) || (!board.isWhiteTurn && !players.isBlackAi)) && savedData.isUndoPossible;
+    bool newEnableUndo = ((board.isWhiteTurn && !players.isWhiteAi) || (!board.isWhiteTurn && !players.isBlackAi) || board.isGameOver()) 
+      && savedData.isUndoPossible;
     if (newEnableUndo != undoButtonModel.isEnabled){
       undoButtonModel.isEnabled = newEnableUndo;
     }
   }
   void undo() async {
-    String lastAppState = await savedData.popBoard(2);
+    String lastAppState = "";
+    if ((board.isWhiteTurn && !players.isWhiteAi) || (!board.isWhiteTurn && !players.isBlackAi)){
+      lastAppState = await savedData.popBoard(2);
+    } else if (board.isGameOver()) {
+      lastAppState = await savedData.popBoard(1);
+      board.isWhiteTurn = !board.isWhiteTurn;
+    } else {
+      log("Error: unexpected undo case");
+    }
     loadBoardStateFromString(lastAppState);
     setUndoState();
     notifyListeners();

@@ -89,12 +89,13 @@ class PreferencesManager {
     String out = "";
     await mtx.acquireWrite();
     try{
-      if (isUndoPossible){
+      if (boardSnapshots.length > N) {
+      for (int i=0; i<N; i++){
         boardSnapshots.removeLast();
-        boardSnapshots.removeLast();
-        out = boardSnapshots.last;
-        isUndoPossible = boardSnapshots.length > 2;
-        await prefs.setStringList(boardSnapshotsKey, boardSnapshots);
+      }
+      out = boardSnapshots.last;
+      isUndoPossible = boardSnapshots.length > 2;
+      await prefs.setStringList(boardSnapshotsKey, boardSnapshots);
       } else {
         log('tried to pop board history when there was none. ');
       }

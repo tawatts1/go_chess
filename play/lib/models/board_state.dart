@@ -47,10 +47,12 @@ class BoardState {
   }
   void resetGame() {
     boardModel = parseBoardString(startingBoard);
-    //boardView = getInitialBoardView(parseBoardString(startingBoard));
     indicatedCoords = '';
     log("Reseting game: ${getBoardString()}");
     gameStatus = statusWhiteMove;
     isWhiteTurn = true;
+  }
+  bool isGameOver() {
+    return gameStatus == statusCheckMate || gameStatus == statusStaleMate;
   }
 }
