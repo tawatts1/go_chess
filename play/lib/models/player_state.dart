@@ -4,11 +4,13 @@ const humanName = "Human";
 const aiName = "Ai";
 
 
+enum PlayStatus {play, pause, undefined}
 class PlayerState {
   // Info about who the players are. 
   bool isBlackAi = true;
   bool isWhiteAi = false;
   int aiDropdownDepth = 1;
+  PlayStatus playPauseStatus = PlayStatus.undefined;
   @override
   String toString() {
     return "$isBlackAi,$isWhiteAi,$aiDropdownDepth";

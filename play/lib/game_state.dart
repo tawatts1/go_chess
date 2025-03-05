@@ -11,8 +11,6 @@ import 'models/board_state.dart';
 import 'models/player_state.dart';
 import 'models/theme_state.dart';
 
-enum PlayStatus {play, pause, undefined}
-
 class MyAppState extends ChangeNotifier {
   Coord? selectedCoord;
   String moveDestinations = '';
@@ -21,7 +19,7 @@ class MyAppState extends ChangeNotifier {
   ButtonState undoButtonModel = ButtonState(false, false);
   ButtonState playButtonModel = ButtonState(false, true);
   ButtonState pauseButtonModel = ButtonState(false, true);
-  PlayStatus playPauseStatus = PlayStatus.undefined;
+
   BoardState board = BoardState();
   ThemeState theme = ThemeState();
   PreferencesManager savedData = PreferencesManager();
@@ -121,7 +119,7 @@ class MyAppState extends ChangeNotifier {
   Future<void> notifyAi() async {
     if (!isGameOver && 
         ((board.isWhiteTurn && players.isWhiteAi) || (!board.isWhiteTurn && players.isBlackAi)) &&
-        playPauseStatus != PlayStatus.pause) {
+        players.playPauseStatus != PlayStatus.pause) {
       //it is the ai's turn
       String aiMove = await getAiChosenMove(board.getBoardString(), board.isWhiteTurn, 'simple', players.aiDropdownDepth);
       parseAndDoAiMove(aiMove);
@@ -172,12 +170,12 @@ class MyAppState extends ChangeNotifier {
   }
   void setPlayPauseButtonState(){
     if (players.isBothAi()) {
-      if (playPauseStatus == PlayStatus.play){
+      if (players.playPauseStatus == PlayStatus.play){
         playButtonModel.isVisible = false;
         pauseButtonModel.isVisible = true;
       } else {
-        if (playPauseStatus == PlayStatus.undefined){
-          playPauseStatus = PlayStatus.pause;
+        if (players.playPauseStatus == PlayStatus.undefined){
+          players.playPauseStatus = PlayStatus.pause;
         }
         playButtonModel.isVisible = true;
         pauseButtonModel.isVisible = false;
@@ -185,17 +183,17 @@ class MyAppState extends ChangeNotifier {
     } else {
       playButtonModel.isVisible = false;
       pauseButtonModel.isVisible = false;
-      playPauseStatus = PlayStatus.undefined;
+      players.playPauseStatus = PlayStatus.undefined;
     }
   }
   void playPause() {
-    if (playPauseStatus == PlayStatus.play){
-      playPauseStatus = PlayStatus.pause;
+    if (players.playPauseStatus == PlayStatus.play){
+      players.playPauseStatus = PlayStatus.pause;
       setPlayPauseButtonState();
       notifyListeners();
       log("Pause was just pushed. ");
-    } else if (playPauseStatus == PlayStatus.pause){
-      playPauseStatus = PlayStatus.play;
+    } else if (players.playPauseStatus == PlayStatus.pause){
+      players.playPauseStatus = PlayStatus.play;
       setPlayPauseButtonState();
       notifyAi();
       notifyListeners();
