@@ -116,7 +116,8 @@ class MyAppState extends ChangeNotifier {
         ((board.isWhiteTurn && players.isWhiteAi) || (!board.isWhiteTurn && players.isBlackAi)) &&
         players.playPauseStatus != PlayStatus.pause) {
       //it is the ai's turn
-      String aiMove = await getAiChosenMove(board.getBoardString(), board.isWhiteTurn, 'simple', players.aiDropdownDepth);
+      int depth = board.isWhiteTurn ? players.aiDropdownDepthWhite : players.aiDropdownDepthBlack;
+      String aiMove = await getAiChosenMove(board.getBoardString(), board.isWhiteTurn, 'simple', depth);
       parseAndDoAiMove(aiMove);
     }
   }
@@ -231,8 +232,12 @@ class MyAppState extends ChangeNotifier {
       return 0;
     }
   }
-  void setAiDepth(int d) {
-    players.aiDropdownDepth = d;
+  void setAiDepth(int d, bool isAiWhite) {
+    if (isAiWhite) {
+      players.aiDropdownDepthWhite = d;
+    } else {
+      players.aiDropdownDepthBlack = d;
+    }
     savedData.players = players.toString();
     savedData.savePlayers();
     notifyListeners();

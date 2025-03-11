@@ -47,7 +47,10 @@ class MyHomePage extends StatelessWidget {
       loadedStartupInfo = null;
       skipStartup = true;
     }
-    
+    var screenSize = MediaQuery.of(context).size;
+    double screenWidth = screenSize.width;
+    double screenHeight = screenSize.height;
+
     return FutureBuilder<List<String>?>(
         future: loadedStartupInfo,
         builder: (BuildContext context, AsyncSnapshot<List<String>?>? snapshot) {
@@ -99,12 +102,49 @@ class MyHomePage extends StatelessWidget {
           Color primaryColor = calculatedTheme.colorScheme.primary;
           Color secondaryColor = calculatedTheme.colorScheme.secondary;
           double buttonBorderWidth = 4;
+
+          Widget whitePlayerDropdown = CustomDropdownMenu(
+            appState: appState, 
+            textColor: primaryColor, 
+            dropdownLabelText: "White Player",
+            getter: () {return appState.players.getPlayerName(true);},
+            setter: (String val) {appState.setPlayer(val, true);},
+            entries: const ["Human", "Ai"],
+            );
+
+          Widget blackPlayerDropdown = CustomDropdownMenu<String>(
+            appState: appState, 
+            textColor: primaryColor, 
+            dropdownLabelText: "Black Player",
+            getter: () {return appState.players.getPlayerName(false);},
+            setter: (String val) {appState.setPlayer(val, false);},
+            entries: const ["Human", "Ai"],
+          );
+          Widget aiDepthDropdownWhite = CustomDropdownMenu<int>(
+            appState: appState, 
+            textColor: primaryColor, 
+            dropdownLabelText: "White Ai Depth",
+            getter: () {return appState.players.aiDropdownDepthWhite;},
+            setter: (int val) {appState.setAiDepth(val, true);},
+            entries: aiDropdownList,
+          );
+          Widget aiDepthDropdownBlack = CustomDropdownMenu<int>(
+            appState: appState, 
+            textColor: primaryColor, 
+            dropdownLabelText: "Black Ai Depth",
+            getter: () {return appState.players.aiDropdownDepthBlack;},
+            setter: (int val) {appState.setAiDepth(val, false);},
+            entries: aiDropdownList,
+          );
           return Theme(
             data: calculatedTheme,
             child: Scaffold(
               body: Column( 
                 //mainAxisAlignment: MainAxisAlignment.center,  
                 //mainAxisSize: MainAxisSize.min,
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(top:20.0),
@@ -172,43 +212,24 @@ class MyHomePage extends StatelessWidget {
                     ],
                   ),
                   Row(
-                    children: [
-                      Expanded(
-                        child: CustomDropdownMenu(
-                          appState: appState, 
-                          textColor: primaryColor, 
-                          dropdownLabelText: "White Player",
-                          getter: () {return appState.players.getPlayerName(true);},
-                          setter: (String val) {appState.setPlayer(val, true);},
-                          entries: const ["Human", "Ai"],
-                          ),
-                      ),
-                      Expanded(
-                        child: CustomDropdownMenu<String>(
-                          appState: appState, 
-                          textColor: primaryColor, 
-                          dropdownLabelText: "Black Player",
-                          getter: () {return appState.players.getPlayerName(false);},
-                          setter: (String val) {appState.setPlayer(val, false);},
-                          entries: const ["Human", "Ai"],
-                        )
-
-                      ),
-                      Expanded(
-                        child: CustomDropdownMenu<int>(
-                          appState: appState, 
-                          textColor: primaryColor, 
-                          dropdownLabelText: "Ai depth",
-                          getter: () {return appState.players.aiDropdownDepth;},
-                          setter: (int val) {appState.setAiDepth(val);},
-                          entries: aiDropdownList,
-                        ),
-                      ),
-                    ]
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.max,
+                    //crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [whitePlayerDropdown, aiDepthDropdownWhite],
+                    
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(appState.board.gameStatus, style: TextStyle(fontSize:24, fontWeight: FontWeight.bold, color: primaryColor)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [blackPlayerDropdown, aiDepthDropdownBlack],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(appState.board.gameStatus, style: TextStyle(fontSize:24, fontWeight: FontWeight.bold, color: primaryColor)),
+                      ),
+                    ],
                   ),
                   Card(
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
@@ -262,36 +283,38 @@ class CustomDropdownMenu<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: DropdownMenu<T>(
-        initialSelection: getter(), //appState.players.aiDropdownDepth,
-        textStyle: TextStyle(color: textColor),
-        trailingIcon: Icon(Icons.arrow_drop_down, 
-          color:textColor,
-        ),
-        selectedTrailingIcon: Icon(Icons.arrow_drop_up, 
-          color: textColor,
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(
-              color: textColor,
-              width: 3.0
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: DropdownMenu<T>(
+          initialSelection: getter(), //appState.players.aiDropdownDepth,
+          textStyle: TextStyle(color: textColor),
+          trailingIcon: Icon(Icons.arrow_drop_down, 
+            color:textColor,
+          ),
+          selectedTrailingIcon: Icon(Icons.arrow_drop_up, 
+            color: textColor,
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: textColor,
+                width: 3.0
+              )
             )
-          )
+          ),
+          label: Text(dropdownLabelText, style: TextStyle(color: textColor)),
+          requestFocusOnTap: true,
+          onSelected: (T? value) {
+            setter(value!); 
+          },
+          dropdownMenuEntries: entries.map<DropdownMenuEntry<T>>((T value) {
+            return DropdownMenuEntry<T>(value:value, 
+            label:"$value",
+            labelWidget: Text("$value", style: TextStyle(color: textColor)),
+            );
+          }).toList(),
         ),
-        label: Text(dropdownLabelText, style: TextStyle(color: textColor)),
-        requestFocusOnTap: true,
-        onSelected: (T? value) {
-          setter(value!); 
-        },
-        dropdownMenuEntries: entries.map<DropdownMenuEntry<T>>((T value) {
-          return DropdownMenuEntry<T>(value:value, 
-          label:"$value",
-          labelWidget: Text("$value", style: TextStyle(color: textColor)),
-          );
-        }).toList(),
       ),
     );
   }

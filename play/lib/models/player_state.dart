@@ -9,21 +9,23 @@ class PlayerState {
   // Info about who the players are. 
   bool isBlackAi = true;
   bool isWhiteAi = false;
-  int aiDropdownDepth = 1;
+  int aiDropdownDepthWhite = 1;
+  int aiDropdownDepthBlack = 1;
   PlayStatus playPauseStatus = PlayStatus.undefined;
   @override
   String toString() {
-    return "$isBlackAi,$isWhiteAi,$aiDropdownDepth";
+    return "$isBlackAi,$isWhiteAi,$aiDropdownDepthWhite,$aiDropdownDepthBlack";
   }
   void loadFromString(String stateStr){
     List<String> playerState = stateStr.split(",");
-    if (playerState.length != 3){
+    if (playerState.length != 4){
       log("Tried to load player state from a bad string: $stateStr");
     } else {
       try {
         isBlackAi = playerState[0].toLowerCase() == "true";
         isWhiteAi = playerState[1].toLowerCase() == "true";
-        aiDropdownDepth = int.parse(playerState[2]);
+        aiDropdownDepthWhite = int.parse(playerState[2]);
+        aiDropdownDepthBlack = int.parse(playerState[3]);
       } catch (e) {
         log("Failed to parse player state: $stateStr");
       }
