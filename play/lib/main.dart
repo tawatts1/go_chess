@@ -136,6 +136,16 @@ class MyHomePage extends StatelessWidget {
             setter: (int val) {appState.setAiDepth(val, false);},
             entries: aiDropdownList,
           );
+          Widget blackIcon = getPlayerIcon(false, appState.players.isBlackAi, primaryColor);
+          Widget whiteIcon = getPlayerIcon(true, appState.players.isWhiteAi, primaryColor);
+          Row whitePlayerRow = Row(
+            mainAxisSize: MainAxisSize.max,
+            children: [whitePlayerDropdown, aiDepthDropdownWhite, whiteIcon],
+          );
+          Row blackPlayerRow = Row(
+            mainAxisSize: MainAxisSize.max,
+            children: [blackPlayerDropdown, aiDepthDropdownBlack, blackIcon],
+          );
           return Theme(
             data: calculatedTheme,
             child: Scaffold(
@@ -212,17 +222,6 @@ class MyHomePage extends StatelessWidget {
                     ],
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    mainAxisSize: MainAxisSize.max,
-                    //crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [whitePlayerDropdown, aiDepthDropdownWhite],
-                    
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [blackPlayerDropdown, aiDepthDropdownBlack],
-                  ),
-                  Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Padding(
@@ -231,6 +230,7 @@ class MyHomePage extends StatelessWidget {
                       ),
                     ],
                   ),
+                  appState.shouldBoardBeFlipped() ? whitePlayerRow : blackPlayerRow,
                   Card(
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
                     color: appState.theme.isDarkTheme ? calculatedTheme.colorScheme.primaryContainer : primaryColor,
@@ -254,6 +254,7 @@ class MyHomePage extends StatelessWidget {
                       ),
                     ),
                   ),
+                  appState.shouldBoardBeFlipped() ? blackPlayerRow : whitePlayerRow, 
                 ]  
               ),
             ),
@@ -285,7 +286,7 @@ class CustomDropdownMenu<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 4),
         child: DropdownMenu<T>(
           initialSelection: getter(), //appState.players.aiDropdownDepth,
           textStyle: TextStyle(color: textColor),
@@ -318,5 +319,17 @@ class CustomDropdownMenu<T> extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget getPlayerIcon(bool isWhitePlayer, bool isAi, Color iconColor) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+    child: Icon(isAi ? 
+        Icons.precision_manufacturing_rounded : 
+        Icons.pan_tool_rounded, 
+      color: iconColor,
+    )
+      
+    );
 }
 
