@@ -138,13 +138,33 @@ class MyHomePage extends StatelessWidget {
           );
           Widget blackIcon = getPlayerIcon(false, appState.players.isBlackAi, primaryColor);
           Widget whiteIcon = getPlayerIcon(true, appState.players.isWhiteAi, primaryColor);
-          Row whitePlayerRow = Row(
-            mainAxisSize: MainAxisSize.max,
-            children: [whitePlayerDropdown, aiDepthDropdownWhite, whiteIcon],
+          Widget whitePlayerRow = Card(
+            color: primaryColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+            child: Padding(
+              padding: const EdgeInsets.all(1.5),
+              child: Card(  
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [whitePlayerDropdown, aiDepthDropdownWhite, whiteIcon],
+                  ),
+              ),
+            ),
           );
-          Row blackPlayerRow = Row(
-            mainAxisSize: MainAxisSize.max,
-            children: [blackPlayerDropdown, aiDepthDropdownBlack, blackIcon],
+          Widget blackPlayerRow = Card(
+            color: primaryColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+            child: Padding(
+              padding: const EdgeInsets.all(1.5),
+              child: Card(  
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [blackPlayerDropdown, aiDepthDropdownBlack, blackIcon],
+                  ),
+              ),
+            ),
           );
           return Theme(
             data: calculatedTheme,
@@ -160,7 +180,7 @@ class MyHomePage extends StatelessWidget {
                     padding: const EdgeInsets.only(top:20.0),
                     child: Row(
                       children: [
-                        OutlinedButton(
+                        ElevatedButton(
                           onPressed: () {
                             appState.printBoard();
                           },
@@ -286,7 +306,7 @@ class CustomDropdownMenu<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 4),
+        padding: const EdgeInsets.all(8),
         child: DropdownMenu<T>(
           initialSelection: getter(), //appState.players.aiDropdownDepth,
           textStyle: TextStyle(color: textColor),
@@ -323,7 +343,7 @@ class CustomDropdownMenu<T> extends StatelessWidget {
 
 Widget getPlayerIcon(bool isWhitePlayer, bool isAi, Color iconColor) {
   return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+    padding: const EdgeInsets.all(8),
     child: Icon(isAi ? 
         Icons.precision_manufacturing_rounded : 
         Icons.pan_tool_rounded, 
