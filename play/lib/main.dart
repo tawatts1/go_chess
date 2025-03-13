@@ -110,6 +110,7 @@ class MyHomePage extends StatelessWidget {
             getter: () {return appState.players.getPlayerName(true);},
             setter: (String val) {appState.setPlayer(val, true);},
             entries: const ["Human", "Ai"],
+            flexInt: 3,
             );
 
           Widget blackPlayerDropdown = CustomDropdownMenu<String>(
@@ -119,6 +120,7 @@ class MyHomePage extends StatelessWidget {
             getter: () {return appState.players.getPlayerName(false);},
             setter: (String val) {appState.setPlayer(val, false);},
             entries: const ["Human", "Ai"],
+            flexInt: 3,
           );
           Widget aiDepthDropdownWhite = CustomDropdownMenu<int>(
             appState: appState, 
@@ -127,6 +129,7 @@ class MyHomePage extends StatelessWidget {
             getter: () {return appState.players.aiDropdownDepthWhite;},
             setter: (int val) {appState.setAiDepth(val, true);},
             entries: aiDropdownList,
+            flexInt: 2,
           );
           Widget aiDepthDropdownBlack = CustomDropdownMenu<int>(
             appState: appState, 
@@ -135,6 +138,7 @@ class MyHomePage extends StatelessWidget {
             getter: () {return appState.players.aiDropdownDepthBlack;},
             setter: (int val) {appState.setAiDepth(val, false);},
             entries: aiDropdownList,
+            flexInt: 2,
           );
           Widget blackIcon = getPlayerIcon(false, appState.players.isBlackAi, primaryColor);
           Widget whiteIcon = getPlayerIcon(true, appState.players.isWhiteAi, primaryColor);
@@ -147,7 +151,7 @@ class MyHomePage extends StatelessWidget {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
                   child: Row(
                     mainAxisSize: MainAxisSize.max,
-                    children: [whitePlayerDropdown, aiDepthDropdownWhite, whiteIcon],
+                    children: [whitePlayerDropdown, aiDepthDropdownWhite, whiteIcon],//, Expanded(flex: 1, child: Spacer())],
                   ),
               ),
             ),
@@ -293,6 +297,7 @@ class CustomDropdownMenu<T> extends StatelessWidget {
     required this.getter,
     required this.setter,
     required this.entries,
+    required this.flexInt,
   });
 
   final MyAppState appState;
@@ -301,10 +306,12 @@ class CustomDropdownMenu<T> extends StatelessWidget {
   final Function getter;
   final Function setter;
   final List<T> entries;
+  final int flexInt;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
+      flex: flexInt,
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: DropdownMenu<T>(
@@ -342,14 +349,17 @@ class CustomDropdownMenu<T> extends StatelessWidget {
 }
 
 Widget getPlayerIcon(bool isWhitePlayer, bool isAi, Color iconColor) {
-  return Padding(
-    padding: const EdgeInsets.all(8),
-    child: Icon(isAi ? 
-        Icons.precision_manufacturing_rounded : 
-        Icons.pan_tool_rounded, 
-      color: iconColor,
-    )
-      
-    );
+  return Expanded(
+    flex: 1,
+    child: Padding(
+      padding: const EdgeInsets.all(8),
+      child: Icon(isAi ? 
+          Icons.precision_manufacturing_rounded : 
+          Icons.pan_tool_rounded, 
+        color: iconColor,
+      )
+        
+      ),
+  );
 }
 
