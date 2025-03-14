@@ -208,7 +208,7 @@ func TestGetBoardAfterMove(t *testing.T) {
 func TestGetGameStatus(t *testing.T) {
 	test := func(b1str, status string, isWhite bool) {
 		b1 := GetBoardFromString(b1str)
-		calcStatus := GetGameStatus(b1, isWhite)
+		_, calcStatus := b1.GetLegalMovesWithStatus(isWhite)
 		if calcStatus != status {
 			t.Errorf("expected (%v) but got (%v)", status, calcStatus)
 		}

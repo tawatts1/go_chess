@@ -98,9 +98,7 @@ func GetMovesFromBoardCoord(b Board, c Coord) []Move {
 }
 
 func (b Board) GetLegalMoves(isWhite bool) []Move {
-
 	var friends, enemies map[Coord]bool
-
 	if isWhite {
 		friends = b.GetWhiteCoordMap()
 		enemies = b.GetBlackCoordMap()
@@ -116,6 +114,36 @@ func (b Board) GetLegalMoves(isWhite bool) []Move {
 		}
 	}
 	return out
+}
+
+func (b Board) GetLegalMovesWithStatus(isWhite bool) ([]Move, string) {
+	var friends, enemies map[Coord]bool
+	if isWhite {
+		friends = b.GetWhiteCoordMap()
+		enemies = b.GetBlackCoordMap()
+	} else {
+		friends = b.GetBlackCoordMap()
+		enemies = b.GetWhiteCoordMap()
+	}
+	out := make([]Move, 0, 2*len(friends))
+	for _, c := range AllCoordinates {
+		_, hasCoord := friends[c]
+		if hasCoord {
+			out = append(out, b.GetMoves(friends, enemies, c, true)...)
+		}
+	}
+	statusString := StatusWhiteMove
+	if !isWhite {
+		statusString = StatusBlackMove
+	}
+	if len(out) == 0 {
+		if b.IsInCheck(friends, enemies, b.GetKingCoord(friends)) {
+			statusString = StatusCheckMate
+		} else {
+			statusString = StatusStaleMate
+		}
+	}
+	return out, statusString
 }
 
 func (b Board) GetMoves(friends, enemies map[Coord]bool, c Coord, filterIllegalMoves bool) []Move {
@@ -466,28 +494,4 @@ func GetBoardAfterMove(b Board, m Move) Board {
 	}
 
 	panic("Not implemented - special move")
-}
-
-func GetGameStatus(b Board, isWhite bool) string {
-	var friends, enemies map[Coord]bool
-	if isWhite {
-		friends = b.GetWhiteCoordMap()
-		enemies = b.GetBlackCoordMap()
-	} else {
-		friends = b.GetBlackCoordMap()
-		enemies = b.GetWhiteCoordMap()
-	}
-	if len(b.GetLegalMoves(isWhite)) == 0 {
-		if b.IsInCheck(friends, enemies, b.GetKingCoord(friends)) {
-			return StatusCheckMate
-		} else {
-			return StatusStaleMate
-		}
-	} else {
-		if isWhite {
-			return StatusWhiteMove
-		} else {
-			return StatusBlackMove
-		}
-	}
 }
