@@ -39,7 +39,7 @@ func getBoardAfterMoveEncoded(boardStr string, y1, x1, y2, x2 int) string {
 	b2 := board.GetBoardAfterMove(b, m)
 	encodedBoard := b2.Encode()
 	isOtherColorWhite := !board.IsWhite(b2.GetPiece(c2))
-	gameStatus := board.GetGameStatus(b2, isOtherColorWhite)
+	_, gameStatus := b2.GetLegalMovesWithStatus(isOtherColorWhite)
 	return fmt.Sprintf("%v,%v", encodedBoard, gameStatus)
 }
 

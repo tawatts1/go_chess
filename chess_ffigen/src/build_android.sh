@@ -1,7 +1,7 @@
 #!/bin/sh
 export ANDROID_OUT=../android/src/main/jniLibs
 export ANDROID_SDK=$HOME/Android/Sdk
-export NDK_BIN=$ANDROID_SDK/ndk/28.0.12674087/toolchains/llvm/prebuilt/linux-x86_64/bin
+export NDK_BIN=$ANDROID_SDK/ndk/28.0.13004108/toolchains/llvm/prebuilt/linux-x86_64/bin
 
 # Compile for x86_64 architecture and place the binary file in the android/src/main/jniLibs/x86_64 folder
 CGO_ENABLED=1 \
