@@ -55,25 +55,30 @@ func GetScoreMutex(b board.Board, isWhite bool, depth int, mtx *MutexScoreManage
 	} else if depth > 0 {
 		maxScore := -utility.Infinity
 		var parent_wcs float64
-		mList := newMoveList(b.GetLegalMoves(isWhite))
-		if depth >= 2 {
-			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFuncName)
-		}
-		var score_i float64
-		for i := range len(mList) {
-			score_i = -GetScore(
-				board.GetBoardAfterMove(b, mList[i].GetMove()),
-				!isWhite,
-				depth-1,
-				-maxScore,
-				scoringFuncName)
-			if score_i > maxScore {
-				maxScore = score_i
-				parent_wcs = mtx.Read()
-				if score_i > parent_wcs && !utility.IsClose(score_i, parent_wcs) {
-					break
+		moves, gameStatus := b.GetLegalMovesWithStatus(isWhite)
+		mList := newMoveList(moves)
+		if len(mList) > 0 {
+			if depth >= 2 {
+				mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFuncName)
+			}
+			var score_i float64
+			for i := range len(mList) {
+				score_i = -GetScore(
+					board.GetBoardAfterMove(b, mList[i].GetMove()),
+					!isWhite,
+					depth-1,
+					-maxScore,
+					scoringFuncName)
+				if score_i > maxScore {
+					maxScore = score_i
+					parent_wcs = mtx.Read()
+					if score_i > parent_wcs && !utility.IsClose(score_i, parent_wcs) {
+						break
+					}
 				}
 			}
+		} else {
+			maxScore = getScoreFromGameStatus(gameStatus, depth)
 		}
 		mtx.Update(maxScore)
 		return maxScore

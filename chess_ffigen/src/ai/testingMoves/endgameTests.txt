@@ -1,0 +1,25 @@
+verbosity,0
+#Test a board where there are a bunch of checkmate in two moves but only one checkmate in one. 
+#The ai should always choose the soonest checkmate. 
+new,simple,r0000QQ0p0PN0000k0p0000000P00000000P00000000000p00000P000R0000K0
+move,2,w,0,6,6,0,,
+move,3,w,0,6,6,0,,
+move,4,w,0,6,6,0,,
+#Test a board where black can force a stalemate. 
+new,simple,0k000000O00000000N000q00O0000000O0000000000000000000O0000K00R000
+move,1,b,2,5,2,1,,
+move,2,b,2,5,2,1,,
+move,3,b,2,5,6,1,,
+#Test a board where black can bait a stalemate, 
+# but make sure white doesn't take the bait. 
+new,simple,0000k000000000RR0000N00000000000000000000000000000000000Kr000000
+move,1,w,7,0,7,1,,
+notmove,2,w,7,0,7,1,,
+verbosity,2
+#Test a board where promoting to a queen would cause a stalemate.
+# so it should instead promote to a rook.  
+new,simple,00000000k0P00000p0000000P0000000000000000000000000000000000000K0
+move,1,w,1,2,0,2,Q,
+move,2,w,1,2,0,2,R,
+#move,3,w,1,2,0,2,R, behaves weird because it doesn't consider the king attacking. 
+move,4,w,1,2,0,2,R,

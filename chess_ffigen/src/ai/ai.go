@@ -12,6 +12,9 @@ import (
 func CalculateScores(b board.Board, isWhite bool, depth int, scoringFunctionName string, useMultiprocessing bool) []board.ScoredMove {
 	mList := newMoveList(b.GetLegalMoves(isWhite))
 	numCores := GetMaxNumCores(len(mList))
+	if len(mList) == 0 {
+		panic("Should not call calculateScores on a board with no possible moves.")
+	}
 	if useMultiprocessing && numCores > 1 && len(mList) > 4 && depth > 2 {
 		if depth >= 2 {
 			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFunctionName)
@@ -93,39 +96,56 @@ func GetScore(b board.Board, isWhite bool, depth int, parent_wcs float64, scorin
 	if depth == 0 {
 		return getScoringFunction(scoringFuncName)(b, isWhite)
 	} else if depth > 0 {
-
 		maxScore := -utility.Infinity
-		mList := newMoveList(b.GetLegalMoves(isWhite))
-		if depth >= 2 {
-			mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFuncName)
-		}
-		var score_i float64
-		for i := range len(mList) {
-			score_i = -GetScore(
-				board.GetBoardAfterMove(b, mList[i].GetMove()),
-				!isWhite,
-				depth-1,
-				-maxScore,
-				scoringFuncName)
-			// Let us say if white does move A, the worst that will happen
-			// after that is white gaining 5 points, so great for them!
-			// Now white is considering move B. After move B, White pretends
-			// to be black, and the value -5 is passed as the parent_wcs.
-			// If after move B, black does move Alpha which can force a loss
-			// of only 2 points, black would be glad since white didn't
-			// do move A which would have been way worse for them.
-			// So white should not consider move B anymore after seeing that
-			// black could get a better deal.
-			// the key metric there is that -2 > -5, or score > parent_wcs
-			if score_i > maxScore {
-				maxScore = score_i
-				if score_i > parent_wcs && !utility.IsClose(score_i, parent_wcs) {
-					break
+		moves, gameStatus := b.GetLegalMovesWithStatus(isWhite)
+		mList := newMoveList(moves)
+		if len(moves) > 0 {
+			if depth >= 2 {
+				mList = ScoreSortMoveList(mList, b, isWhite, depth-2, scoringFuncName)
+			}
+			var score_i float64
+			for i := range len(mList) {
+				score_i = -GetScore(
+					board.GetBoardAfterMove(b, mList[i].GetMove()),
+					!isWhite,
+					depth-1,
+					-maxScore,
+					scoringFuncName)
+				// Let us say if white does move A, the worst that will happen
+				// after that is white gaining 5 points, so great for them!
+				// Now white is considering move B. After move B, White pretends
+				// to be black, and the value -5 is passed as the parent_wcs.
+				// If after move B, black does move Alpha which can force a loss
+				// of only 2 points, black would be glad since white didn't
+				// do move A which would have been way worse for them.
+				// So white should not consider move B anymore after seeing that
+				// black could get a better deal.
+				// the key metric there is that -2 > -5, or score > parent_wcs
+				if score_i > maxScore {
+					maxScore = score_i
+					if score_i > parent_wcs && !utility.IsClose(score_i, parent_wcs) {
+						break
+					}
 				}
 			}
+		} else {
+			maxScore = getScoreFromGameStatus(gameStatus, depth)
 		}
+
 		return maxScore
 	} else {
 		panic("invalid depth")
 	}
+}
+
+func getScoreFromGameStatus(status string, depth int) float64 {
+	var out float64 = 0
+	if status == board.StatusStaleMate {
+		out = 0
+	} else if status == board.StatusCheckMate {
+		out = -(utility.Infinity * .9) - (0.1 * float64(depth))
+	} else {
+		panic(fmt.Sprintf("Invalid status to calculate score from game status: %v", status))
+	}
+	return out
 }

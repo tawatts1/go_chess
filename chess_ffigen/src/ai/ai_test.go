@@ -103,6 +103,13 @@ func TestChooseMove(t *testing.T) {
 	}
 }
 
+func TestChooseMoveEndgame(t *testing.T) {
+	err := testAiMoveFile(testFolder + "endgameTests.txt")
+	if err != "" {
+		t.Error(err)
+	}
+}
+
 func ContainsMove(moveSlice []board.ScoredMove, m1 board.Move) bool {
 	for _, m2 := range moveSlice {
 		if m2.GetMove().Equals(m1) {

@@ -3,7 +3,6 @@ package ai
 import (
 	"github.com/tawatts1/go_chess/board"
 	"github.com/tawatts1/go_chess/utility"
-	"golang.org/x/exp/rand"
 )
 
 // type []board.ScoredMove struct {
@@ -70,22 +69,27 @@ func newMoveList(moves []board.Move) []board.ScoredMove {
 
 // after the scores are calculated, choose the best move. No need for this function to be efficient as it is called only once.
 func GetMaxScoreMove(mList []board.ScoredMove) board.Move {
-	if len(mList) > 0 {
-		maxScore := mList[0].GetScore()
-		for i := 1; i < len(mList); i++ {
-			if mList[i].GetScore() > maxScore {
-				maxScore = mList[i].GetScore()
-			}
-		}
-		bestMoves := make([]board.Move, 0)
-		for i := 0; i < len(mList); i++ {
-			if utility.IsClose(maxScore, mList[i].GetScore()) {
-				bestMoves = append(bestMoves, mList[i].GetMove())
-			}
-		}
-		return bestMoves[rand.Intn(len(bestMoves))]
+	if len(mList) > 0 && isSortedDesc(mList) {
+		return mList[0].GetMove()
+		// maxScore := mList[0].GetScore()
+		// for i := 1; i < len(mList); i++ {
+		// 	if mList[i].GetScore() > maxScore {
+		// 		maxScore = mList[i].GetScore()
+		// 	}
+		// }
+		// bestMoves := make([]board.Move, 0)
+		// for i := 0; i < len(mList); i++ {
+		// 	if utility.IsClose(maxScore, mList[i].GetScore()) {
+		// 		bestMoves = append(bestMoves, mList[i].GetMove())
+		// 	}
+		// }
+		// return bestMoves[rand.Intn(len(bestMoves))]
 	} else {
-		panic("No moves")
+		if len(mList) == 0 {
+			panic("No moves to choose from.")
+		} else {
+			panic("Move list is not sorted.")
+		}
 	}
 }
 
