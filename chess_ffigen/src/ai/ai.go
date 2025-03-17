@@ -2,6 +2,7 @@ package ai
 
 import (
 	"fmt"
+	"math/rand"
 	"sync"
 
 	"github.com/tawatts1/go_chess/board"
@@ -56,7 +57,17 @@ func CalculateScores(b board.Board, isWhite bool, depth int, scoringFunctionName
 		return mList
 	}
 }
-func ChooseMove(b board.Board, isWhite bool, depth int, scoringFunctionName string, useMultiprocessing bool) board.Move {
+func ChooseMove(b board.Board, isWhite bool, depth int, scoringFunctionName string, useMultiprocessing bool, shuffledCoords bool) board.Move {
+	if shuffledCoords {
+		//before chosing the move, randomize the coords so that the iterations do not go in the same order every time.
+		rand.Shuffle(len(board.AllCoordinates), func(i, j int) {
+			board.AllCoordinates[i], board.AllCoordinates[j] = board.AllCoordinates[j], board.AllCoordinates[i]
+		})
+	} else {
+		// should only be used for testing.
+		board.AllCoordinates = board.GetAllCoordinates()
+	}
+
 	return GetMaxScoreMove(CalculateScores(b, isWhite, depth, scoringFunctionName, useMultiprocessing))
 }
 

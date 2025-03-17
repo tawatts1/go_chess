@@ -15,13 +15,15 @@ var TopRight = Coord{y: 0, x: BoardWidth - 1}
 var WhiteKingHome = Coord{y: BoardHeight - 1, x: 4}
 var BlackKingHome = Coord{y: 0, x: 4}
 
-var AllCoordinates [BoardHeight * BoardWidth]Coord = [BoardHeight * BoardWidth]Coord(getAllCoordinates())
+var AllCoordinates [BoardHeight * BoardWidth]Coord = [BoardHeight * BoardWidth]Coord(GetAllCoordinates())
 
-func getAllCoordinates() []Coord {
-	out := make([]Coord, 0, BoardHeight*BoardWidth)
+func GetAllCoordinates() [BoardHeight * BoardWidth]Coord {
+	var out [BoardHeight * BoardWidth]Coord
+	var counter int = 0
 	for i := range BoardHeight {
 		for j := range BoardWidth {
-			out = append(out, Coord{y: i, x: j})
+			out[counter] = Coord{y: i, x: j}
+			counter++
 		}
 	}
 	return out

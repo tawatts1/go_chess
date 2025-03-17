@@ -1,0 +1,5 @@
+verbosity,2
+#Test starting board first moves. 
+new,simple,onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO
+move,1,w,6,0,5,0,,
+move,1,b,0,1,2,0,,

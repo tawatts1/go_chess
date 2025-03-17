@@ -15,7 +15,6 @@ move,3,b,2,5,6,1,,
 new,simple,0000k000000000RR0000N00000000000000000000000000000000000Kr000000
 move,1,w,7,0,7,1,,
 notmove,2,w,7,0,7,1,,
-verbosity,2
 #Test a board where promoting to a queen would cause a stalemate.
 # so it should instead promote to a rook.  
 new,simple,00000000k0P00000p0000000P0000000000000000000000000000000000000K0
