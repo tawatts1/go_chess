@@ -60,6 +60,7 @@ class Square extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
+    String keyString = "$c,${sq.hashCode}";
     Size screenSize = MediaQuery.of(context).size;
     double screenWidth = screenSize.width;
     double squareW = (screenWidth-20)/8;
@@ -76,27 +77,29 @@ class Square extends StatelessWidget {
     }
     if (iconLoc=='') {
       return SizedBox(
-          width: squareW,
-          height: squareW,
-          child: ElevatedButton(
-            style:style,
-            onPressed: () {
-              appState.humanSelectButton(c);
-            }, 
-            child: const Text('')
-          ),
-        );
-    }
-    return SizedBox(
+        key: ValueKey(keyString),
         width: squareW,
         height: squareW,
-        child: IconButton(
+        child: ElevatedButton(
           style:style,
-          icon: Image.asset(iconLoc),
           onPressed: () {
             appState.humanSelectButton(c);
-          },  
-        )
+          }, 
+          child: const Text('')
+        ),
       );
+    }
+    return SizedBox(
+      key: ValueKey(keyString),
+      width: squareW,
+      height: squareW,
+      child: IconButton(
+        style:style,
+        icon: Image.asset(iconLoc),
+        onPressed: () {
+          appState.humanSelectButton(c);
+        },  
+      )
+    );
   }
 }
