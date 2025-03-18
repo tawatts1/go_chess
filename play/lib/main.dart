@@ -143,6 +143,7 @@ class MyHomePage extends StatelessWidget {
           Widget blackIcon = getPlayerIcon(false, appState.players.isBlackAi, primaryColor);
           Widget whiteIcon = getPlayerIcon(true, appState.players.isWhiteAi, primaryColor);
           Widget whitePlayerRow = Card(
+            key: const ValueKey("white row"),
             color: primaryColor,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
             child: Padding(
@@ -157,6 +158,7 @@ class MyHomePage extends StatelessWidget {
             ),
           );
           Widget blackPlayerRow = Card(
+            key: const ValueKey("black row"),
             color: primaryColor,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
             child: Padding(
