@@ -175,113 +175,115 @@ class MyHomePage extends StatelessWidget {
           return Theme(
             data: calculatedTheme,
             child: Scaffold(
-              body: Column( 
-                //mainAxisAlignment: MainAxisAlignment.center,  
-                //mainAxisSize: MainAxisSize.min,
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  if (developerMode) Padding(
-                    padding: const EdgeInsets.only(top:20.0),
-                    child: Row(
+              body: SafeArea(
+                child: Column( 
+                  //mainAxisAlignment: MainAxisAlignment.center,  
+                  //mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    if (developerMode) Padding(
+                      padding: const EdgeInsets.only(top:20.0),
+                      child: Row(
+                        children: [
+                          ElevatedButton(
+                            onPressed: () {
+                              appState.printBoard();
+                            },
+                            style: OutlinedButton.styleFrom(side: BorderSide(color: primaryColor, width: buttonBorderWidth),),
+                            child: Text('Print Board',
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              appState.printSavedData();
+                            },
+                            style: OutlinedButton.styleFrom(side: BorderSide(color: primaryColor, width: buttonBorderWidth),),
+                            child: const Text('Print Saved Data'),
+                          ),
+                        ]
+                      ),
+                    ),
+                    Row(
                       children: [
                         ElevatedButton(
                           onPressed: () {
-                            appState.printBoard();
+                            appState.resetGame();
                           },
                           style: OutlinedButton.styleFrom(side: BorderSide(color: primaryColor, width: buttonBorderWidth),),
-                          child: Text('Print Board',
-                            style: TextStyle(color: primaryColor),
+                          child: const Text('Reset Game'),
+                        ),
+                        if (appState.undoButtonModel.isVisible) 
+                        OutlinedButton(
+                          onPressed: appState.undoButtonModel.isEnabled ? () => appState.undo() : null,
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: appState.undoButtonModel.isEnabled ? primaryColor : secondaryColor, 
+                            width: appState.undoButtonModel.isEnabled ? buttonBorderWidth : buttonBorderWidth/2),
+                            backgroundColor: appState.undoButtonModel.isEnabled ? calculatedTheme.colorScheme.onPrimary : calculatedTheme.colorScheme.onSecondary
+                            ),
+                          child: 
+                            Icon(Icons.undo, 
+                              color: appState.undoButtonModel.isEnabled ? primaryColor : secondaryColor,
+                            ),
+                        ),
+                        if (appState.playButtonModel.isVisible)
+                        IconButton(
+                          icon: Icon(Icons.play_arrow,
+                          color: appState.playButtonModel.isEnabled ? primaryColor : secondaryColor,
                           ),
+                          onPressed: appState.playButtonModel.isEnabled ? () => appState.playPause() : null
                         ),
-                        ElevatedButton(
-                          onPressed: () {
-                            appState.printSavedData();
-                          },
-                          style: OutlinedButton.styleFrom(side: BorderSide(color: primaryColor, width: buttonBorderWidth),),
-                          child: const Text('Print Saved Data'),
+                        if (appState.pauseButtonModel.isVisible)
+                        IconButton(
+                          icon: Icon(Icons.pause,
+                          color: appState.pauseButtonModel.isEnabled ? primaryColor : secondaryColor,
+                          ),
+                          onPressed: appState.pauseButtonModel.isEnabled ? () => appState.playPause() : null
                         ),
-                      ]
+                        Switch(
+                            value: appState.theme.isDarkTheme,
+                            onChanged: (bool val) {appState.setTheme(val);}
+                          )
+                      ],
                     ),
-                  ),
-                  Row(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          appState.resetGame();
-                        },
-                        style: OutlinedButton.styleFrom(side: BorderSide(color: primaryColor, width: buttonBorderWidth),),
-                        child: const Text('Reset Game'),
-                      ),
-                      if (appState.undoButtonModel.isVisible) 
-                      OutlinedButton(
-                        onPressed: appState.undoButtonModel.isEnabled ? () => appState.undo() : null,
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: appState.undoButtonModel.isEnabled ? primaryColor : secondaryColor, 
-                          width: appState.undoButtonModel.isEnabled ? buttonBorderWidth : buttonBorderWidth/2),
-                          backgroundColor: appState.undoButtonModel.isEnabled ? calculatedTheme.colorScheme.onPrimary : calculatedTheme.colorScheme.onSecondary
-                          ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(appState.board.gameStatus, style: TextStyle(fontSize:24, fontWeight: FontWeight.bold, color: primaryColor)),
+                        ),
+                      ],
+                    ),
+                    appState.shouldBoardBeFlipped() ? whitePlayerRow : blackPlayerRow,
+                    Card(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+                      color: appState.theme.isDarkTheme ? calculatedTheme.colorScheme.primaryContainer : primaryColor,
+                      child: Padding(
+                        padding: const EdgeInsets.all(2), 
                         child: 
-                          Icon(Icons.undo, 
-                            color: appState.undoButtonModel.isEnabled ? primaryColor : secondaryColor,
-                          ),
-                      ),
-                      if (appState.playButtonModel.isVisible)
-                      IconButton(
-                        icon: Icon(Icons.play_arrow,
-                        color: appState.playButtonModel.isEnabled ? primaryColor : secondaryColor,
-                        ),
-                        onPressed: appState.playButtonModel.isEnabled ? () => appState.playPause() : null
-                      ),
-                      if (appState.pauseButtonModel.isVisible)
-                      IconButton(
-                        icon: Icon(Icons.pause,
-                        color: appState.pauseButtonModel.isEnabled ? primaryColor : secondaryColor,
-                        ),
-                        onPressed: appState.pauseButtonModel.isEnabled ? () => appState.playPause() : null
-                      ),
-                      Switch(
-                          value: appState.theme.isDarkTheme,
-                          onChanged: (bool val) {appState.setTheme(val);}
-                        )
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(appState.board.gameStatus, style: TextStyle(fontSize:24, fontWeight: FontWeight.bold, color: primaryColor)),
-                      ),
-                    ],
-                  ),
-                  appState.shouldBoardBeFlipped() ? whitePlayerRow : blackPlayerRow,
-                  Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
-                    color: appState.theme.isDarkTheme ? calculatedTheme.colorScheme.primaryContainer : primaryColor,
-                    child: Padding(
-                      padding: const EdgeInsets.all(2), 
-                      child: 
-                      Card(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
-                        color: appState.theme.isDarkTheme ? primaryColor : calculatedTheme.colorScheme.primaryContainer,
-                        child: Padding(
-                          padding: const EdgeInsets.all(3),
-                          child: GridView.count(
-                                shrinkWrap: true,
-                                crossAxisCount: BoardWidth,
-                                padding: EdgeInsets.zero,
-                                children: List.from(
-                                  appState.shouldBoardBeFlipped() ? appState.board.boardView.reversed : appState.board.boardView
-                                      ),
+                        Card(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+                          color: appState.theme.isDarkTheme ? primaryColor : calculatedTheme.colorScheme.primaryContainer,
+                          child: Padding(
+                            padding: const EdgeInsets.all(3),
+                            child: GridView.count(
+                                  shrinkWrap: true,
+                                  crossAxisCount: BoardWidth,
+                                  padding: EdgeInsets.zero,
+                                  children: List.from(
+                                    appState.shouldBoardBeFlipped() ? appState.board.boardView.reversed : appState.board.boardView
+                                        ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  appState.shouldBoardBeFlipped() ? blackPlayerRow : whitePlayerRow, 
-                ]  
+                    appState.shouldBoardBeFlipped() ? blackPlayerRow : whitePlayerRow, 
+                  ]  
+                ),
               ),
             ),
           );
