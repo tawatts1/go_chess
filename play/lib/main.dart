@@ -7,7 +7,7 @@ import 'coord.dart';
 import 'square.dart';
 import 'game_state.dart';
 
-
+bool developerMode = false;
 
 void main() {
   runApp(const MyApp());
@@ -182,7 +182,7 @@ class MyHomePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Padding(
+                  if (developerMode) Padding(
                     padding: const EdgeInsets.only(top:20.0),
                     child: Row(
                       children: [
@@ -202,10 +202,6 @@ class MyHomePage extends StatelessWidget {
                           style: OutlinedButton.styleFrom(side: BorderSide(color: primaryColor, width: buttonBorderWidth),),
                           child: const Text('Print Saved Data'),
                         ),
-                        Switch(
-                          value: appState.theme.isDarkTheme,
-                          onChanged: (bool val) {appState.setTheme(val);}
-                        )
                       ]
                     ),
                   ),
@@ -245,6 +241,10 @@ class MyHomePage extends StatelessWidget {
                         ),
                         onPressed: appState.pauseButtonModel.isEnabled ? () => appState.playPause() : null
                       ),
+                      Switch(
+                          value: appState.theme.isDarkTheme,
+                          onChanged: (bool val) {appState.setTheme(val);}
+                        )
                     ],
                   ),
                   Row(
