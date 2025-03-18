@@ -45,6 +45,9 @@ class MyAppState extends ChangeNotifier {
     if (players.isWhiteAi && !players.isBlackAi){
       notifyAi();
     }
+    if (players.isBothAi()) {
+      setPlayPauseButtonState();
+    }
   }
   
   void clearSelection() {
@@ -87,7 +90,8 @@ class MyAppState extends ChangeNotifier {
         List<String> resultList = boardResult.split(',');
         if (resultList.length == 2) {
           String newBoardStr = resultList[0];
-          board.gameStatus = resultList[1];
+          setGameStatus(resultList[1]);
+          
           board.boardModel = parseBoardString(newBoardStr);
           board.isWhiteTurn = !board.isWhiteTurn;
           isNotifyAi = true;
@@ -174,7 +178,11 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
   void setPlayPauseButtonState(){
-    if (players.isBothAi()) {
+    if (players.isBothAi() && board.isGameOver()) {
+      playButtonModel.isVisible = false;
+      pauseButtonModel.isVisible = false;
+      players.playPauseStatus = PlayStatus.undefined;
+    } else if (players.isBothAi()) {
       if (players.playPauseStatus == PlayStatus.play){
         playButtonModel.isVisible = false;
         pauseButtonModel.isVisible = true;
@@ -302,6 +310,12 @@ class MyAppState extends ChangeNotifier {
       notifyListeners();
     } else {
       log("Error: changing theme to the same theme");
+    }
+  }
+  void setGameStatus(String newStatus) {
+    if (board.gameStatus != newStatus) {
+      board.gameStatus = newStatus;
+      setPlayPauseButtonState();
     }
   }
 }
