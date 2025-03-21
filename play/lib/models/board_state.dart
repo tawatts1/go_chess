@@ -45,8 +45,12 @@ class BoardState {
       }
     }
   }
-  void resetGame() {
-    boardModel = parseBoardString(startingBoard);
+  void resetGame(bool useTestStartBoard) {
+    if (useTestStartBoard) {
+      boardModel = parseBoardString(testingBoard);
+    } else {
+      boardModel = parseBoardString(startingBoard);
+    }
     indicatedCoords = '';
     log("Reseting game: ${getBoardString()}");
     gameStatus = statusWhiteMove;

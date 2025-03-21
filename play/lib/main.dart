@@ -7,7 +7,8 @@ import 'coord.dart';
 import 'square.dart';
 import 'game_state.dart';
 
-bool developerMode = false;
+bool developerMode = true;
+bool resetToTestBoard = true;
 
 void main() {
   runApp(const MyApp());
@@ -210,7 +211,7 @@ class MyHomePage extends StatelessWidget {
                       children: [
                         ElevatedButton(
                           onPressed: () {
-                            appState.resetGame();
+                            appState.resetGame(resetToTestBoard);
                           },
                           style: OutlinedButton.styleFrom(side: BorderSide(color: primaryColor, width: buttonBorderWidth),),
                           child: const Text('Reset Game'),

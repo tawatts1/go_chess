@@ -35,10 +35,10 @@ class MyAppState extends ChangeNotifier {
   void loadThemeStateFromString(String stateStr) {
     theme.loadFromString(stateStr);
   }
-  Future<void> resetGame() async {
+  Future<void> resetGame(bool useTestBoard) async {
     await savedData.clearBoardStates();
     moveDestinations = '';
-    board.resetGame();
+    board.resetGame(useTestBoard);
     setUndoState();
     clearSelection();
     notifyListeners();
