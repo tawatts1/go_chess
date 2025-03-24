@@ -1,7 +1,6 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:play/models/pawn_promotion_dialog.dart';
 import 'constants.dart';
 import 'coord.dart';
 import 'ffi_funcs.dart';

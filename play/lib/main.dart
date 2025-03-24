@@ -57,13 +57,13 @@ class MyHomePage extends StatelessWidget {
     if (appState.showPawnPromotion) {
       
       SchedulerBinding.instance.addPostFrameCallback((_) {
-        List<Widget> actionsList = [];
+        List<Widget> pieceButtons = [];
         for (String p in promotablePiecesList) {
           if ((appState.board.isWhiteTurn && (whiteMap[p] ?? false)) || 
               (!appState.board.isWhiteTurn && !(whiteMap[p] ?? true))){
-            actionsList.add(
-              TextButton(
-                child: Text('images/${imageMap[p]}'),
+            pieceButtons.add(
+              IconButton(
+                icon: Image.asset('images/${imageMap[p]}'),
                 onPressed: () {
                   appState.continueWithPawnPromotion(p);
                   Navigator.of(context).pop();
@@ -79,8 +79,31 @@ class MyHomePage extends StatelessWidget {
             appState.showPawnPromotion = false;
             return AlertDialog(
               title: const Text("Pawn Promotion"),
-              content: const Text("Your pawn can be promoted to Queen, Rook, Bishop or Knight."),
-              actions: actionsList,
+              // content: ConstrainedBox(
+              //   constraints: BoxConstraints(
+              //     minWidth: 10,
+              //     minHeight: 10,
+              //     maxWidth: screenWidth, 
+              //     maxHeight: screenHeight
+              //   ),
+              content: SizedBox(
+                width: screenWidth,
+                height: screenWidth * 0.8,
+              
+                child: Column(
+                  //mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text("Your pawn can be promoted to Knight, Bishop, Rook, or Queen."),
+                    GridView.count(
+                      shrinkWrap: true,
+                      crossAxisCount: 2,
+                      //padding: EdgeInsets.zero,
+                      children: pieceButtons,
+                    ),
+                  ],
+                ),
+              )
+              //actions: pieceButtons,
             );
           }
         );
