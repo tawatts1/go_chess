@@ -20,7 +20,7 @@ Future<Pointer<Char>> getAiChosenMove(Pointer<Char> boardStr, int isWhite, Point
 }
 //=> _bindings.GetAiChosenMove(boardStr, isWhite, aiName, N);
 
-Pointer<Char> getBoardAfterMove(Pointer<Char> boardStr, int y1, int x1, int y2, int x2) => _bindings.GetBoardAfterMove(boardStr, y1, x1, y2, x2);
+Pointer<Char> getBoardAfterMove(Pointer<Char> boardStr, int y1, int x1, int y2, int x2, Pointer<Char> specialChar) => _bindings.GetBoardAfterMove(boardStr, y1, x1, y2, x2, specialChar);
 
 Pointer<Char> getNextMoves(Pointer<Char> boardStr, int y, int x) => _bindings.GetNextMoves(boardStr, y, x);
 

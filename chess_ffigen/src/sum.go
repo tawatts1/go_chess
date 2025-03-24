@@ -26,16 +26,16 @@ func getAiChosenMove(boardStr string, isWhite bool, aiName string, N int) string
 }
 
 //export GetBoardAfterMove
-func GetBoardAfterMove(boardStr *C.char, y1, x1, y2, x2 C.int) *C.char {
-	return C.CString(getBoardAfterMoveEncoded(C.GoString(boardStr), int(y1), int(x1), int(y2), int(x2)))
+func GetBoardAfterMove(boardStr *C.char, y1, x1, y2, x2 C.int, special *C.char) *C.char {
+	return C.CString(getBoardAfterMoveEncoded(C.GoString(boardStr), int(y1), int(x1), int(y2), int(x2), C.GoString(special)))
 }
 
-func getBoardAfterMoveEncoded(boardStr string, y1, x1, y2, x2 int) string {
+func getBoardAfterMoveEncoded(boardStr string, y1, x1, y2, x2 int, special string) string {
 	b := board.GetBoardFromString(boardStr)
 	c1 := board.NewCoord(y1, x1)
 	c2 := board.NewCoord(y2, x2)
 	moves := board.GetMovesFromBoardCoord(b, c1)
-	m := board.GetFirstEqualMove(moves, c1, c2)
+	m := board.GetMatchingMove(moves, c1, c2, special)
 	b2 := board.GetBoardAfterMove(b, m)
 	encodedBoard := b2.Encode()
 	isOtherColorWhite := !board.IsWhite(b2.GetPiece(c2))
@@ -62,7 +62,7 @@ func getMoveDestinationsEncoded(boardStr string, y, x int) string {
 	moves := b.GetMoves(friends, enemies, c, true)
 	out := ""
 	for _, m := range moves {
-		out += m.EncodeB() + "|"
+		out += m.EncodeBSpecial() + "|"
 	}
 	return out
 }

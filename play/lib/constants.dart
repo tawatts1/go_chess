@@ -41,6 +41,17 @@ const piecesList = [
   'A'
 ];
 
+const promotablePiecesList = [
+  'n',
+  'b',
+  'r',
+  'q',
+  'N',
+  'B',
+  'R',
+  'Q',
+];
+
 const BoardHeight = 8;
 const BoardWidth = 8;
 

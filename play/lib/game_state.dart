@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:play/models/pawn_promotion_dialog.dart';
 import 'constants.dart';
 import 'coord.dart';
 import 'ffi_funcs.dart';
@@ -22,6 +23,10 @@ class MyAppState extends ChangeNotifier {
   BoardState board = BoardState();
   ThemeState theme = ThemeState();
   PreferencesManager savedData = PreferencesManager();
+  bool showPawnPromotion = false;
+  String selectedPromotionPiece = '';
+  Coord? selectedPromotionCoord;
+
   @override 
   String toString() {
     return "$board";
@@ -61,16 +66,15 @@ class MyAppState extends ChangeNotifier {
     } else if ((board.isWhiteTurn && players.isWhiteAi) || (!board.isWhiteTurn && players.isBlackAi)){
       log('It is an AIs turn');
     } else {
-      selectButton(c);
+      selectButton(c, true);
     }
   } 
-  void selectButton(Coord c) async {
+  void selectButton(Coord c, bool isFromHuman) async {
     String piece = board.boardModel[c.i][c.j];
     bool isNotifyAi = false;
     String boardString = board.getBoardString();
     Future<void>? dataSaved;
-    if (selectedCoord == null) {
-      // no selection has been made
+    if (selectedCoord == null) { // no move selection has been made
       if (piece == Space) {
         log('try clicking on a piece!');
       } else if ((board.isWhiteTurn && (whiteMap[piece] ?? false)) ||
@@ -82,32 +86,58 @@ class MyAppState extends ChangeNotifier {
       } else {
         log('not that colors turn');
       }
-    } else if (selectedCoord != null) {
-      // a move has already been selected. 
-      if (moveDestinations.contains(c.toString())){
-        log('legal move');
-        String boardResult = getBoardAfterMove(boardString, selectedCoord!, c);
-        List<String> resultList = boardResult.split(',');
-        if (resultList.length == 2) {
-          String newBoardStr = resultList[0];
-          setGameStatus(resultList[1]);
-          
-          board.boardModel = parseBoardString(newBoardStr);
-          board.isWhiteTurn = !board.isWhiteTurn;
-          isNotifyAi = true;
-          board.indicatedCoords = '$selectedCoord|$c';
-          if (boardString != startingBoard){
-            // do not save the starting board. The user can reset the board if they want.
-            dataSaved = savedData.addBoardSnapshot(toString());
+    } else if (selectedCoord != null) { // a move has already been selected. 
+      // count how many times c is in the destinations.
+      var numAppearancesInMoves = c.toString().allMatches(moveDestinations).length;
+      if (numAppearancesInMoves > 1) {
+        // Need to have the user choose which piece. This should only happen for 
+        // pawn promotion. 
+        log('pawn promotion detected');
+        if (selectedPromotionPiece != ''){// The user has already chosen the promotion piece
+          //showPawnPromotion = false; // make the pawn promotion alert dissapear
+          String promotionMove = '${c.toString()},$selectedPromotionPiece';
+          if (moveDestinations.contains(promotionMove)){
+            log("Valid promotion move. ");
+            executeMove(boardString, selectedCoord!, c, selectedPromotionPiece);
+            clearSelection();
+            selectedPromotionCoord = null;
+            selectedPromotionPiece = "";
+          } else {
+            log("Error: Invalid promotion move. ");
           }
-        } 
-      } else {
+        } else {// The user still has to choose a piece
+          showPawnPromotion = true;
+          selectedPromotionCoord = c;
+        }
+        
+      } else if (numAppearancesInMoves == 1){
+        log('legal move');
+        dataSaved = executeMove(boardString, selectedCoord!, c, "");
+        clearSelection();
+        // String boardResult = getBoardAfterMove(boardString, selectedCoord!, c, "");
+        // List<String> resultList = boardResult.split(',');
+        // if (resultList.length == 2) {
+        //   String newBoardStr = resultList[0];
+        //   setGameStatus(resultList[1]);
+          
+        //   board.boardModel = parseBoardString(newBoardStr);
+        //   board.isWhiteTurn = !board.isWhiteTurn;
+        //   isNotifyAi = true;
+        //   board.indicatedCoords = '$selectedCoord|$c';
+        //   if (boardString != startingBoard){
+        //     // do not save the starting board. The user can reset the board if they want.
+        //     dataSaved = savedData.addBoardSnapshot(toString());
+        //   }
+        // } 
+      } else if (numAppearancesInMoves == 0) {
         log('not one of the legal moves. Clearing selection');
+        clearSelection();
       }
-      clearSelection();
+      
     }
     if (dataSaved != null) {
       await dataSaved;
+      isNotifyAi = true;
     }
     setUndoState(); 
     notifyListeners();
@@ -115,6 +145,27 @@ class MyAppState extends ChangeNotifier {
       notifyAi();
     }
   }
+  //Handle changing the pieces, updating which coords are indicated, 
+  // return a future indicating when the data is done being saved. 
+  Future<void>? executeMove(String boardStr, Coord c1, Coord c2, String specialChar) {
+    String boardResult = getBoardAfterMove(boardStr, c1, c2, specialChar);
+    List<String> resultList = boardResult.split(',');
+    Future<void>? dataSaved;
+    if (resultList.length == 2) {
+      String newBoardStr = resultList[0];
+      setGameStatus(resultList[1]);
+      
+      board.boardModel = parseBoardString(newBoardStr);
+      board.isWhiteTurn = !board.isWhiteTurn;
+      board.indicatedCoords = '$c1|$c2';
+      if (boardStr != startingBoard){
+        // do not save the starting board. The user can reset the board if they want.
+        dataSaved = savedData.addBoardSnapshot(toString());
+      }
+    }
+    return dataSaved;
+  }
+
   Future<void> notifyAi() async {
     if (!board.isGameOver() && 
         ((board.isWhiteTurn && players.isWhiteAi) || (!board.isWhiteTurn && players.isBlackAi)) &&
@@ -125,6 +176,13 @@ class MyAppState extends ChangeNotifier {
       parseAndDoAiMove(aiMove);
     }
   }
+  void continueWithPawnPromotion(String promoteTo) {
+    if (promoteTo != '' && selectedPromotionCoord != null){
+      selectedPromotionPiece = promoteTo;
+      selectButton(selectedPromotionCoord!, true);
+    }
+    
+  }
   void parseAndDoAiMove(String moveStr) async {
     List<String> indexList = moveStr.split(',');
     if (indexList.length == 4) {
@@ -133,9 +191,9 @@ class MyAppState extends ChangeNotifier {
         int j1 = int.parse(indexList[1]);
         int i2 = int.parse(indexList[2]);
         int j2 = int.parse(indexList[3]);
-        selectButton(Coord(i1, j1));
+        selectButton(Coord(i1, j1), false);
         Coord click2 = await Future.delayed(const Duration(milliseconds: 700),  () => Coord(i2,j2));
-        selectButton(click2);
+        selectButton(click2, false);
       } catch(ex) {
         log("failed to parse ai move");
       }

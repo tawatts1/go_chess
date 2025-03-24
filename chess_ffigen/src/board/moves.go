@@ -39,11 +39,19 @@ func (m Move) String() string {
 }
 
 func (m Move) Encode() string {
-	return fmt.Sprintf("%v,%v,%v,%v", m.a.y, m.a.x, m.b.y, m.b.x)
+	if m.special == 0 {
+		return fmt.Sprintf("%v,%v,%v,%v", m.a.y, m.a.x, m.b.y, m.b.x)
+	}
+	return fmt.Sprintf("%v,%v,%v,%v,%c", m.a.y, m.a.x, m.b.y, m.b.x, m.special)
 }
 
-func (m Move) EncodeB() string {
-	return m.b.Encode()
+// Encode the destination and special character for the move, so that pawn
+// promotion can be taken into account in the app.
+func (m Move) EncodeBSpecial() string {
+	if m.special == 0 {
+		return fmt.Sprintf("%v,%v,", m.b.y, m.b.x)
+	}
+	return fmt.Sprintf("%v,%v,%c", m.b.y, m.b.x, m.special)
 }
 
 type ScoredMove struct {
@@ -76,9 +84,13 @@ func (sm ScoredMove) GetMove() Move {
 	return sm.move
 }
 
-func GetFirstEqualMove(moves []Move, c1, c2 Coord) Move {
+func GetMatchingMove(moves []Move, c1, c2 Coord, special string) Move {
+	specialSlice := []rune(special)
 	for _, m := range moves {
-		if m.a.Equals(c1) && m.b.Equals(c2) {
+		if m.a.Equals(c1) &&
+			m.b.Equals(c2) &&
+			(len(specialSlice) == 0 ||
+				(len(specialSlice) == 1 && specialSlice[0] == m.special)) {
 			return m
 		}
 	}

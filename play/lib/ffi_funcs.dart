@@ -19,12 +19,14 @@ Future<String> getAiChosenMove(String boardStr, bool isWhite, String aiName, int
   return moveString;
 }
 
-String getBoardAfterMove(String boardStr, Coord c1, Coord c2){
+String getBoardAfterMove(String boardStr, Coord c1, Coord c2, String specialChar){
   final ffi.Pointer<ffi.Char> cBoardStr1 = boardStr.toNativeUtf8().cast<ffi.Char>();
-  final ffi.Pointer<Utf8> boardPtr = go_chess.getBoardAfterMove(cBoardStr1, c1.i, c1.j, c2.i, c2.j).cast<Utf8>();
+  final ffi.Pointer<ffi.Char> cSpecialChar = specialChar.toNativeUtf8().cast<ffi.Char>();
+  final ffi.Pointer<Utf8> boardPtr = go_chess.getBoardAfterMove(cBoardStr1, c1.i, c1.j, c2.i, c2.j, cSpecialChar).cast<Utf8>();
   final newBoardStr = boardPtr.toDartString();
   calloc.free(boardPtr);
   calloc.free(cBoardStr1);
+  calloc.free(cSpecialChar);
   return newBoardStr;
 }
 

@@ -54,6 +54,7 @@ class NativeLibrary {
     int x1,
     int y2,
     int x2,
+    ffi.Pointer<ffi.Char> special,
   ) {
     return _GetBoardAfterMove(
       boardStr,
@@ -61,16 +62,22 @@ class NativeLibrary {
       x1,
       y2,
       x2,
+      special,
     );
   }
 
   late final _GetBoardAfterMovePtr = _lookup<
       ffi.NativeFunction<
-          ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>, ffi.Int,
-              ffi.Int, ffi.Int, ffi.Int)>>('GetBoardAfterMove');
+          ffi.Pointer<ffi.Char> Function(
+              ffi.Pointer<ffi.Char>,
+              ffi.Int,
+              ffi.Int,
+              ffi.Int,
+              ffi.Int,
+              ffi.Pointer<ffi.Char>)>>('GetBoardAfterMove');
   late final _GetBoardAfterMove = _GetBoardAfterMovePtr.asFunction<
       ffi.Pointer<ffi.Char> Function(
-          ffi.Pointer<ffi.Char>, int, int, int, int)>();
+          ffi.Pointer<ffi.Char>, int, int, int, int, ffi.Pointer<ffi.Char>)>();
 
   ffi.Pointer<ffi.Char> GetNextMoves(
     ffi.Pointer<ffi.Char> boardStr,

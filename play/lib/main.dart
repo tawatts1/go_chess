@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'constants.dart';
 import 'coord.dart';
@@ -9,6 +10,7 @@ import 'game_state.dart';
 
 bool developerMode = true;
 bool resetToTestBoard = true;
+bool neverFlipBoard = true;
 
 void main() {
   runApp(const MyApp());
@@ -51,6 +53,40 @@ class MyHomePage extends StatelessWidget {
     var screenSize = MediaQuery.of(context).size;
     double screenWidth = screenSize.width;
     double screenHeight = screenSize.height;
+
+    if (appState.showPawnPromotion) {
+      
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        List<Widget> actionsList = [];
+        for (String p in promotablePiecesList) {
+          if ((appState.board.isWhiteTurn && (whiteMap[p] ?? false)) || 
+              (!appState.board.isWhiteTurn && !(whiteMap[p] ?? true))){
+            actionsList.add(
+              TextButton(
+                child: Text('images/${imageMap[p]}'),
+                onPressed: () {
+                  appState.continueWithPawnPromotion(p);
+                  Navigator.of(context).pop();
+                }
+              ), 
+            );
+          }
+        }
+        showDialog(
+          context: context, 
+          builder: (BuildContext context) {
+            var appState = context.watch<MyAppState>();
+            appState.showPawnPromotion = false;
+            return AlertDialog(
+              title: const Text("Pawn Promotion"),
+              content: const Text("Your pawn can be promoted to Queen, Rook, Bishop or Knight."),
+              actions: actionsList,
+            );
+          }
+        );
+        appState.showPawnPromotion = false;
+      });
+    }
 
     return FutureBuilder<List<String>?>(
         future: loadedStartupInfo,
@@ -258,7 +294,7 @@ class MyHomePage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    appState.shouldBoardBeFlipped() ? whitePlayerRow : blackPlayerRow,
+                    appState.shouldBoardBeFlipped() && !neverFlipBoard ? whitePlayerRow : blackPlayerRow,
                     Card(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
                       color: appState.theme.isDarkTheme ? calculatedTheme.colorScheme.primaryContainer : primaryColor,
@@ -275,14 +311,15 @@ class MyHomePage extends StatelessWidget {
                                   crossAxisCount: BoardWidth,
                                   padding: EdgeInsets.zero,
                                   children: List.from(
-                                    appState.shouldBoardBeFlipped() ? appState.board.boardView.reversed : appState.board.boardView
+                                    appState.shouldBoardBeFlipped() && !neverFlipBoard ? appState.board.boardView.reversed : appState.board.boardView
                                         ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                    appState.shouldBoardBeFlipped() ? blackPlayerRow : whitePlayerRow, 
+                    appState.shouldBoardBeFlipped() && !neverFlipBoard ? blackPlayerRow : whitePlayerRow, 
+                    
                   ]  
                 ),
               ),
