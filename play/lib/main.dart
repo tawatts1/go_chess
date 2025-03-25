@@ -79,17 +79,9 @@ class MyHomePage extends StatelessWidget {
             appState.showPawnPromotion = false;
             return AlertDialog(
               title: const Text("Pawn Promotion"),
-              // content: ConstrainedBox(
-              //   constraints: BoxConstraints(
-              //     minWidth: 10,
-              //     minHeight: 10,
-              //     maxWidth: screenWidth, 
-              //     maxHeight: screenHeight
-              //   ),
               content: SizedBox(
                 width: screenWidth,
                 height: screenWidth * 0.8,
-              
                 child: Column(
                   //mainAxisSize: MainAxisSize.min,
                   children: [
@@ -97,7 +89,6 @@ class MyHomePage extends StatelessWidget {
                     GridView.count(
                       shrinkWrap: true,
                       crossAxisCount: 2,
-                      //padding: EdgeInsets.zero,
                       children: pieceButtons,
                     ),
                   ],
@@ -212,7 +203,9 @@ class MyHomePage extends StatelessWidget {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
                   child: Row(
                     mainAxisSize: MainAxisSize.max,
-                    children: [whitePlayerDropdown, aiDepthDropdownWhite, whiteIcon],//, Expanded(flex: 1, child: Spacer())],
+                    children: [whitePlayerDropdown, 
+                    if (appState.players.isWhiteAi) aiDepthDropdownWhite, 
+                    whiteIcon],//, Expanded(flex: 1, child: Spacer())],
                   ),
               ),
             ),
@@ -227,7 +220,9 @@ class MyHomePage extends StatelessWidget {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
                   child: Row(
                     mainAxisSize: MainAxisSize.max,
-                    children: [blackPlayerDropdown, aiDepthDropdownBlack, blackIcon],
+                    children: [blackPlayerDropdown, 
+                      if (appState.players.isBlackAi) aiDepthDropdownBlack, 
+                      blackIcon],
                   ),
               ),
             ),
