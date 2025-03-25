@@ -9,7 +9,7 @@ import 'square.dart';
 import 'game_state.dart';
 
 bool developerMode = true;
-bool resetToTestBoard = true;
+bool resetToTestBoard = false;
 bool neverFlipBoard = true;
 
 void main() {

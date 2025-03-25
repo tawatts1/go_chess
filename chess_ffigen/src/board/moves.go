@@ -40,7 +40,7 @@ func (m Move) String() string {
 
 func (m Move) Encode() string {
 	if m.special == 0 {
-		return fmt.Sprintf("%v,%v,%v,%v", m.a.y, m.a.x, m.b.y, m.b.x)
+		return fmt.Sprintf("%v,%v,%v,%v,", m.a.y, m.a.x, m.b.y, m.b.x)
 	}
 	return fmt.Sprintf("%v,%v,%v,%v,%c", m.a.y, m.a.x, m.b.y, m.b.x, m.special)
 }
