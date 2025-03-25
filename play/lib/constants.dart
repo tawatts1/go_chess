@@ -8,7 +8,9 @@ const statusWhiteMove = "White's Move";
 
 const aiDropdownList = <int>[0,1,2,3,4,5,6];
 
-const testingBoard = "Rnb0kN0r0q00p0P000000n0p000p000P0000P000000P00000PpB00000N00KB0O";//"0000k00000Qp000000B000000P0000PP000000000000000000P00P000N00K00O";
+const testingBoard = "00000000k0P00000p0000000P0000000000000000000000000000000000000K0";// board where promoting a pawn to a queen would cause a stalemate. 
+//"Rnb0kN0r0q00p0P000000n0p000p000P0000P000000P00000PpB00000N00KB0O";// board where black and white can promote pawns
+//"0000k00000Qp000000B000000P0000PP000000000000000000P00P000N00K00O";
 const startingBoard = "onbqkbnopppppppp00000000000000000000000000000000PPPPPPPPONBQKBNO";
 const boardBeforeWhiteCheckmate = "o00qkb0op0pp0pppnp000p000000000Q00BP000000000000PPP00PbPONB0K0NO";
 const defaultPlayers = "true,false,1,1";//black is ai, white is not ai, ai depth 1. 

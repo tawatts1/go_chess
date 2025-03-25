@@ -8,9 +8,9 @@ import 'coord.dart';
 import 'square.dart';
 import 'game_state.dart';
 
-bool developerMode = true;
+bool developerMode = false;
 bool resetToTestBoard = false;
-bool neverFlipBoard = true;
+bool neverFlipBoard = false;
 
 void main() {
   runApp(const MyApp());
