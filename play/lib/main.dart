@@ -271,17 +271,11 @@ class MyHomePage extends StatelessWidget {
                           child: const Text('Reset Game'),
                         ),
                         if (appState.undoButtonModel.isVisible) 
-                        OutlinedButton(
+                        ElevatedButton(
                           onPressed: appState.undoButtonModel.isEnabled ? () => appState.undo() : null,
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: appState.undoButtonModel.isEnabled ? primaryColor : secondaryColor, 
-                            width: appState.undoButtonModel.isEnabled ? buttonBorderWidth : buttonBorderWidth/2),
-                            backgroundColor: appState.undoButtonModel.isEnabled ? calculatedTheme.colorScheme.onPrimary : calculatedTheme.colorScheme.onSecondary
-                            ),
+                          style: OutlinedButton.styleFrom(side: BorderSide(color: primaryColor, width: buttonBorderWidth),),
                           child: 
-                            Icon(Icons.undo, 
-                              color: appState.undoButtonModel.isEnabled ? primaryColor : secondaryColor,
-                            ),
+                            const Icon(Icons.undo,),
                         ),
                         if (appState.playButtonModel.isVisible)
                         IconButton(
